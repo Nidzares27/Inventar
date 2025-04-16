@@ -1,0 +1,52 @@
+﻿@using Inventar.ViewModels;
+
+@model DeleteEditPaymentViewModel
+@{
+    ViewData["Title"] = "EditPayment";
+}
+
+<h1>@Inventar.Resources.Resource.EditPayment</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditPayment">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="BuyerId" />
+            <div class="form-group">
+                <label asp-for="Id" class="control-label"></label>
+                <input asp-for="Id" class="form-control" readonly />
+                <span asp-validation-for="Id" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CustomerName" class="control-label">@Inventar.Resources.Resource.CustomerFullName</label>
+                <input asp-for="CustomerName" class="form-control" readonly />
+                <span asp-validation-for="CustomerName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Amount" class="control-label">@Inventar.Resources.Resource.Amount</label>
+                <input asp-for="Amount" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PaymentTime" class="control-label">@Inventar.Resources.Resource.PaymentTime</label>
+                <input asp-for="PaymentTime" class="form-control" readonly />
+                <span asp-validation-for="PaymentTime" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="@Inventar.Resources.Resource.Edit" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="PaymentHistory" asp-route-id="@Model.BuyerId">@Inventar.Resources.Resource.BackToList</a>
+</div>
+<style>
+    label {
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+</style>

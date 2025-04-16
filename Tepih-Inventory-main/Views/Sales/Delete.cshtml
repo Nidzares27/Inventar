@@ -1,0 +1,50 @@
+﻿@model Inventar.Models.Prodaja
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>@Inventar.Resources.Resource.DeleteSale</h1>
+
+<h3>@Inventar.Resources.Resource.DeleteThis</h3>
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-4">
+            @Html.DisplayNameFor(model => model.Id)
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DisplayFor(model => model.Id)
+        </dd>
+        <dt class="col-sm-4">
+            @Inventar.Resources.Resource.ProductID
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DisplayFor(model => model.TepihId)
+        </dd>
+        <dt class="col-sm-4">
+            @Inventar.Resources.Resource.CustomerFullName
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DisplayFor(model => model.CustomerFullName)
+        </dd>
+        <dt class="col-sm-4">
+            @Inventar.Resources.Resource.SaleTime
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DisplayFor(model => model.VrijemeProdaje)
+        </dd>
+        <dt class="col-sm-4">
+            @Inventar.Resources.Resource.Quantity
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DisplayFor(model => model.Quantity)
+        </dd>
+    </dl>
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" name="returnUrl" value="@Context.Request.Query["returnUrl"]" />
+        <input type="submit" value="@Inventar.Resources.Resource.Delete" class="btn btn-danger" /> |
+        <a href="@Context.Request.Query["returnUrl"]" class="btn btn-secondary btn-sm">@Inventar.Resources.Resource.BackToList</a>
+    </form>
+</div>

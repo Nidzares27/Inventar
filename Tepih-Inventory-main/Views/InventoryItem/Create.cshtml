@@ -1,0 +1,68 @@
+﻿@model Tepih
+
+<h2>@Inventar.Resources.Resource.CreateProduct</h2>
+<h6 style="color:green">@ViewBag.OldProductUpdate</h6>
+<br />
+
+<form class="row g-3" asp-action="Create" method="post">
+    <input type="hidden" class="form-control" asp-for="DateTime" />
+    <input type="hidden" class="form-control" asp-for="Prodaje" />
+    <div class="col-sm-3">
+        <label for="ProductNumber">@Inventar.Resources.Resource.ProductNumber</label>
+        <input type="text" class="form-control" asp-for="ProductNumber" />
+    </div>
+    <div class="col-sm-6">
+        <label for="Name">@Inventar.Resources.Resource.Name</label>
+        <input type="text" class="form-control" asp-for="Name" />
+    </div>
+    <div class="col-sm-3">
+        <label for="Model">Model</label>
+        <input type="text" class="form-control" asp-for="Model" />
+    </div>
+    <div class="col-sm-6">
+        <label for="Color">@Inventar.Resources.Resource.Color</label>
+        <input type="text" class="form-control" asp-for="Color" />
+    </div>
+    <div class="col-sm-3">
+        <label for="Length">@Inventar.Resources.Resource.Length</label>
+        <input type="number" step="any" class="form-control" asp-for="Length" />
+    </div>
+    <div class="col-sm-3">
+        <label for="Width">@Inventar.Resources.Resource.Width</label>
+        <input type="number" step="any" class="form-control" asp-for="Width" />
+    </div>
+    <div class="col-sm-6">
+        <label for="Quantity">@Inventar.Resources.Resource.Quantity</label>
+        <input type="number" class="form-control" asp-for="Quantity" />
+    </div>
+    <div class="col-sm-6">
+        <label for="Price">@Inventar.Resources.Resource.Price</label>
+        <input type="number" step="any" class="form-control" asp-for="Price" />
+    </div>
+    <div class="col-12">
+        <div class="form-check">
+            <input type="checkbox" asp-for="PerM2" style="vertical-align:middle" />
+            <label for="PerM2" style="vertical-align:middle; margin-bottom:0">@Inventar.Resources.Resource.PerM2</label>
+        </div>
+    </div>
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.CreateProduct</button>
+    </div>
+</form>
+<style>
+    label{
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+    }
+
+    input {
+        border: 1.5px solid blueviolet !important;
+    }
+
+        input[type="checkbox"] {
+            width: 2rem;
+            height: 2rem;
+            border: 5px !important solid blueviolet;
+            accent-color: #007bff; /* For modern browsers */
+        }
+</style>

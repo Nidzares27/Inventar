@@ -1,0 +1,124 @@
+﻿@using Inventar.ViewModels;
+
+@model EditProdajaViewModel
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>@Inventar.Resources.Resource.EditSale</h1>
+
+<hr />
+<div class="row g-3">
+    <form asp-action="Edit" class="row g-3">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" id="Length" asp-for="Length" />
+        <input type="hidden" id="Width" asp-for="Width" />
+        <input type="hidden" id="PerM2" asp-for="PerM2" />
+        <input type="hidden" name="returnUrl" value="@Context.Request.Query["returnUrl"]" />
+        <div class="col-sm-3">
+            <label asp-for="TepihId" class="control-label">@Inventar.Resources.Resource.ProductID</label>
+            <input asp-for="TepihId" class="form-control" readonly/>
+            <span asp-validation-for="TepihId" class="text-danger"></span>
+        </div>
+        <div class="col-sm-3">
+            <label asp-for="Quantity" class="control-label">@Inventar.Resources.Resource.Quantity</label>
+            <input asp-for="Quantity" id="Quantity" class="form-control" min="1" />
+            <span asp-validation-for="Quantity" class="text-danger"></span>
+        </div>
+        <div class="col-sm-6">
+            <label asp-for="CustomerFullName" class="control-label">@Inventar.Resources.Resource.CustomerFullName</label>
+            <input asp-for="CustomerFullName" class="form-control" />
+            <span asp-validation-for="CustomerFullName" class="text-danger"></span>
+        </div>
+        <div class="col-sm-12">
+            <label asp-for="VrijemeProdaje" class="control-label">@Inventar.Resources.Resource.SaleTime</label>
+            <input asp-for="VrijemeProdaje" class="form-control" readonly />
+            <span asp-validation-for="VrijemeProdaje" class="text-danger"></span>
+        </div>
+        <div class="col-sm-4">
+            <label asp-for="M2Total" class="control-label">@Inventar.Resources.Resource.M2Total</label>
+            <input asp-for="M2Total" id="M2Total" class="form-control" readonly />
+            <span asp-validation-for="M2Total" class="text-danger"></span>
+        </div>
+        <div class="col-sm-4">
+            <label asp-for="Price" class="control-label">@Inventar.Resources.Resource.Price</label>
+            <input asp-for="Price" type="number" id="Price" class="form-control" readonly />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+        <div class="col-sm-4">
+            <label class="control-label">@Inventar.Resources.Resource.TotalPrice</label>
+            <input type="number" step="any" min="0.1" class="form-control" id="TotalPrice" value="@Math.Round((Model.PerM2 ? Model.Price * Model.M2Total : Model.Price * Model.Quantity),2)" />
+        </div>
+        <div class="col-sm-3">
+            <input type="submit" value="@Inventar.Resources.Resource.Edit" class="btn btn-primary" />
+        </div>
+    </form>
+</div>
+
+<div>
+    <a href="@Context.Request.Query["returnUrl"]" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+</div>
+<style>
+    label{
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    input {
+        border: 1.5px solid blueviolet !important;
+    }
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        function calculateTotalPrice() {
+            let quantity = parseInt($("#Quantity").val()) || 0;
+            let m2Total = parseFloat($("#M2Total").val()) || 0;
+            let price = parseFloat($("#Price").val()) || 0;
+            let length = parseInt($("#Length").val()) || 0;
+            let width = parseInt($("#Width").val()) || 0;
+            let perM2 = $("#PerM2").val()
+
+            console.log(length);
+            console.log(quantity);
+            console.log(perM2);
+
+
+            if (perM2 == "True") {
+                m2Total = (length * width / 10000) * quantity
+                $("#M2Total").val(((length * width / 10000) * quantity).toFixed(2));
+                $("#TotalPrice").val(((price * m2Total)).toFixed(2));
+            } else if (perM2 ="False") {
+                $("#TotalPrice").val((price * quantity).toFixed(2));
+            }
+        }
+
+        function updatePriceFromTotal() {
+            let totalPrice = parseFloat($("#TotalPrice").val()) || 0;
+            let quantity = parseInt($("#Quantity").val()) || 1;
+            let m2Total = parseFloat($("#M2Total").val()) || 1;
+            let price = parseFloat($("#Price").val()) || 0;
+            let perM2 = $("#PerM2").val()
+
+            if (perM2 =="True") {
+                $("#Price").val((totalPrice / m2Total).toFixed(2));
+            } else if (perM2 ="False") {
+                $("#Price").val((totalPrice / quantity).toFixed(2));
+            }
+        }
+
+        $("#Quantity, #M2Total, #Price").on("input", function () {
+            calculateTotalPrice();
+        });
+
+        $("#TotalPrice").on("input", function () {
+            updatePriceFromTotal();
+        });
+
+        // Ensure only one of PriceM2 or PriceUnit has a value
+        $("#Price").on("input", function () {
+            calculateTotalPrice();
+        });
+    });
+</script>

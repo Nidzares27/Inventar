@@ -1,0 +1,249 @@
+﻿@model Inventar.ViewModels.PerProductViewModel
+@{
+    ViewData["Title"] = "Sales Report";
+}
+<p>
+    @Inventar.Resources.Resource.SalesReport: <strong style="font-weight:900">@Model.CustomerFullName</strong>
+</p>
+@* @if (Model.StartDate.HasValue && Model.EndDate.HasValue)
+{
+    <p><b style="color:mediumblue">@Model.StartDate</b> --- <b style="color:mediumblue">@Model.EndDate</b></p>
+} *@
+
+<!-- Filter Form -->
+<form id="myForm">
+    @if (!string.IsNullOrEmpty(Model.CustomerFullName))
+    {
+        <input type="hidden" name="customerFullName" value="@Model.CustomerFullName" />
+    }
+
+    <label>@Inventar.Resources.Resource.StartDate:</label>
+    <input type="date" name="startDate" />
+
+    <label>@Inventar.Resources.Resource.EndDate:</label>
+    <input type="date" name="endDate" />
+
+    <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.Filter</button>
+</form>
+
+<!-- Results Table -->
+<div id="salesReportTable">
+    @await Html.PartialAsync("_SalesReportTable", Model)
+</div>
+@if (!string.IsNullOrEmpty(Model.CustomerFullName))
+{
+    <div>
+        <a asp-action="Index" asp-controller="Buyer" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+    </div>
+}
+<!-- Spinner -->
+<div id="loading-spinner" class="spinner-wrapper" style="display:none; text-align: center;">
+    <div class="spinner-border text-danger" role="status">
+        <span class="sr-only" id="loadingText"></span>
+    </div>
+    <div style="color:firebrick; font-size:larger">@Inventar.Resources.Resource.Searching</div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#myForm').submit(function (e) {
+                e.preventDefault();
+
+                // Show loading spinner
+                $('#loading-spinner').css('display', 'flex');  // Show and center
+
+                $.ajax({
+                    url: '@Url.Action("PerProductsPartial", "Sales")', // Change to match your controller name
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function (result) {
+                        $('#salesReportTable').html(result);
+
+                        $(document).ready(function () {
+                            var table = $('#PerProductsTable').DataTable({
+                                "paging": true,
+                                "pageLength": 10,
+                                "order": [[0, "desc"]], // Sorts the first column (ID) in descending order
+                                "orderCellsTop": true, // Ensures ordering is applied to the first row only
+                                "fixedHeader": true // Keeps the filters visible when scrolling
+                            });
+                            $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
+                                $('input', this).on('keyup change', function () {
+                                    if (table.column(i).search() !== this.value) {
+                                        table.column(i).search(this.value).draw();
+                                    }
+                                });
+                            });
+                        });
+                    },
+                    error: function () {
+                        alert("Error loading data.");
+                    },
+                    complete: function () {
+                        // Always hide spinner when done (success or error)
+                        $('#loading-spinner').css('display', 'none');  // Hide
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
+            $('input', this).on('keyup change', function () {
+                if (table.column(i).search() !== this.value) {
+                    table.column(i).search(this.value).draw();
+                }
+            });
+        });
+    </script>
+    <style>
+        td {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        th {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        col {
+            border-style: ridge;
+        }
+
+        select {
+            margin-right: 0.5rem;
+        }
+
+        #TepisiTable {
+            margin: 0;
+            width: 100% !important;
+        }
+    </style>
+}
+
+@* @model Inventar.ViewModels.PerProductViewModel
+@{
+    ViewData["Title"] = "Sales Report";
+}
+
+<p>
+    @Inventar.Resources.Resource.SalesReport: <strong style="font-weight:900">@Model.CustomerFullName</strong>
+</p>
+@if (Model.StartDate.HasValue && Model.EndDate.HasValue)
+{
+    <p><b style="color:mediumblue">@Model.StartDate</b> --- <b style="color:mediumblue">@Model.EndDate</b></p>
+}
+
+<!-- Filter Form -->
+<form asp-action="PerProducts" id="myForm" method="post">
+    @if (!string.IsNullOrEmpty(Model.CustomerFullName))
+    {
+        <input type="hidden" name="customerFullName" value="@Model.CustomerFullName" />
+    }
+    <label style="vertical-align:middle">@Inventar.Resources.Resource.StartDate:</label>
+    <input style="vertical-align:middle; margin-right:0.5rem" type="date" name="startDate" />
+
+    <label style="vertical-align:middle">@Inventar.Resources.Resource.EndDate:</label>
+    <input style="vertical-align:middle; margin-right:0.5rem" type="date" name="endDate" />
+
+    <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.Filter</button>
+</form>
+
+<!-- Results Table -->
+@if (Model.SalesReport != null && Model.SalesReport.Any())
+{
+    <table id="PerProductsTable" class="table">
+        <thead>
+            <tr>
+                <th>@Inventar.Resources.Resource.ProductID</th>
+                <th>@Inventar.Resources.Resource.Name</th>
+                <th>Model</th>
+                <th>@Inventar.Resources.Resource.Size</th>
+                <th>@Inventar.Resources.Resource.M2PerProduct</th>
+                <th>@Inventar.Resources.Resource.M2Total</th>
+                <th>@Inventar.Resources.Resource.Color</th>
+                <th>@Inventar.Resources.Resource.TotalQuantity</th>
+                <th>@Inventar.Resources.Resource.TotalPrice</th>
+            </tr>
+            <tr class="filters">
+                <th><input style="width:5rem" type="text" placeholder="Product ID"></th>
+                <th><input style="width:10rem" type="text" placeholder="Name"></th>
+                <th><input style="width:10rem" type="text" placeholder="Model"></th>
+                <th><input style="width:5rem" type="text" placeholder="Size"></th>
+                <th><input style="width:5rem" type="text" placeholder="M2PerProduct"></th>
+                <th><input style="width:5rem" type="text" placeholder="M2Total"></th>
+                <th><input style="width:10rem" type="text" placeholder="Color"></th>
+                <th><input style="width:5rem" type="text" placeholder="Total Quantity"></th>
+                <th><input style="width:5rem" type="text" placeholder="Total Price"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.SalesReport)
+            {
+                <tr>
+                    <td>@item.ProductId</td>
+                    <td>@item.Name</td>
+                    <td>@item.Model</td>
+                    <td>@item.Size</td>
+                    <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2))</td>
+                    <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.TotalQuantity), 2))</td>
+                    <td>@item.Color</td>
+                    <td>@item.TotalQuantity</td>
+                    <td>@string.Format("{0:F2}", item.TotalPrice)€</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>@Inventar.Resources.Resource.NoResultsFound</p>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#PerProductsTable').DataTable({
+                "paging": true,
+                "pageLength": 10,
+                "order": [[0, "desc"]], // Sorts the first column (ID) in descending order
+                "orderCellsTop": true, // Ensures ordering is applied to the first row only
+                "fixedHeader": true // Keeps the filters visible when scrolling
+            });
+            $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
+                $('input', this).on('keyup change', function () {
+                    if (table.column(i).search() !== this.value) {
+                        table.column(i).search(this.value).draw();
+                    }
+                });
+            });
+        });
+    </script>
+
+    <style>
+        td {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        th {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        col {
+            border-style: ridge;
+        }
+
+        select {
+            margin-right: 0.5rem;
+        }
+
+        #TepisiTable {
+            margin: 0;
+            width: 100% !important;
+        }
+    </style>
+} *@

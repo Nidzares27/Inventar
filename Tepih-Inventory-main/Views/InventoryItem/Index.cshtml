@@ -1,0 +1,100 @@
+﻿@model IEnumerable<Inventar.Models.Tepih>
+
+<h2>@Inventar.Resources.Resource.InventoryItems</h2>
+
+
+<table id="TepisiTable" class="table stripe" style="font-weight:500">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>@Inventar.Resources.Resource.ProductNumber</th>
+            <th>@Inventar.Resources.Resource.Name</th>
+            <th>Model</th>
+            <th>@Inventar.Resources.Resource.Color</th>
+            <th>@Inventar.Resources.Resource.Size</th>
+            <th>@Inventar.Resources.Resource.M2PerProduct</th>
+            <th>@Inventar.Resources.Resource.M2Total</th>
+            <th>@Inventar.Resources.Resource.Price</th>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <th></th>
+        </tr>
+        <tr class="filters">
+            <th><input style="width:5rem" type="text" placeholder="Id"></th>
+            <th><input style="width:5rem" type="text" placeholder="ProductNumber"></th>
+            <th><input style="width:7.5rem" type="text" placeholder="Name"></th>
+            <th><input style="width:5rem" type="text" placeholder="Model"></th>
+            <th><input style="width:7.5rem" type="text" placeholder="Color"></th>
+            <th><input style="width:5rem" type="text" placeholder="Size"></th>
+            <th><input style="width:5rem" type="text" placeholder="M2PerProduct"></th>
+            <th><input style="width:5rem" type="text" placeholder="M2Total"></th>
+            <th><input style="width:5rem" type="text" placeholder="Price"></th>
+            <th><input style="width:5rem" type="text" placeholder="Quantity"></th>
+            <th><input style="width:5rem" type="text" placeholder="" disabled></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.ProductNumber</td>
+                <td>@item.Name</td>
+                <td>@item.Model</td>
+                <td>@item.Color</td>
+                <td>@item.Length X @item.Width</td>
+                <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2))</td>
+                <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.Quantity), 2))</td>
+                <td>@item.Price €</td>
+                <td>@item.Quantity</td>
+                <td>
+                    <a asp-area="" asp-controller="InventoryItem" asp-action="Edit" asp-route-id="@item.Id">@Inventar.Resources.Resource.Edit</a>
+                    <a asp-area="" asp-controller="InventoryItem" asp-action="Delete" asp-route-id="@item.Id">@Inventar.Resources.Resource.Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a class="btn btn-primary" href="/InventoryItem/Create">@Inventar.Resources.Resource.AddNewProduct</a>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#TepisiTable').DataTable({
+                "paging": true,
+                "pageLength": 10,
+                "order": [[0, "desc"]], // Sorts the first column (ID) in descending order
+                "orderCellsTop": true, // Ensures ordering is applied to the first row only
+                "fixedHeader": true // Keeps the filters visible when scrolling
+            });
+            $('#TepisiTable thead tr:eq(1) th').each(function (i) {
+                $('input', this).on('keyup change', function () {
+                    if (table.column(i).search() !== this.value) {
+                        table.column(i).search(this.value).draw();
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        td{
+            text-align:center !important;
+            vertical-align: middle !important;
+        }
+        th{
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+        col{
+            border-style:ridge;
+        }
+        select{
+            margin-right: 0.5rem;
+        }
+
+        #TepisiTable{
+            margin:0;
+            width:100% !important;
+        }
+    </style>
+}

@@ -1,0 +1,41 @@
+﻿@model Inventar.ViewModels.PerDayViewModel
+@if (Model.Date.HasValue)
+{
+    <p>@Inventar.Resources.Resource.Day: <b style="color:mediumblue">@Model.Date.Value.ToString("dd-MM-yyyy")</b></p>
+}
+@if (Model.SalesReport != null && Model.SalesReport.Any())
+{
+    <table id="PerDayTable" class="table table-bordered stripe" style="width:100%; font-weight:500">
+        <thead>
+            <tr>
+                <th>@Inventar.Resources.Resource.CustomerFullName</th>
+                <th>@Inventar.Resources.Resource.TotalSpent</th>
+                <th>@Inventar.Resources.Resource.M2Total</th>
+            </tr>
+            <tr class="filters">
+                <th><input type="text" placeholder="Customer Name" /></th>
+                <th><input type="text" placeholder="Total Spent" /></th>
+                <th><input type="text" placeholder="Total m²" /></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.SalesReport)
+            {
+                <tr>
+                    <td>@item.CustomerName</td>
+                    <td>@Math.Round(item.TotalSpent, 2) €</td>
+                    <td>@Math.Round(item.M2Total, 2)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="text-end mt-3">
+        <strong>@Inventar.Resources.Resource.TotalSpent: @Model.TotalSpentSum €</strong><br />
+        <strong>@Inventar.Resources.Resource.M2Total: @Model.TotalM2 m²</strong>
+    </div>
+}
+else
+{
+    <p>@Inventar.Resources.Resource.NoResultsFound</p>
+}

@@ -1,0 +1,81 @@
+﻿@model IEnumerable<Inventar.Models.Placanje>
+
+<h2>@Inventar.Resources.Resource.PaymentHistory - @ViewBag.CustomerName</h2>
+
+<table id="PaymentsTable" class="table stripe" style="font-weight:500">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>@Inventar.Resources.Resource.Time</th>
+            <th>@Inventar.Resources.Resource.Amount</th>
+            <th></th>
+        </tr>
+        <tr class="filters">
+            <th><input style="width:5rem" type="text" placeholder=""></th>
+            <th><input style="width:10rem" type="text" placeholder=""></th>
+            <th><input style="width:7rem" type="text" placeholder=""></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.PaymentTime</td>
+                <td>@item.Amount €</td>
+                <td>
+                    <a asp-area="" asp-controller="Buyer" asp-action="EditPayment" asp-route-id="@item.Id">@Inventar.Resources.Resource.Edit</a>
+                    <a asp-area="" asp-controller="Buyer" asp-action="DeletePayment" asp-route-id="@item.Id">@Inventar.Resources.Resource.Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div>
+    <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#PaymentsTable').DataTable({
+                "paging": true,
+                "pageLength": 10,
+                "order": [[0, "desc"]], // Sorts the first column (ID) in descending order
+                "orderCellsTop": true, // Ensures ordering is applied to the first row only
+                "fixedHeader": true, // Keeps the filters visible when scrolling
+            });
+            $('#PaymentsTable thead tr:eq(1) th').each(function (i) {
+                $('input', this).on('keyup change', function () {
+                    if (table.column(i).search() !== this.value) {
+                        table.column(i).search(this.value).draw();
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        td {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        th {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        col {
+            border-style: ridge;
+        }
+
+        select {
+            margin-right: 0.5rem;
+        }
+
+        #PaymentsTable {
+            margin: 0;
+            width: 100% !important;
+        }
+    </style>
+}

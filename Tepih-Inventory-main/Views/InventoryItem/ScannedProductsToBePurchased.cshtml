@@ -1,0 +1,316 @@
+﻿@model Inventar.ViewModels.ScannedProductsOverviewViewModel
+
+<h2>@Inventar.Resources.Resource.BuyerInfo</h2>
+<form asp-action="ScannedProductsToBePurchased" method="post">
+    <input type="hidden" class="form-control" asp-for="PurchaseTime" />
+    <div class="form-group">
+        <div class="row g-3">
+            <div class="col-sm-8">
+                <label for="FullName">@Inventar.Resources.Resource.FullName</label>
+                <input type="text" id="FullName" class="form-control" asp-for="FullName" required autocomplete="off" />
+            </div>
+            <div class="col-sm">
+                <label for="AmountPaid">@Inventar.Resources.Resource.AmountPaid</label>
+                <input type="text" id="AmountPaid" class="form-control" asp-for="AmountPaid" required autocomplete="off" />
+            </div>
+        </div>
+@*         <label for="FullName">@Inventar.Resources.Resource.FullName</label>
+        <input type="text" id="FullName" class="form-control" asp-for="FullName" required autocomplete="off" />
+        <label for="AmountPaid">@Inventar.Resources.Resource.AmountPaid</label>
+        <input type="text" id="AmountPaid" class="form-control" asp-for="AmountPaid" required autocomplete="off" /> *@
+        <input type="checkbox" class="form-check-input" asp-for="PrintPDF" />
+        <label class="form-check-label" asp-for="PrintPDF">@Inventar.Resources.Resource.PrintPDF</label>
+        <div id="suggestions" style="border-style: groove;"></div>
+    </div>
+    <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.ConfirmPurchase</button>
+</form>
+<table id="productTable" class="table table-hover table-striped">
+    <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">@Inventar.Resources.Resource.ProductNumber</th>
+            <th scope="col">@Inventar.Resources.Resource.Name</th>
+            <th scope="col">Model</th>
+            <th scope="col">@Inventar.Resources.Resource.Size</th>
+            <th scope="col">@Inventar.Resources.Resource.M2Total</th>
+            <th scope="col">@Inventar.Resources.Resource.Color</th>
+            <th scope="col">Rabat %</th>
+            @* <th scope="col">PerM2</th> *@
+            <th scope="col">@Inventar.Resources.Resource.Price</th>
+            <th scope="col">@Inventar.Resources.Resource.Quantity</th>
+            <th scope="col">@Inventar.Resources.Resource.PriceTotal</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in  Model.Products)
+        {
+            <tr data-perm2="@item.PerM2" data-id="@item.Id">
+                <th scope="row">
+                    @item.Id
+                </th>
+                <td>
+                    @item.ProductNumber
+                </td>
+                <td>
+                    @item.Name
+                </td>
+                <td>
+                    @item.Model
+                </td>
+                <td style="white-space: nowrap">
+                    @item.Length X @item.Width
+                </td>
+                <td id="m2Total-@item.Id" class="m2Total">
+                    @item.M2Total
+                </td>
+                <td>
+                    @item.Color
+                </td>
+                <td>
+                    <input type="number" style="width:5rem" class="rabat" value="@item.Rabat" min="0" max="100">
+                </td>
+@*                 <td class="perM2">
+                    @item.PerM2
+                </td> *@
+                <td>
+                    <input type="number" style="width:5rem" class="price" value="@item.Price" min="0.1">
+                </td>
+                <td id="quantity-@item.Id" class="quantity">
+                    @item.Quantity
+                </td>
+                <td id="priceTotal-@item.Id" class="priceTotal">
+                    @(Math.Round(item.PriceTotal,2)) €
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div style="text-align: right; margin-top: 10px;">
+    <strong>@Inventar.Resources.Resource.Total: <span id="totalPrice">0</span>€</strong>
+</div>
+
+<style>
+    td, th {
+        text-align: center;
+    }
+    input{
+        border: 2px solid #111 !important;
+    }
+
+    #suggestions {
+        border: 1px solid #ccc;
+        max-width: 300px;
+        display: none;
+        position: absolute;
+        background: white;
+        z-index: 1000;
+    }
+
+    .suggestion-item {
+        padding: 8px;
+        cursor: pointer; /* Makes it clear that the item is clickable */
+    }
+
+        .suggestion-item:hover {
+            background: #007bff; /* Blue background */
+            color: white; /* White text for contrast */
+        }
+</style>
+@* <script>
+    function calculateTotal() {
+        let sum = 0;
+        document.querySelectorAll(".priceTotal").forEach(function (element) {
+            sum += parseFloat(element.textContent) || 0;
+        });
+        document.getElementById("totalPrice").textContent = sum.toFixed(2);
+    }
+
+    // Run calculation on page load
+    calculateTotal();
+</script> *@
+<script>
+    function calculateTotal() {
+        let sum = 0;
+        document.querySelectorAll(".priceTotal").forEach(function (element) {
+            sum += parseFloat(element.textContent) || 0;
+        });
+        document.getElementById("totalPrice").textContent = sum.toFixed(2);
+    }
+
+    function calculateTotalWithRabat() {
+        let sum = 0;
+        let priceTotals = document.querySelectorAll(".priceTotal");
+        let rabats = document.querySelectorAll(".rabat");
+        // let perM2s = document.querySelectorAll(".perM2");
+        let pm2s = document.querySelectorAll("tr[data-perm2]");
+        let prices = document.querySelectorAll(".price");
+        let quantitys = document.querySelectorAll(".quantity");
+        let m2Totals = document.querySelectorAll(".m2Total");
+
+        for (let i = 0; i < priceTotals.length; i++) {
+            let priceTotal = parseFloat(priceTotals[i].textContent);
+            // let perM2 = perM2s[i].textContent.trim();
+            let pm2 = pm2s[i].dataset.perm2;
+            let rabat = parseFloat(rabats[i].value);
+            let price = parseFloat(prices[i].value);
+            let quantity = parseInt(quantitys[i].textContent);
+            let m2Total = parseFloat(m2Totals[i].textContent);
+
+            let totalPricePerUnit = price * quantity;
+            let totalPricePerM2 = (price * m2Total);
+
+            if (rabat) {
+                let rbt = rabat / 100
+                if (pm2 == "True") {
+                    totalPricePerM2 -= rbt * totalPricePerM2;
+                    sum += totalPricePerM2;
+                }
+                if (pm2 == "False") {
+                    totalPricePerUnit -= rbt * totalPricePerUnit;
+                    sum += totalPricePerUnit;
+                }
+                // price -= rbt * price;
+                // prices[i].textContent = price.toFixed(2) + "€";
+            } else {
+                sum += priceTotal;
+            }
+
+
+            if (pm2 == "True"/* priceUnit == null || priceUnit == 0 */) {
+                priceTotals[i].textContent = totalPricePerM2.toFixed(2) + "€";
+            }
+            if (pm2 == "False"/* priceM2 == null || priceM2 == 0 */) {
+                priceTotals[i].textContent = totalPricePerUnit.toFixed(2) + "€";
+            }
+
+        }
+        document.getElementById("totalPrice").textContent = sum.toFixed(2);
+    }
+
+    // Run calculation on page load
+    calculateTotal();
+    // calculateTotalWithRabat();
+    document.addEventListener("DOMContentLoaded", function () {
+        function updateRow(row) {
+            // let id = parseInt(row.dataset.id, 10);  // Ensure correct ID parsing
+            // if (isNaN(id) || id <= 0) {
+            //     console.error("Invalid ID:", row.dataset.id); // Debugging log
+            //     return;
+            // }
+            let price = parseFloat(row.querySelector(".price").value); /* || 0 */
+            // let perM2 = row.querySelector(".perM2").textContent.trim();
+            let pm2 = row.dataset.perm2;
+            console.log("!!!" + pm2);
+
+
+            let quantity = parseInt(row.querySelector(".quantity").textContent) || 0;
+            let m2Total = parseFloat(row.querySelector(".m2Total").textContent) || 0;
+            let rabat = parseInt(row.querySelector(".rabat").value);
+            console.log(price);
+
+            let totalPricePerUnit = price * quantity;
+            let totalPricePerM2 = price * m2Total;
+
+            if (rabat) {
+                console.log("11111111");
+                let rbt = rabat / 100
+                console.log(rbt);
+                if (pm2 == "True") {
+                    console.log("2222222");
+                    totalPricePerM2 -= rbt * totalPricePerM2;
+                    console.log(totalPricePerM2);
+                }
+                if (pm2 == "False") {
+                    console.log("3333333");
+                    totalPricePerUnit -= rbt * totalPricePerUnit;
+                    console.log(totalPricePerUnit);
+                }
+                // price -= rbt * price;
+                // row.querySelector(".price").value = price;
+
+            }
+
+
+            if (pm2 == "True"/* priceUnit == null || priceUnit == 0 */) {
+                row.querySelector(".priceTotal").textContent = totalPricePerM2.toFixed(2) + "€";
+            }
+            if (pm2 == "False"/* priceM2 == null || priceM2 == 0 */) {
+                row.querySelector(".priceTotal").textContent = totalPricePerUnit.toFixed(2) + "€";
+            }
+            calculateTotal();
+            // row.querySelector(".perUnit").textContent = perUnit.toFixed(2);
+            // row.querySelector(".total").textContent = total.toFixed(2);
+
+            saveToServer(row.dataset.id, price, rabat);
+        }
+
+        function saveToServer(id, price, rabat) {
+            let data = {
+                id: Number(id),  // Ensure proper data types
+                price: Number(price),
+                rabat: Number(rabat),
+            };
+
+            console.log("Sending JSON:", JSON.stringify(data)); // Debugging
+
+            fetch('/InventoryItem/Update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => console.log("Server Response:", data))
+                .catch(error => console.error("Error:", error));
+        }
+
+        document.querySelectorAll("#productTable tbody tr").forEach(row => {
+            row.querySelectorAll(".price,.rabat").forEach(input => {
+                input.addEventListener("input", function () {
+                    updateRow(row);
+                });
+            });
+        });
+    });
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#FullName").on("input", function () {
+            let query = $(this).val().trim();
+            if (query.length < 3) {
+                $("#suggestions").hide();
+                return;
+            }
+
+            $.getJSON("/InventoryItem/SearchPeople", { query: query }, function (data) {
+                let suggestions = $("#suggestions");
+                suggestions.empty();
+
+                if (data.length === 0) {
+                    suggestions.hide();
+                    return;
+                }
+
+                data.forEach(function (name) {
+                    suggestions.append(`<div class="suggestion-item">${name}</div>`);
+                });
+
+                suggestions.show();
+            });
+        });
+
+        // Fill the input field when user clicks on a suggestion
+        $(document).on("click", ".suggestion-item", function () {
+            $("#FullName").val($(this).text());
+            $("#suggestions").hide();
+        });
+
+        // Hide suggestions if user clicks outside
+        $(document).click(function (e) {
+            if (!$(e.target).closest("#FullName, #suggestions").length) {
+                $("#suggestions").hide();
+            }
+        });
+    });
+</script>

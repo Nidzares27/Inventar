@@ -1,0 +1,88 @@
+﻿@using Inventar.ViewModels;
+
+@model EditTepihViewModel
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>@Inventar.Resources.Resource.EditProduct</h1>
+
+<hr />
+<div class="row g-3 ">
+    <form asp-action="Edit" class="row g-3" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="col-sm-6">
+                <label asp-for="Name" class="control-label">@Inventar.Resources.Resource.Name</label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="col-sm-3">
+                <label asp-for="ProductNumber" class="control-label">@Inventar.Resources.Resource.ProductNumber</label>
+                <input asp-for="ProductNumber" class="form-control" />
+                <span asp-validation-for="ProductNumber" class="text-danger"></span>
+            </div>
+            <div class="col-sm-3">
+                <label asp-for="Model" class="control-label"></label>
+                <input asp-for="Model" class="form-control" />
+                <span asp-validation-for="Model" class="text-danger"></span>
+            </div>
+        <div class="col-sm-6">
+            <label asp-for="Color" class="control-label">@Inventar.Resources.Resource.Color</label>
+            <input asp-for="Color" class="form-control" />
+            <span asp-validation-for="Color" class="text-danger"></span>
+        </div>
+        <div class="col-sm-6">
+                <label asp-for="DateTime" class="control-label">@Inventar.Resources.Resource.DateTime</label>
+                <input asp-for="DateTime" class="form-control" readonly />
+                <span asp-validation-for="DateTime" class="text-danger"></span>
+            </div>
+            <div class="col-sm-3">
+                <label asp-for="Quantity" class="control-label">@Inventar.Resources.Resource.Quantity</label>
+                <input asp-for="Quantity" class="form-control" />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+            <div class="col-sm-9">
+                <label asp-for="QRCodeUrl" class="control-label"></label>
+                <input asp-for="QRCodeUrl" class="form-control" readonly />
+                <span asp-validation-for="QRCodeUrl" class="text-danger"></span>
+            </div>
+            <div class="col-sm-4">
+                <label asp-for="Length" class="control-label">@Inventar.Resources.Resource.Length</label>
+                <input asp-for="Length" step="any" class="form-control" />
+                <span asp-validation-for="Length" class="text-danger"></span>
+            </div>            
+            <div class="col-sm-4">
+                <label asp-for="Width" class="control-label">@Inventar.Resources.Resource.Width</label>
+                <input asp-for="Width" step="any" class="form-control" />
+                <span asp-validation-for="Width" class="text-danger"></span>
+            </div>                       
+            <div class="col-sm-4">
+                <label asp-for="Price" class="control-label">@Inventar.Resources.Resource.Price</label>
+                <input asp-for="Price" step="any" class="form-control" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <input asp-for="PerM2" style="vertical-align:middle; width:2rem; height:2rem" />
+                <label asp-for="PerM2" style="vertical-align:middle; margin-bottom:0">@Inventar.Resources.Resource.PerM2</label>@* class="control-label" *@
+                <span asp-validation-for="PerM2" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <input type="submit" value="@Inventar.Resources.Resource.Edit" class="btn btn-primary" />
+            </div>
+        </form>
+</div>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+</div>
+<style>
+    label {
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    input {
+        border: 1.5px solid blueviolet !important;
+    }
+</style>

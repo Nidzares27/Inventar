@@ -1,0 +1,27 @@
+﻿@model Inventar.ViewModels.MakePaymentViewModel
+
+<h2>@Inventar.Resources.Resource.AddPayment - @Model.Name</h2>
+<hr />
+<form asp-action="MakePayment" method="post">
+    <input type="hidden" class="form-control" asp-for="Id" />
+    <input type="hidden" class="form-control" asp-for="Name" />
+    <div class="form-group">
+        <label for="AmountPaid" >@Inventar.Resources.Resource.Amount: </label>
+        <input asp-for=AmountPaid type="number" style="width:5rem" step="0.1" min="0.1" required>
+        €
+    </div>
+    <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.AddPayment</button>
+</form>
+<div>
+    <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+</div>
+<style>
+    input {
+        border: 2px solid blueviolet !important;
+    }
+    label{
+        margin-right:1rem;
+        font-size:large;
+        font-weight:700;
+    }
+</style>

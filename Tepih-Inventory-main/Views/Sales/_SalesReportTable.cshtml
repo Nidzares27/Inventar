@@ -1,0 +1,58 @@
+﻿@model Inventar.ViewModels.PerProductViewModel
+@if (Model.StartDate.HasValue && Model.EndDate.HasValue)
+{
+    <p>
+        <b style="color:mediumblue">@Model.StartDate.Value.ToString("dd-MM-yyyy")</b> ---
+        <b style="color:mediumblue">@Model.EndDate.Value.ToString("dd-MM-yyyy")</b>
+    </p>
+}
+
+@if (Model.SalesReport != null && Model.SalesReport.Any())
+{
+    <table id="PerProductsTable" class="table stripe" style="font-weight:500">
+        <thead>
+            <tr>
+                <th>@Inventar.Resources.Resource.ProductID</th>
+                <th>@Inventar.Resources.Resource.Name</th>
+                <th>Model</th>
+                <th>@Inventar.Resources.Resource.Size</th>
+                <th>@Inventar.Resources.Resource.M2PerProduct</th>
+                <th>@Inventar.Resources.Resource.M2Total</th>
+                <th>@Inventar.Resources.Resource.Color</th>
+                <th>@Inventar.Resources.Resource.TotalQuantity</th>
+                <th>@Inventar.Resources.Resource.TotalPrice</th>
+            </tr>
+            <tr class="filters">
+                <th><input style="width:5rem" type="text" placeholder="Product ID"></th>
+                <th><input style="width:7.5rem" type="text" placeholder="Name"></th>
+                <th><input style="width:5rem" type="text" placeholder="Model"></th>
+                <th><input style="width:5rem" type="text" placeholder="Size"></th>
+                <th><input style="width:5rem" type="text" placeholder="M2PerProduct"></th>
+                <th><input style="width:5rem" type="text" placeholder="M2Total"></th>
+                <th><input style="width:7.5rem" type="text" placeholder="Color"></th>
+                <th><input style="width:5rem" type="text" placeholder="Total Quantity"></th>
+                <th><input style="width:5rem" type="text" placeholder="Total Price"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.SalesReport)
+            {
+                <tr>
+                    <td>@item.ProductId</td>
+                    <td>@item.Name</td>
+                    <td>@item.Model</td>
+                    <td>@item.Size</td>
+                    <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2))</td>
+                    <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.TotalQuantity), 2))</td>
+                    <td>@item.Color</td>
+                    <td>@item.TotalQuantity</td>
+                    <td>@string.Format("{0:F2}", item.TotalPrice)€</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>@Inventar.Resources.Resource.NoResultsFound</p>
+}

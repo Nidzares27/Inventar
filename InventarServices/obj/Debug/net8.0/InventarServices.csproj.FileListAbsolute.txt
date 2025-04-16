@@ -1,0 +1,11 @@
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\bin\Debug\net8.0\InventarServices.deps.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\bin\Debug\net8.0\InventarServices.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\bin\Debug\net8.0\InventarServices.pdb
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\obj\Debug\net8.0\InventarServices.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\obj\Debug\net8.0\InventarServices.AssemblyInfoInputs.cache
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\obj\Debug\net8.0\InventarServices.AssemblyInfo.cs
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\obj\Debug\net8.0\InventarServices.csproj.CoreCompileInputs.cache
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\obj\Debug\net8.0\InventarServices.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\obj\Debug\net8.0\refint\InventarServices.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\obj\Debug\net8.0\InventarServices.pdb
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\InventarServices\obj\Debug\net8.0\ref\InventarServices.dll

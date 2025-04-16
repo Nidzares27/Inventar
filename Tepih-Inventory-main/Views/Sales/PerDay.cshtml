@@ -1,0 +1,153 @@
+﻿@* @model Inventar.ViewModels.PerDayViewModel
+@{
+    ViewData["Title"] = "Per Day Sales Report";
+}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" />
+
+<h2>@Inventar.Resources.Resource.SalesByDay</h2>
+
+<form id="filterForm" asp-action="PerDay" method="post">
+    <label>@Inventar.Resources.Resource.Day:</label>
+    <input id="datepicker" type="date" name="date" required class="form-control d-inline w-auto" />
+    <button type="submit" class="btn btn-primary" data-loading="true">@Inventar.Resources.Resource.Filter</button>
+</form>
+<div id="loadingSpinner" class="spinner-wrapper" style="display: none; text-align: center;">
+    <div class="spinner-border text-danger" role="status">
+        <span class="sr-only" id="loadingText">Loading...</span>
+    </div>
+    <div style="color:firebrick; font-size:larger">Pretraga reda voznje...</div>
+</div>
+
+<hr />
+
+<!-- AJAX Container -->
+<div id="resultsContainer">
+    @if (Model.SalesReport?.Any() == true)
+    {
+        await Html.RenderPartialAsync("_PerDayTablePartial", Model);
+    }
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        function initializeDataTable() {
+            var table = $('#PerDayTable').DataTable({
+                orderCellsTop: true,
+                fixedHeader: true,
+                paging: true,
+                pageLength: 10
+            });
+
+            $('#PerDayTable thead tr:eq(1) th input').on('keyup change', function () {
+                const index = $(this).parent().index();
+                table.column(index).search(this.value).draw();
+            });
+        }
+
+        $(document).ready(function () {
+            initializeDataTable();
+
+            $('#filterForm').on('submit', function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '@Url.Action("PerDay")',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function (result) {
+                        $('#resultsContainer').html(result);
+                        initializeDataTable();
+                    },
+                    error: function () {
+                        alert('Error loading data.');
+                    }
+                });
+            });
+        });
+    </script>
+} *@
+@model Inventar.ViewModels.PerDayViewModel
+@{
+    ViewData["Title"] = "Per Day Sales Report";
+}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" />
+
+<h2>@Inventar.Resources.Resource.SalesByDay</h2>
+
+<!-- Filter Form -->
+<form id="filterForm" asp-action="PerDay" method="post">
+    <label>@Inventar.Resources.Resource.Day:</label>
+    <input id="datepicker" type="date" name="date" required class="form-control d-inline w-auto" />
+    <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.Filter</button>
+</form>
+
+
+
+<hr />
+
+<!-- AJAX Result Container -->
+<div id="resultsContainer">
+    @if (Model.SalesReport?.Any() == true)
+    {
+        await Html.RenderPartialAsync("_PerDayTablePartial", Model);
+    }
+</div>
+<!-- Spinner -->
+<div id="loading-spinner" class="spinner-wrapper" style="display:none; text-align: center;">
+    <div class="spinner-border text-danger" role="status">
+        <span class="sr-only" id="loadingText"></span>
+    </div>
+    <div style="color:firebrick; font-size:larger">@Inventar.Resources.Resource.Searching</div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        function initializeDataTable() {
+            var table = $('#PerDayTable').DataTable({
+                orderCellsTop: true,
+                fixedHeader: true,
+                paging: true,
+                pageLength: 10
+            });
+
+            $('#PerDayTable thead tr:eq(1) th input').on('keyup change', function () {
+                const index = $(this).parent().index();
+                table.column(index).search(this.value).draw();
+            });
+        }
+
+        $(document).ready(function () {
+            initializeDataTable();
+
+            $('#filterForm').on('submit', function (e) {
+                e.preventDefault();
+
+                // Show loading spinner
+                $('#loading-spinner').css('display', 'flex');  // Show and center
+
+
+                $.ajax({
+                    url: '@Url.Action("PerDay")',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function (result) {
+                        $('#resultsContainer').html(result);
+                        initializeDataTable();
+                    },
+                    error: function () {
+                        alert('Error loading data.');
+                    },
+                    complete: function () {
+                        // Always hide spinner when done (success or error)
+                        $('#loading-spinner').css('display', 'none');  // Hide
+                    }
+                });
+            });
+        });
+    </script>
+}

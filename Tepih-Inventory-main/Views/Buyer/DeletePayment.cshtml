@@ -1,0 +1,42 @@
+﻿@model Inventar.ViewModels.DeleteEditPaymentViewModel
+
+@{
+    ViewData["Title"] = "DeletePayment";
+}
+
+<h1>@Inventar.Resources.Resource.DeletePayment</h1>
+
+<h3>@Inventar.Resources.Resource.DeleteThis</h3>
+<div>
+    <dl class="row">
+        <dt class="col-sm-4">
+            @Html.DisplayNameFor(model => model.Id)
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DisplayFor(model => model.Id)
+        </dd>
+        <dt class="col-sm-4">
+            @Inventar.Resources.Resource.CustomerFullName
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DisplayFor(model => model.CustomerName)
+        </dd>
+        <dt class="col-sm-4">
+            @Inventar.Resources.Resource.Amount
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DisplayFor(model => model.Amount)
+        </dd>
+        <dt class="col-sm-4">
+            @Inventar.Resources.Resource.PaymentTime
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DisplayFor(model => model.PaymentTime)
+        </dd>
+    </dl>
+    <form asp-action="DeletePayment">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="@Inventar.Resources.Resource.Delete" class="btn btn-danger" /> |
+        <a asp-action="PaymentHistory" asp-route-id="@Model.BuyerId">@Inventar.Resources.Resource.BackToList</a>
+    </form>
+</div>

@@ -1,0 +1,98 @@
+﻿@model IEnumerable<Inventar.ViewModels.BuyerViewModel>
+
+<h2>@Inventar.Resources.Resource.Buyers</h2>
+
+<table id="BuyersTable" class="table stripe" style="font-weight:500">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>@Inventar.Resources.Resource.CustomerFullName</th>
+            <th>@Inventar.Resources.Resource.LeftToPay</th>
+            <th>@Inventar.Resources.Resource.BuysPerProduct</th>
+            <th>@Inventar.Resources.Resource.Payments</th>
+            <th>@Inventar.Resources.Resource.Buys</th>
+            <th></th>
+        </tr>
+        <tr class="filters">
+            <th><input style="width:5rem" type="text" placeholder="Id" /></th>
+            <th><input style="width:7.5rem" type="text" placeholder="Customer Name" /></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.CustomerFullName</td>
+                <td>@(item.LeftToPay - item.Paid)€</td>
+                <td>
+                    <a asp-action="PerProducts" asp-controller="Sales" asp-route-customerFullName="@item.CustomerFullName">
+                        @Inventar.Resources.Resource.BuysPerProduct
+                    </a>
+                </td>
+                <td>
+                    <a asp-action="PaymentHistory" asp-controller="Buyer" asp-route-id="@item.Id" data-loading="true">
+                        @Inventar.Resources.Resource.ViewPaymentHistory
+                    </a> | <a asp-area="" asp-controller="Buyer" asp-action="MakePayment" asp-route-id="@item.Id" style="color:green">@Inventar.Resources.Resource.AddPayment</a>
+
+                </td>
+                <td>
+                    <a asp-area="" asp-controller="Buyer" asp-action="ShowBuys" asp-route-id="@item.Id" data-loading="true">@Inventar.Resources.Resource.Buys</a>
+                </td>
+                <td>
+                    <a asp-area="" asp-controller="Buyer" asp-action="Delete" asp-route-id="@item.Id">@Inventar.Resources.Resource.Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#BuyersTable').DataTable({
+                "paging": true,
+                "pageLength": 10,
+                "order": [[0, "desc"]], // Sorts the first column (ID) in descending order
+                "orderCellsTop": true, // Ensures ordering is applied to the first row only
+                "fixedHeader": true // Keeps the filters visible when scrolling
+            });
+            $('#BuyersTable thead tr:eq(1) th').each(function (i) {
+                $('input', this).on('keyup change', function () {
+                    if (table.column(i).search() !== this.value) {
+                        table.column(i).search(this.value).draw();
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        td {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        th {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+        col {
+            border-style: ridge;
+        }
+
+        select {
+            margin-right: 0.5rem;
+        }
+
+        #BuyersTable {
+            margin: 0;
+            width: 100% !important;
+        }
+    </style>
+}
