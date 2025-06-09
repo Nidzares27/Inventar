@@ -20,16 +20,14 @@ namespace Inventar.Utils
 
         public Task<ProviderCultureResult> DetermineProviderCultureResult(HttpContext httpContext)
         {
-            // Try to get culture from the session
             var culture = httpContext.Session.GetString(CultureSessionKey);
             if (string.IsNullOrEmpty(culture))
             {
-                // If no culture is found, use the default
                 culture = "en-US";
             }
 
             var cultureInfo = new CultureInfo(culture);
-            var uiCultureInfo = new CultureInfo(culture); // You can customize UI culture if needed
+            var uiCultureInfo = new CultureInfo(culture);
 
             return Task.FromResult(new ProviderCultureResult(cultureInfo.Name, uiCultureInfo.Name));
         }

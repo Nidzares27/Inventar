@@ -2,18 +2,25 @@
 
 <h2>@Inventar.Resources.Resource.PaymentHistory - @ViewBag.CustomerName</h2>
 
-<table id="PaymentsTable" class="table stripe" style="font-weight:500">
+<table id="PaymentsTable" class="table stripe tabela" style="font-weight:500">
     <thead>
         <tr>
+            <th>#</th>
             <th>Id</th>
             <th>@Inventar.Resources.Resource.Time</th>
             <th>@Inventar.Resources.Resource.Amount</th>
+            <th>@Inventar.Resources.Resource.PaymentType</th>
             <th></th>
         </tr>
         <tr class="filters">
+            <th><input style="width:2rem" type="text" placeholder="" disabled></th>
             <th><input style="width:5rem" type="text" placeholder=""></th>
-            <th><input style="width:10rem" type="text" placeholder=""></th>
+            <th>
+                <input type="date" id="minDate" placeholder="From">
+                <input type="date" id="maxDate" placeholder="To">
+            </th>
             <th><input style="width:7rem" type="text" placeholder=""></th>
+            <th><input style="width:5rem" type="text" placeholder=""></th>
             <th></th>
         </tr>
     </thead>
@@ -21,9 +28,11 @@
         @foreach (var item in Model)
         {
             <tr>
+                <td></td>
                 <td>@item.Id</td>
-                <td>@item.PaymentTime</td>
+                <td>@item.PaymentTime.ToString("dd-MM-yyyy HH:mm:ss")</td>
                 <td>@item.Amount €</td>
+                <td>@item.PaymentType</td>
                 <td>
                     <a asp-area="" asp-controller="Buyer" asp-action="EditPayment" asp-route-id="@item.Id">@Inventar.Resources.Resource.Edit</a>
                     <a asp-area="" asp-controller="Buyer" asp-action="DeletePayment" asp-route-id="@item.Id">@Inventar.Resources.Resource.Delete</a>
@@ -32,50 +41,170 @@
         }
     </tbody>
 </table>
+
+<button id="downloadPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+
 <div>
     <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
 </div>
 @section Scripts {
+
     <script>
         $(document).ready(function () {
             var table = $('#PaymentsTable').DataTable({
                 "paging": true,
                 "pageLength": 10,
-                "order": [[0, "desc"]], // Sorts the first column (ID) in descending order
-                "orderCellsTop": true, // Ensures ordering is applied to the first row only
-                "fixedHeader": true, // Keeps the filters visible when scrolling
+                "order": [[1, "desc"]],
+                "orderCellsTop": true,
+                "fixedHeader": true,
             });
+
+            function parseCustomDate(dateString) {
+                if (!dateString) return null;
+
+                var parts = dateString.split(' ');
+                var dateParts = parts[0].split('-');
+                var timeParts = parts[1] ? parts[1].split(':') : [0, 0];
+
+                return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0], timeParts[1]);
+            }
+
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+
+                var minDate = $('#minDate').val();
+                var maxDate = $('#maxDate').val();
+                var purchaseTime = data[2];
+
+                var purchaseDate = parseCustomDate(purchaseTime);
+                if (!purchaseDate) return false;
+
+                var min = minDate ? new Date(minDate + "T00:00:00") : null;
+                var max = maxDate ? new Date(maxDate + "T23:59:59") : null;
+
+                if ((min === null || purchaseDate >= min) && (max === null || purchaseDate <= max)) {
+                    return true;
+                }
+                return false;
+            });
+
+            $('#minDate, #maxDate').on('change', function () {
+                table.draw();
+                updateTotals();
+            });
+
             $('#PaymentsTable thead tr:eq(1) th').each(function (i) {
                 $('input', this).on('keyup change', function () {
-                    if (table.column(i).search() !== this.value) {
-                        table.column(i).search(this.value).draw();
+                    if (i === 2) {
+                        return;
+                    }
+                    table.column(i).search(this.value).draw();
+                });
+            });
+
+            function updateTotals() {
+                var table = $('#PaymentsTable').DataTable();
+                var totalPrice = 0;
+
+                table.rows({ filter: 'applied' }).data().each(function (value, index) {
+                    totalPrice += parseFloat(value[3]) || 0;
+                });
+
+                $('#totalPrice').text(totalPrice.toFixed(2));
+            }
+
+            $('#PaymentsTable').after(`
+                                <div style="margin-top: 10px; font-weight: bold;">
+        @Inventar.Resources.Resource.Total: <span id="totalPrice">0.00</span>€
+                                </div>
+                            `);
+
+            table.on('draw', function () {
+                updateTotals();
+
+                let counter = 1;
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    var node = this.node();
+                    $('td:eq(0)', node).html(counter++);
+                });
+            });
+
+            updateTotals();
+            table.draw();
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#downloadPDF').on('click', function () {
+                var table = $('#PaymentsTable').DataTable();
+
+                var data = [];
+
+                table.rows({ search: 'applied' }).every(function () {
+                    var row = this.node();
+                    var rowData = [];
+                    $(row).find('td').each(function () {
+                        rowData.push($(this).text().trim());
+                    });
+                    data.push(rowData);
+                });
+
+                // Get filter values
+                var filters = {};
+                $('#PaymentsTable thead tr:eq(1) th').each(function (i) {
+                    var input = $(this).find('input');
+                    if (input.length > 0) {
+                        filters[i] = input.val();
+                    }
+                });
+
+                // Get date range
+                var minDate = $('#minDate').val();
+                var maxDate = $('#maxDate').val();
+
+                // Get heading text
+                var heading = $('h2').text();
+
+                // Get column headers (excluding last one)
+                var columnHeaders = [];
+                $('#PaymentsTable thead tr:eq(0) th').each(function (i, th) {
+                    if (i < $(this).closest('tr').children().length - 1) { // exclude last column
+                        columnHeaders.push($(th).text().trim());
+                    }
+                });
+
+                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+
+                $.ajax({
+                    url: '@Url.Action("GeneratePaymentHistoryPDF", "Pdf")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        heading: heading,
+                        data: data,
+                        filters: filters,
+                        minDate: minDate,
+                        maxDate: maxDate,
+                        columnHeaders: columnHeaders,
+                        totalPrice: totalPrice
+                    }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function (blob) {
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = 'Istorija_plaćanja.pdf';
+                        link.click();
                     }
                 });
             });
+
         });
     </script>
     <style>
-        td {
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-
-        th {
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-
-        col {
-            border-style: ridge;
-        }
-
-        select {
-            margin-right: 0.5rem;
-        }
-
-        #PaymentsTable {
-            margin: 0;
-            width: 100% !important;
+        #PaymentsTable thead tr:first-child th {
+            background-color: khaki;
         }
     </style>
 }

@@ -1,8 +1,83 @@
-﻿@{
+﻿@using Inventar.ViewModels.Login_Register
+@using Microsoft.AspNetCore.Http
+@model LoginViewModel
+<link rel="stylesheet" href="~/css/Login.css" asp-append-version="true" />
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-8 offset-sm-2 col-md-6 offset-md-3 ">
+            <p>
+                <h4 class="naslov" style="text-align:center">@Inventar.Resources.Resource.LogInToYourAccount</h4>
+            </p>
+            @if (TempData["Error"] != null)
+            {
+                <div class="col-md-12 alert alert-danger">
+                    <span><b>Sorry!</b> - @TempData["Error"]</span>
+                </div>
+            }
+            <div class="row" style="margin-top: 2rem;">
+                <div class="col-sm-12" style="margin-bottom: 2rem;">
+                    <form asp-action="Index">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label asp-for="EmailAddress" class="control-label">@Inventar.Resources.Resource.EmailAddress</label>
+                            <input asp-for="EmailAddress" class="form-control">
+                            <span asp-validation-for="EmailAddress" class="text-danger"></span>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label asp-for="Password" class="control-label">@Inventar.Resources.Resource.Password</label>
+                            <input asp-for="Password" class="form-control" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="form-group" style="display:flex">
+                            <div style="margin-bottom: auto; margin-top:auto; flex:1;">
+                                <input id="confirmBtn" class="btn btn-outline-success float right" style="width:-webkit-fill-available " type="submit" value="@Inventar.Resources.Resource.Log_in" />
+                            </div>
+@*                             <div style="margin-bottom: auto; margin-top:auto; flex:2">
+                                <a asp-controller="Home" asp-action="ForgotPassword" style="float:right">@Inventar.Resources.Resource.ForgotPassword</a>
+                            </div> *@
+                        </div>
+                    </form>
+                </div>
+@*                 <div class="col-sm-12" style="margin-bottom: 3rem; text-align:center">
+                    <p style="margin:auto">@Inventar.Resources.Resource.NoAccount <a asp-controller="Home" asp-action="Register">@Inventar.Resources.Resource.Register!</a></p>
+                </div> *@
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputs = document.querySelectorAll("input, select");
+
+            // Load saved values from sessionStorage
+            inputs.forEach(input => {
+                const id = input.id;
+                const savedValue = sessionStorage.getItem(id);
+
+                if (savedValue !== null) {
+                    input.value = savedValue; // Restore value from sessionStorage
+                } else {
+                    sessionStorage.setItem(id, input.value); // Store default value
+                }
+
+                // Save to sessionStorage on input change
+                input.addEventListener("input", function () {
+                    sessionStorage.setItem(id, this.value);
+                });
+
+                // Special case for <select> elements (ensure correct selection is displayed)
+                input.addEventListener("change", function () {
+                    sessionStorage.setItem(id, this.value);
+                });
+            });
+        });
+    </script>
+}

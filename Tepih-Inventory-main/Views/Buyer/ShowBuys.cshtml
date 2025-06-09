@@ -1,41 +1,41 @@
-﻿@model IEnumerable<Inventar.ViewModels.ProdajaViewModel>
+﻿@using Inventar.ViewModels.Shared
+@model IEnumerable<ProdajaViewModel>
 
-<h2>@Inventar.Resources.Resource.Buys: @Model.FirstOrDefault().CustomerFullName</h2>
+<h2>@Inventar.Resources.Resource.Buys: @if(Model.Count() != 0){@Model.FirstOrDefault().CustomerFullName}</h2>
 
-<table id="BuysTable" class="table stripe" style="font-weight:500">
+<table id="BuysTable" class="table stripe tabela" style="font-weight:500">
     <thead>
         <tr>
+            <th>#</th>
+            <th>@Inventar.Resources.Resource.SaleTime</th>
             <th>Id</th>
-@*             <th>Product ID</th>
-            *@
             <th>@Inventar.Resources.Resource.Name</th>
             <th>Model</th>
             <th>@Inventar.Resources.Resource.Color</th>
             <th>@Inventar.Resources.Resource.Size</th>
-            <th>@Inventar.Resources.Resource.M2PerProduct</th>
+            <th>m²</th>
             <th>@Inventar.Resources.Resource.M2Total</th>
-@*             <th>PriceM2</th>
-            <th>PriceUnit</th> *@
             <th>@Inventar.Resources.Resource.Quantity</th>
+            <th>@Inventar.Resources.Resource.Price</th>
             <th>@Inventar.Resources.Resource.TotalPrice</th>
-            <th>@Inventar.Resources.Resource.SaleTime</th>
             <th></th>
         </tr>
         <tr class="filters">
+            <th><input style="width:2rem" type="text" placeholder="" disabled></th>
+            <th>
+                <input type="date" id="minDate" placeholder="@Inventar.Resources.Resource.From">
+                <input type="date" id="maxDate" placeholder="@Inventar.Resources.Resource.To">
+            </th>
             <th><input style="width:5rem" type="text" placeholder="Id"></th>
             <th><input style="width:7.5rem" type="text" placeholder="Name"></th>
             <th><input style="width:5rem" type="text" placeholder="Model"></th>
             <th><input style="width:7.5rem" type="text" placeholder="Color"></th>
             <th><input style="width:5rem" type="text" placeholder="Size"></th>
-            <th><input style="width:5rem" type="text" placeholder="m2PerUnit"></th>
+            <th><input style="width:5rem" type="text" placeholder="m²"></th>
             <th><input style="width:5rem" type="text" placeholder="m2Total"></th>
             <th><input style="width:5rem" type="text" placeholder="Quantity"></th>
+            <th><input style="width:5rem" type="text" placeholder="Price"></th>
             <th><input style="width:5rem" type="text" placeholder="TotalPrice"></th>
-            <th>
-                @* <input type="text" placeholder="Sale Time"> *@
-                <input type="date" id="minDate" placeholder="@Inventar.Resources.Resource.From">
-                <input type="date" id="maxDate" placeholder="@Inventar.Resources.Resource.To">
-            </th>
             <th><input style="width:5rem" type="text" placeholder="" disabled></th>
         </tr>
     </thead>
@@ -43,27 +43,39 @@
         @foreach (var item in Model)
         {
             <tr>
+                <td></td>
+                <td>@item.VrijemeProdaje.ToString("dd-MM-yyyy HH:mm:ss")</td>
                 <td>@item.Id</td>
-@*                 <td>@item.TepihId</td>
- *@                <td>@item.Name</td>
+                <td>@item.Name</td>
                 <td>@item.Model</td>
                 <td>@item.Color</td>
-                <td>@item.Length X @item.Width</td>
-                <td>@Math.Round(item.M2PerUnit, 2)</td>
-                <td>@Math.Round(item.M2Total, 2)</td>
-@*                 <td>@item.PriceM2</td>
-                <td>@item.PriceUnit</td> *@
+                @if (item.PerM2 || (!item.PerM2 && (item.Width != null && item.Length != null)))
+                {
+                    <td>
+                        @($"{item.Width}X{item.Length}")
+                    </td>
+                }
+                @if (!item.PerM2 && (item.Width == null || item.Length == null))
+                {
+                    <td></td>
+                }
+                <td>@(item.PerM2 ? Math.Round((decimal)item.M2PerUnit, 2) : "")</td>
+                <td>@(item.PerM2 ? Math.Round((decimal)item.M2Total, 2) : "")</td>
                 <td>@item.Quantity</td>
-                <td>@Math.Round((item.PerM2 ? item.Price * item.M2Total : item.Price * item.Quantity),2)€</td>
-                <td>@item.VrijemeProdaje.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price€</td>
+                <td>@Math.Round((item.PerM2 ? item.Price * (decimal)item.M2Total : item.Price * item.Quantity), 2)€</td>
                 <td>
-                    <a href="@Url.Action("Edit", "Sales", new {id=item.Id, returnUrl = Context.Request.Path })">@Inventar.Resources.Resource.Edit</a>
-                    <a href="@Url.Action("Delete", "Sales", new {id=item.Id, returnUrl = Context.Request.Path })">@Inventar.Resources.Resource.Delete</a>
+                    <a href="@Url.Action("Edit", "Sales", new {id=item.Id, returnUrl = Context.Request.Path, returnFromDetails = ViewBag.ReturnUrl })">@Inventar.Resources.Resource.Edit</a>
+                    <a href="@Url.Action("Delete", "Sales", new {id=item.Id, returnUrl = Context.Request.Path, returnFromDetails = ViewBag.ReturnUrl })">@Inventar.Resources.Resource.Delete</a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+<div id="pdfDownloadContainer" style="margin-top:1rem;">
+    <button id="downloadBuysPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+</div>
+
 <div>
     <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
 </div>
@@ -74,123 +86,179 @@
             var table = $('#BuysTable').DataTable({
                 "paging": true,
                 "pageLength": 10,
-                "order": [[0, "desc"]], // Sorts the first column (ID) in descending order
-                "orderCellsTop": true, // Ensures ordering is applied to the first row only
-                "fixedHeader": true, // Keeps the filters visible when scrolling
+                "order": [[2, "desc"]],
+                "orderCellsTop": true,
+                "fixedHeader": true,
                 initComplete: function () {
-                    updateTotals(); // ✅ Call totals only after DataTable is initialized
+                    updateTotals();
                 }
             });
 
-            // ✅ Identify column indexes (⚠️ Adjust if needed)
-            var quantityColumnIndex = 7; // Adjust based on actual column position
-            var priceColumnIndex = 8;    // Adjust based on actual column position
-            var purchaseTimeColumnIndex = 9; // PurchaseTime column
+            var quantityColumnIndex = 9;
+            var priceColumnIndex = 11;
+            var m2ColumnIndex = 8;
 
-            // ✅ Custom function to parse `DD-MM-YYYY HH:MM:SS` into JavaScript Date
+
             function parseCustomDate(dateString) {
-                if (!dateString) return null; // Handle empty values
+                if (!dateString) return null;
 
-                // Split date and time
                 var parts = dateString.split(' ');
-                var dateParts = parts[0].split('-'); // [DD, MM, YYYY]
-                var timeParts = parts[1] ? parts[1].split(':') : [0, 0, 0]; // [HH, MM, SS]
+                var dateParts = parts[0].split('-');
+                var timeParts = parts[1] ? parts[1].split(':') : [0, 0, 0];
 
-                // Create Date object (YYYY, MM (0-based), DD, HH, MM, SS)
                 return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0], timeParts[1], timeParts[2]);
             }
 
-            // ✅ Custom filtering function for date range
             $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
 
-                var minDate = $('#minDate').val(); // Get "From" Date (YYYY-MM-DD)
-                var maxDate = $('#maxDate').val(); // Get "To" Date (YYYY-MM-DD)
-                var purchaseTime = data[9]; // 🔹 Column index of "PurchaseTime"
+                var minDate = $('#minDate').val();
+                var maxDate = $('#maxDate').val();
+                var purchaseTime = data[1];
 
-                // Convert table date to a Date object
                 var purchaseDate = parseCustomDate(purchaseTime);
-                if (!purchaseDate) return false; // false
+                if (!purchaseDate) return false;
 
-                var min = minDate ? new Date(minDate) : null;
-                var max = maxDate ? new Date(maxDate) : null;
+                var min = minDate ? new Date(minDate + "T00:00:00") : null;
+                var max = maxDate ? new Date(maxDate + "T23:59:59") : null;
 
-                // ✅ Apply filtering conditions
                 if ((min === null || purchaseDate >= min) && (max === null || purchaseDate <= max)) {
-                    return true; // ✅ Show row
+                    return true;
                 }
-                return false; // ❌ Hide row
+                return false;
             });
 
-            // ✅ Listen for changes in the date fields
             $('#minDate, #maxDate').on('change', function () {
-                table.draw(); // 🔄 Redraw the table
-                updateTotals(); // ✅ Update totals after filtering
+                table.draw();
+                updateTotals();
             });
-            // Add column-wise search
+
             $('#BuysTable thead tr:eq(1) th').each(function (i) {
                 $('input', this).on('keyup change', function () {
-                    if (i === 9) {
-                        return; // 🚫 Skip search() for date column
+                    if (i === 1) {
+                        return;
                     }
                     table.column(i).search(this.value).draw();
-                    // if (table.column(i).search() !== this.value) {
-                    //     table.column(i).search(this.value).draw();
-                    // }
                 });
             });
 
-            // ✅ Function to Calculate and Display Totals
             function updateTotals() {
-                var table = $('#BuysTable').DataTable(); // ✅ Ensure table is initialized
+                var table = $('#BuysTable').DataTable();
                 var totalQuantity = 0;
                 var totalPrice = 0;
+                var totalM2 = 0;
 
                 table.rows({ filter: 'applied' }).data().each(function (value, index) {
                     totalQuantity += parseFloat(value[quantityColumnIndex]) || 0;
                     totalPrice += parseFloat(value[priceColumnIndex]) || 0;
+                    totalM2 += parseFloat(value[m2ColumnIndex]) || 0;
                 });
 
-                // ✅ Update total values in the footer
                 $('#totalQuantity').text(totalQuantity);
-                $('#totalPrice').text(totalPrice.toFixed(2)); // Formatting price to 2 decimal places
+                $('#totalPrice').text(totalPrice.toFixed(2));
+                $('#totalM2').text(totalM2.toFixed(2));
             }
 
-            // ✅ Add totals row below the table
             $('#BuysTable').after(`
                         <div style="margin-top: 10px; font-weight: bold;">
-                            Total Quantity: <span id="totalQuantity">0</span> |
-                            Total Price: <span id="totalPrice">0.00</span>€
+        @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span> |
+        @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span>   |
+        @Inventar.Resources.Resource.PriceTotal: <span id="totalPrice">0.00</span>€
                         </div>
                     `);
 
-            // ✅ Update totals when table changes
             table.on('draw', function () {
                 updateTotals();
+
+                let counter = 1;
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    var node = this.node();
+                    $('td:eq(0)', node).html(counter++);
+                });
             });
+
+            updateTotals();
+            table.draw();
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#downloadBuysPDF').on('click', function () {
+                var table = $('#BuysTable').DataTable();
+
+                var data = [];
+
+                table.rows({ search: 'applied' }).every(function () {
+                    var row = this.node();
+                    var rowData = [];
+                    $(row).find('td').each(function () {
+                        rowData.push($(this).text().trim());
+                    });
+                    data.push(rowData);
+                });
+
+                // Get filter values
+                var filters = {};
+                $('#BuysTable thead tr:eq(1) th').each(function (i) {
+                    var input = $(this).find('input');
+                    if (input.length > 0) {
+                        filters[i] = input.val();
+                    }
+                });
+
+                // Get date range
+                var minDate = $('#minDate').val();
+                var maxDate = $('#maxDate').val();
+
+                // Get heading text
+                var heading = $('h2').text();
+
+                // Get column headers (excluding last one)
+                var columnHeaders = [];
+                $('#BuysTable thead tr:eq(0) th').each(function (i, th) {
+                    if (i < $(this).closest('tr').children().length - 1) { // exclude last column
+                        columnHeaders.push($(th).text().trim());
+                    }
+                });
+
+                // Get totals from your DOM or compute here
+                var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
+                var totalM2 = parseFloat($('#totalM2').text()) || 0;
+                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+
+                // Send data to server
+                $.ajax({
+                    url: '@Url.Action("GenerateBuysPdf", "Pdf")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        heading: heading,
+                        data: data,
+                        filters: filters,
+                        minDate: minDate,
+                        maxDate: maxDate,
+                        columnHeaders: columnHeaders,
+                        totalQuantity: totalQuantity,
+                        totalM2: totalM2,
+                        totalPrice: totalPrice
+                    }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function (blob) {
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = `Kupovine.pdf`;
+                        link.click();
+                    }
+                });
+            });
+
         });
     </script>
     <style>
-        td {
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-
-        th {
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-
-        col {
-            border-style: ridge;
-        }
-
-        select {
-            margin-right: 0.5rem;
-        }
-
-        #SalesTable {
-            margin: 0;
-            width: 100% !important;
+        #BuysTable thead tr:first-child th {
+            background-color: khaki;
         }
     </style>
 }

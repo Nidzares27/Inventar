@@ -1,0 +1,119 @@
+﻿@using Inventar.ViewModels.Shared
+@model IEnumerable<SaleDetailsViewModel>
+
+<h2>@Inventar.Resources.Resource.Sales</h2>
+<div style="margin-bottom: 20px;">
+    <h4>@Inventar.Resources.Resource.CustomerFullName: @ViewBag.CustomerFullName</h4>
+    <h4>@Inventar.Resources.Resource.SaleTime: @ViewBag.SaleTime</h4>
+</div>
+<table id="DetailsTable" class="table stripe tabela" style="font-weight:500">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>@Inventar.Resources.Resource.ProductNumber</th>
+            <th>@Inventar.Resources.Resource.Name</th>
+            <th>Model</th>
+            <th>@Inventar.Resources.Resource.Color</th>
+            <th>@Inventar.Resources.Resource.Size</th>
+            <th>@Inventar.Resources.Resource.M2PerProduct</th>
+            <th>@Inventar.Resources.Resource.M2Total</th>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <th>@Inventar.Resources.Resource.Price</th>
+            <th>@Inventar.Resources.Resource.TotalPrice</th>
+            <th></th>
+        </tr>
+        <tr class="filters">
+            <th><input style="width:5rem" type="text" placeholder="Id"></th>
+            <th><input style="width:5rem" type="text" placeholder="ProductNumber"></th>
+            <th><input style="width:7.5rem" type="text" placeholder="Name"></th>
+            <th><input style="width:5rem" type="text" placeholder="Model"></th>
+            <th><input style="width:7.5rem" type="text" placeholder="Color"></th>
+            <th><input style="width:5rem" type="text" placeholder="Size"></th>
+            <th><input style="width:5rem" type="text" placeholder="m2PerUnit"></th>
+            <th><input style="width:5rem" type="text" placeholder="m2Total"></th>
+            <th><input style="width:5rem" type="text" placeholder="Quantity"></th>
+            <th><input style="width:5rem" type="text" placeholder="Price"></th>
+            <th><input style="width:5rem" type="text" placeholder="TotalPrice"></th>
+            <th><input style="width:5rem" type="text" placeholder="" disabled></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.ProductNumber</td>
+                <td>@item.Name</td>
+                <td>@item.Model</td>
+                <td>@item.Color</td>
+                @if (item.PerM2 || (!item.PerM2 && (item.Width != null && item.Length != null)))
+                {
+                    <td>
+                        @($"{item.Width}X{item.Length}")
+                    </td>
+                }
+                @if (!item.PerM2 && (item.Width == null || item.Length == null))
+                {
+                    <td></td>
+                }
+                <td>@Math.Round((decimal)item.M2PerUnit, 2)</td>
+                <td>@Math.Round((decimal)item.M2Total, 2)</td>
+                <td>@item.Quantity</td>
+                <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price€</td>
+                <td>@Math.Round((item.PerM2 ? item.Price * (decimal)item.M2Total : item.Price * item.Quantity), 2)€</td>
+                <td>
+                    <a href="@Url.Action("Edit", "Sales", new {id=item.Id, returnUrl = Context.Request.Path })">@Inventar.Resources.Resource.Edit</a>
+                    <a href="@Url.Action("Delete", "Sales", new {id=item.Id, returnUrl = Context.Request.Path })">@Inventar.Resources.Resource.Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div style="margin-top: 10px; font-weight: bold;">
+    <strong>@Inventar.Resources.Resource.TotalQuantity: </strong><span id="totalQuantity"></span>   |
+    <strong>@Inventar.Resources.Resource.TotalPrice: </strong><span id="totalPrice"></span>€
+</div>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#DetailsTable').DataTable({
+                orderCellsTop: true,
+                fixedHeader: true
+            });
+
+            $('#DetailsTable thead tr:eq(1) th').each(function (i) {
+                $('input', this).on('keyup change', function () {
+                    if (table.column(i).search() !== this.value) {
+                        table.column(i).search(this.value).draw();
+                    }
+                });
+            });
+
+            function updateTotals() {
+                var data = table.rows({ search: 'applied' }).data();
+                var totalQuantity = 0;
+                var totalPrice = 0;
+
+                for (var i = 0; i < data.length; i++) {
+                    totalQuantity += parseInt(data[i][8]);
+                    totalPrice += parseFloat(data[i][10]);
+                }
+
+                $('#totalQuantity').text(totalQuantity);
+                $('#totalPrice').text(totalPrice.toFixed(2));
+            }
+
+            updateTotals();
+
+            table.on('draw', function () {
+                updateTotals();
+            });
+        });
+    </script>
+}

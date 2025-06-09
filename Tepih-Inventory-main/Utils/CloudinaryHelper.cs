@@ -20,7 +20,6 @@
             }
             catch (Exception ex)
             {
-                // Handle the exception as needed
                 throw new Exception("Invalid URL format", ex);
             }
 

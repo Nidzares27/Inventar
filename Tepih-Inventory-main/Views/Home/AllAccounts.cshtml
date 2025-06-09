@@ -1,0 +1,94 @@
+﻿@model IEnumerable<Inventar.ViewModels.Login_Register.UserWithRoleViewModel>
+
+@{
+    ViewData["Title"] = @Inventar.Resources.Resource.AllAccounts;
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<h2>@Inventar.Resources.Resource.AllAccounts</h2>
+<small id="passwordHelp" class="form-text text-muted">
+    @Inventar.Resources.Resource.PasswordRequirements
+</small>
+<table id="Nalozi" class="table stripe tabela" style="font-weight:500">
+    <thead class="thead-dark">
+        <tr>
+            <th >@Inventar.Resources.Resource.FirstName</th>
+            <th >@Inventar.Resources.Resource.LastName</th>
+            <th >Email</th>
+            <th >@Inventar.Resources.Resource.Role</th>
+            <th >@Inventar.Resources.Resource.NewPassword</th>
+            <th>@Inventar.Resources.Resource.Delete</th>
+        </tr>
+        <tr class="filters">
+            <th><input type="text" placeholder="" /></th>
+            <th><input type="text" placeholder="" /></th>
+            <th><input type="text" placeholder="" /></th>
+            <th><input type="text" placeholder="" /></th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            if (user.Role != "superadmin")
+            {
+                <tr>
+                    <td>@user.FirstName</td>
+                    <td>@user.LastName</td>
+                    <td>@user.Email</td>
+                    <td>@user.Role</td>
+                    <td>
+                        <form asp-action="ChangePassword" method="post" class="d-flex">
+                            <input type="hidden" name="email" value="@user.Email" />
+                            <input type="password"
+                                   id="newPassword"
+                                   name="newPassword"
+                                   placeholder=""
+                                   class="form-control me-2"
+                                   pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{6,}$"
+                                   title="Password must be at least 6 characters and include uppercase, lowercase, a digit, and a special character."
+                                   required />
+                            <button type="submit" id="rstBtn" class="btn btn-sm btn-warning">@Inventar.Resources.Resource.ResetPassword</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form asp-action="DeleteUser" method="post" onsubmit="return confirm('@Inventar.Resources.Resource.DeleteUser_');">
+                            <input type="hidden" name="email" value="@user.Email" />
+                            <button type="submit" class="btn btn-sm btn-danger">@Inventar.Resources.Resource.DeleteAccount</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+
+        }
+    </tbody>
+</table>
+@section Scripts {
+    <link rel="stylesheet" href="~/css/allAccounts.css" asp-append-version="true" />
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#Nalozi').DataTable({
+                "paging": true,
+                "pageLength": 10,
+                "order": [[0, "desc"]],
+                "orderCellsTop": true,
+                "fixedHeader": true,
+            });
+
+            $('#Nalozi thead tr:eq(1) th').each(function (i) {
+                $('input', this).on('keyup change', function () {
+                    table.column(i).search(this.value).draw();
+                });
+            });
+        });
+    </script>
+}

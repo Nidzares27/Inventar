@@ -1,27 +1,38 @@
-﻿@model Inventar.ViewModels.MakePaymentViewModel
+﻿@using Inventar.ViewModels.Buyer
+@model MakePaymentViewModel
+<link rel="stylesheet" href="~/css/MakePayment.css" asp-append-version="true" />
 
-<h2>@Inventar.Resources.Resource.AddPayment - @Model.Name</h2>
+<h2 class="naslov">@Inventar.Resources.Resource.AddPayment - @Model.Name</h2>
 <hr />
-<form asp-action="MakePayment" method="post">
-    <input type="hidden" class="form-control" asp-for="Id" />
-    <input type="hidden" class="form-control" asp-for="Name" />
-    <div class="form-group">
-        <label for="AmountPaid" >@Inventar.Resources.Resource.Amount: </label>
-        <input asp-for=AmountPaid type="number" style="width:5rem" step="0.1" min="0.1" required>
-        €
-    </div>
-    <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.AddPayment</button>
-</form>
-<div>
-    <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+<div style="margin-left: 1.5rem;">
+    <form asp-action="MakePayment" method="post">
+        <input type="hidden" class="form-control" asp-for="Id" />
+        <input type="hidden" class="form-control" asp-for="Name" />
+        <div class="form-group divZaAmount">
+            <label class="bigFont" for="AmountPaid">@Inventar.Resources.Resource.Amount: </label>
+            <input class="bigAmountInput" asp-for=AmountPaid type="number" step="0.1" min="0.1" required>
+            €
+        </div>
+        <div class="form-group" id="radioDiv">
+            <div class="row" style="height:100%; margin-left:1rem">
+                <div class="form-check" style="display: flex; align-items: center;">
+                    <input class="form-check-input" type="radio" name="PaymentType" asp-for="PaymentType" value="Cash" id="cash">
+                    <label class="form-check-label bigFont" for="cash" style="padding-left:1rem">
+                        @Inventar.Resources.Resource.Cash
+                    </label>
+                </div>
+                <div class="form-check" style="display: flex; align-items: center;">
+                    <input class="form-check-input" type="radio" name="PaymentType" asp-for="PaymentType" value="Virman" id="virman" checked>
+                    <label class="form-check-label bigFont" for="virman" style="padding-left:1rem">
+                        Virman
+                    </label>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-success addPaymentbtn">@Inventar.Resources.Resource.AddPayment</button>
+    </form>
 </div>
-<style>
-    input {
-        border: 2px solid blueviolet !important;
-    }
-    label{
-        margin-right:1rem;
-        font-size:large;
-        font-weight:700;
-    }
-</style>
+
+<div style="margin-left: 1.5rem;">
+    <a asp-action="Index" class="btn btn-secondary btn-sm backToListBtn" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+</div>

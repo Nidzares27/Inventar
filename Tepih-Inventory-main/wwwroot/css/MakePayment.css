@@ -1,0 +1,56 @@
+﻿input {
+    border: 2px solid blueviolet !important;
+}
+
+label {
+    margin-right: 1rem;
+    font-size: larger;
+    font-weight: 700;
+}
+
+/* ✅ Tablet-only styling */
+@media screen and (min-width: 768px) and (min-height: 768px) {
+    .bigFont {
+        font-size: 3rem;
+    }
+    hr{
+        margin-bottom:3rem;
+        margin-top:2rem;
+    }
+
+    #radioDiv {
+        margin-bottom: 3rem;
+    }
+
+    .form-check-input {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .bigAmountInput {
+        width: 14rem;
+        height: 3.5rem;
+        font-size: 2rem;
+    }
+
+    .addPaymentbtn {
+        width: 25rem;
+        height: 5rem;
+        font-size: 2rem;
+        margin-bottom:1.5rem;
+    }
+
+    .backToListBtn {
+        width: 20rem;
+        height: 4rem;
+        font-size: 2rem;
+    }
+
+    .divZaAmount {
+        font-size: 2rem;
+    }
+
+    .naslov {
+        font-size: 3rem;
+    }
+}

@@ -11,6 +11,15 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization.Routing;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Builder;
+using Inventar.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Inventar.Utils;
+using Microsoft.AspNetCore.Authorization;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,24 +31,53 @@ builder.Services.AddScoped<IKupacRepository, KupacRepository>();
 builder.Services.AddScoped<ISalesRepository,SalesRepository>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IPlacanjeRepository, PlacanjeRepository>();
-
-
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsPrincipalFactory>();
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TepihDb")));
 
+builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+})
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddRoles<IdentityRole>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddMemoryCache();
+
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(10); // Set session timeout
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout
     options.Cookie.HttpOnly = true; // Make the session cookie HTTP only
     options.Cookie.IsEssential = true; // Make the session cookie essential
-
 });
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Home/Index";
+    options.AccessDeniedPath = "/Home/Error";
+    options.SlidingExpiration = true;
+});
+
 
 var app = builder.Build();
 
+if (args.Length == 1 && args[0].ToLower() == "seeddata")
+{
+    await Seed.SeedUsersAndRolesAsync(app);
+    //Seed.SeedData(app);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -50,29 +88,38 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
-
 app.UseSession();
-
 app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
 
 app.Use(async (context, next) =>
 {
     string cookie = string.Empty;
+    string cultureName = "sr-Latn"; // Defaultni Jezik je bio : en
+
     if (context.Request.Cookies.TryGetValue("Language", out cookie))
     {
-        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo(cookie);
-        System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo(cookie);
+        cultureName = cookie;
     }
-    else
+
+    // Apply culture setting based on the session/cookie.
+    var culture = new CultureInfo(cultureName);
+
+    // Special handling for Serbian (sr-Latn), set decimal separator as period
+    if (culture.Name == "sr-Latn")
     {
-        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en");
-        System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en");
+        culture.NumberFormat.CurrencyDecimalSeparator = ".";
+        culture.NumberFormat.NumberDecimalSeparator = ".";
     }
+
+    // Set the culture globally
+    Thread.CurrentThread.CurrentCulture = culture;
+    Thread.CurrentThread.CurrentUICulture = culture;
+
     await next.Invoke();
 });
-
-app.UseAuthorization();
-
 
 app.MapControllerRoute(
     name: "default",

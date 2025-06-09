@@ -1,56 +1,144 @@
-﻿@model Inventar.ViewModels.PerProductViewModel
+﻿@using Inventar.ViewModels.Sales
+@model PerProductViewModel
 @if (Model.StartDate.HasValue && Model.EndDate.HasValue)
 {
-    <p>
-        <b style="color:mediumblue">@Model.StartDate.Value.ToString("dd-MM-yyyy")</b> ---
-        <b style="color:mediumblue">@Model.EndDate.Value.ToString("dd-MM-yyyy")</b>
+    <p id="dateStartEnd">
+        <b style="color:mediumblue">@Model.StartDate.Value.ToString("dd-MM-yyyy")</b> --- <b style="color:mediumblue">@Model.EndDate.Value.ToString("dd-MM-yyyy")</b>
     </p>
 }
 
 @if (Model.SalesReport != null && Model.SalesReport.Any())
 {
-    <table id="PerProductsTable" class="table stripe" style="font-weight:500">
-        <thead>
-            <tr>
-                <th>@Inventar.Resources.Resource.ProductID</th>
-                <th>@Inventar.Resources.Resource.Name</th>
-                <th>Model</th>
-                <th>@Inventar.Resources.Resource.Size</th>
-                <th>@Inventar.Resources.Resource.M2PerProduct</th>
-                <th>@Inventar.Resources.Resource.M2Total</th>
-                <th>@Inventar.Resources.Resource.Color</th>
-                <th>@Inventar.Resources.Resource.TotalQuantity</th>
-                <th>@Inventar.Resources.Resource.TotalPrice</th>
-            </tr>
-            <tr class="filters">
-                <th><input style="width:5rem" type="text" placeholder="Product ID"></th>
-                <th><input style="width:7.5rem" type="text" placeholder="Name"></th>
-                <th><input style="width:5rem" type="text" placeholder="Model"></th>
-                <th><input style="width:5rem" type="text" placeholder="Size"></th>
-                <th><input style="width:5rem" type="text" placeholder="M2PerProduct"></th>
-                <th><input style="width:5rem" type="text" placeholder="M2Total"></th>
-                <th><input style="width:7.5rem" type="text" placeholder="Color"></th>
-                <th><input style="width:5rem" type="text" placeholder="Total Quantity"></th>
-                <th><input style="width:5rem" type="text" placeholder="Total Price"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.SalesReport)
-            {
+    @if (Model.IsGrouped)
+    {
+        <table id="PerProductsTable" class="table stripe" style="font-weight:500">
+            <thead>
                 <tr>
-                    <td>@item.ProductId</td>
-                    <td>@item.Name</td>
-                    <td>@item.Model</td>
-                    <td>@item.Size</td>
-                    <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2))</td>
-                    <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.TotalQuantity), 2))</td>
-                    <td>@item.Color</td>
-                    <td>@item.TotalQuantity</td>
-                    <td>@string.Format("{0:F2}", item.TotalPrice)€</td>
+                    <th>#</th>
+                    <th>@Inventar.Resources.Resource.Name</th>
+                    <th>@Inventar.Resources.Resource.ProductNumber</th>
+                    <th>@Inventar.Resources.Resource.Size</th>
+                    <th>m²</th>
+                    <th>@Inventar.Resources.Resource.M2Total</th>
+                    <th>@Inventar.Resources.Resource.TotalQuantity</th>
+                    <th>@Inventar.Resources.Resource.TotalPrice</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+                <tr class="filters">
+                    <th><input style="width:2rem" type="text" placeholder="" disabled></th>
+                    <th><input style="width:7.5rem" type="text" placeholder="Name" /></th>
+                    <th><input style="width:5rem" type="text" placeholder="" /></th>
+                    <th><input style="width:5rem" type="text" placeholder="Size" /></th>
+                    <th><input style="width:5rem" type="text" placeholder="m²" /></th>
+                    <th><input style="width:5rem" type="text" placeholder="M2Total" /></th>
+                    <th><input style="width:5rem" type="text" placeholder="Total Quantity" /></th>
+                    <th><input style="width:5rem" type="text" placeholder="Total Price" /></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.SalesReport)
+                {
+                    decimal m2 = 0;
+                    decimal m2Total = 0;
+                    if (item.PerM2)
+                    {
+                        m2 = Math.Round(((decimal)item.Length * (decimal)item.Width) / 10000, 2);
+                        m2Total = Math.Round(m2 * item.TotalQuantity, 2);
+                    }
+                    <tr>
+                       <td></td>
+                       <td>
+                            @{
+                                var currentQuery = Context.Request.QueryString.ToString();
+                            }
+                            <a asp-action="DetailsGrouped" asp-controller="Sales"
+                               asp-route-name="@item.Name"
+                               asp-route-length="@item.Length"
+                               asp-route-width="@item.Width"
+                               asp-route-productNumber="@item.ProductNumber"
+                               asp-route-buyer="@Model.CustomerFullName"
+                               asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                               asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                               target="_blank">
+                                @item.Name
+                            </a>
+                        </td>
+                        <td>@item.ProductNumber</td>
+                        <td>@(item.Size ?? "")</td>
+                        <td>@(item.PerM2 ? m2 : "")</td>
+                        <td>@(item.PerM2 ? m2Total : "")</td>
+                        <td>@item.TotalQuantity</td>
+                        <td style="color:@(item.PerM2 ? "green" : "black")">@string.Format("{0:F2}", item.TotalPrice)€</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <table id="PerProductsTable" class="table stripe" style="font-weight:500">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>@Inventar.Resources.Resource.ProductID</th>
+                    <th>@Inventar.Resources.Resource.ProductNumber</th>
+                    <th>@Inventar.Resources.Resource.Name</th>
+                    <th>Model</th>
+                    <th>@Inventar.Resources.Resource.Color</th>
+                    <th>@Inventar.Resources.Resource.Size</th>
+                    <th>m²</th>
+                    <th>@Inventar.Resources.Resource.M2Total</th>
+                    <th>@Inventar.Resources.Resource.TotalQuantity</th>
+                    <th>@Inventar.Resources.Resource.TotalPrice</th>
+                </tr>
+                <tr class="filters">
+                    <th><input style="width:2rem" type="text" placeholder="" disabled></th>
+                    <th><input style="width:5rem" type="text" placeholder="Product ID"></th>
+                    <th><input style="width:5rem" type="text" placeholder=""></th>
+                    <th><input style="width:7.5rem" type="text" placeholder="Name"></th>
+                    <th><input style="width:5rem" type="text" placeholder="Model"></th>
+                    <th><input style="width:7.5rem" type="text" placeholder="Color"></th>
+                    <th><input style="width:5rem" type="text" placeholder="Size"></th>
+                    <th><input style="width:5rem" type="text" placeholder="m²"></th>
+                    <th><input style="width:5rem" type="text" placeholder="M2Total"></th>
+                    <th><input style="width:5rem" type="text" placeholder="Total Quantity"></th>
+                    <th><input style="width:5rem" type="text" placeholder="Total Price"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.SalesReport)
+                {
+                    <tr>
+                        <td></td>
+                        <td>
+                            <a asp-action="DetailsUngrouped"
+                                asp-route-productId="@item.ProductId"
+                                asp-route-productNumber="@item.ProductNumber"
+                                asp-route-name="@item.Name"
+                                asp-route-model="@item.Model"
+                                asp-route-size="@(item.Size ?? "")"
+                                asp-route-m2PerProduct="@(item.PerM2 ? (Math.Round((decimal)item.Length * (decimal)item.Width / 10000, 2)) : "")" 
+                                asp-route-color="@item.Color"
+                                asp-route-buyer="@Model.CustomerFullName"
+                                asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                                asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                                target="_blank">
+                                @item.ProductId
+                            </a>
+                        </td>
+                        <td>@item.ProductNumber</td>
+                        <td>@item.Name</td>
+                        <td>@item.Model</td>
+                        <td>@item.Color</td>
+                        <td>@(item.Size ?? "")</td>
+                        <td>@(item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : "")</td>
+                        <td>@(item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.TotalQuantity), 2) : "")</td>
+                        <td>@item.TotalQuantity</td>
+                        <td style="color:@(item.PerM2 ? "green" : "black")">@string.Format("{0:F2}", item.TotalPrice)€</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 }
 else
 {

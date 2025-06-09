@@ -1,5 +1,4 @@
-﻿@using Inventar.ViewModels;
-
+﻿@using Inventar.ViewModels.Inventory
 @model EditTepihViewModel
 @{
     ViewData["Title"] = "Edit";
@@ -62,9 +61,14 @@
                 <input asp-for="Price" step="any" class="form-control" />
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
+        <div class="col-sm-6">
+            <label asp-for="Description" class="control-label">@Inventar.Resources.Resource.Description</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
             <div class="col-12">
                 <input asp-for="PerM2" style="vertical-align:middle; width:2rem; height:2rem" />
-                <label asp-for="PerM2" style="vertical-align:middle; margin-bottom:0">@Inventar.Resources.Resource.PerM2</label>@* class="control-label" *@
+                <label asp-for="PerM2" style="vertical-align:middle; margin-bottom:0">@Inventar.Resources.Resource.PerM2</label>
                 <span asp-validation-for="PerM2" class="text-danger"></span>
             </div>
             <div class="col-12">
@@ -80,6 +84,10 @@
     label {
         font-weight: 700;
         margin-bottom: 0.2rem;
+    }
+
+    textarea {
+        border: 1.5px solid blueviolet !important;
     }
 
     input {

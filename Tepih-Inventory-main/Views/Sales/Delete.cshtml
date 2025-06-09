@@ -1,4 +1,5 @@
 ﻿@model Inventar.Models.Prodaja
+<link rel="stylesheet" href="~/css/DeleteSale.css" asp-append-version="true" />
 
 @{
     ViewData["Title"] = "Delete";
@@ -9,42 +10,42 @@
 <h3>@Inventar.Resources.Resource.DeleteThis</h3>
 <div>
     <hr />
-    <dl class="row">
-        <dt class="col-sm-4">
-            @Html.DisplayNameFor(model => model.Id)
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Id)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.ProductID
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.TepihId)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.CustomerFullName
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.CustomerFullName)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.SaleTime
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.VrijemeProdaje)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.Quantity
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Quantity)
-        </dd>
-    </dl>
+    <table class="custom-table">
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Id)</th>
+            <td>@Html.DisplayFor(model => model.Id)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.ProductID</th>
+            <td>@Html.DisplayFor(model => model.TepihId)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.CustomerFullName</th>
+            <td>@Html.DisplayFor(model => model.CustomerFullName)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.SaleTime</th>
+            <td>@Html.DisplayFor(model => model.VrijemeProdaje)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <td>@Html.DisplayFor(model => model.Quantity)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Seller</th>
+            <td>@Html.DisplayFor(model => model.Prodavac)</td>
+        </tr>
+    </table>
+
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="CustomerFullName" />
+        <input type="hidden" asp-for="VrijemeProdaje" />
         <input type="hidden" name="returnUrl" value="@Context.Request.Query["returnUrl"]" />
-        <input type="submit" value="@Inventar.Resources.Resource.Delete" class="btn btn-danger" /> |
-        <a href="@Context.Request.Query["returnUrl"]" class="btn btn-secondary btn-sm">@Inventar.Resources.Resource.BackToList</a>
+        <input type="hidden" name="returnFromDetails" value="@ViewBag.ReturnFromDetails" />
+        <input type="submit" value="@Inventar.Resources.Resource.Delete" class="btn btn-danger large-button" />
     </form>
+</div>
+<div>
+    <a href="@ViewBag.ReturnUrl" class="btn btn-secondary btn-sm large-button" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
 </div>

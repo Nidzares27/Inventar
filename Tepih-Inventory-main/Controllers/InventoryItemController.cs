@@ -11,7 +11,6 @@ using System.Data;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
-using Inventar.ViewModels;
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Http;
@@ -30,9 +29,15 @@ using System.IO;
 using iText.Layout.Properties;
 using Org.BouncyCastle.Crypto.Macs;
 using Microsoft.AspNetCore.Localization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
+using Inventar.ViewModels.Inventory;
+using iText.Kernel.Geom;
+using iText.Commons.Utils;
 
 namespace Inventar.Controllers
 {
+    [Authorize]
     public class InventoryItemController : Controller
     {
         private readonly ITepihRepository _tepihRepository;
@@ -55,7 +60,14 @@ namespace Inventar.Controllers
         public async Task<IActionResult> Index()
         {
             IEnumerable<Tepih> tepisi = await _tepihRepository.GetAll();
+
             return View(tepisi);
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            Tepih tepih = await _tepihRepository.GetByIdAsyncNoTracking(id);
+            return View(tepih);
         }
 
         [HttpGet]
@@ -65,43 +77,57 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
-        public async Task< IActionResult> Create(Tepih tepih)
+        public async Task<IActionResult> Create(Tepih tepih)
         {
-            ViewBag.OldProductUpdate = "";
             if (ModelState.IsValid)
             {
+                if (tepih.PerM2 && (tepih.Width == null || tepih.Length == null))
+                {
+                    TempData["MissingLengthWidth"] = "Proizvod koji se prodaje po m² mora imati Dužinu i Širinu!";
+                    return View(tepih);
+                }
+
                 var time = DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss");
 
-                // Generate QR Code for the item
-                var qrCodeImageUrl = await GenerateQRCode($"{time}");
-                var url = "";
+                //var qrCodeImageUrl = await GenerateQRCode($"{tepih.Name}/{tepih.Model}/{tepih.ProductNumber}/{tepih.Length}/{tepih.Width}/{tepih.Color}/{tepih.PerM2}/{tepih.Price}");
+                var qrCodeImageUrl = await GenerateQRCode($"{tepih.Name}/{tepih.Model}/{tepih.Width}/{tepih.Length}/{tepih.Color}");
 
+                var url = "";
                 if (qrCodeImageUrl is OkObjectResult okResult)
                 {
-                    // Retrieve the actual object from the OkObjectResult
                     var value = okResult.Value as dynamic;
-
-                    // Extract the URL from the object
                     url = value?.url;
                 }
 
-                var istiProizvod = await _context.Tepisi.Where(c => c.Name.Equals(tepih.Name) && c.Model.Equals(tepih.Model) && c.ProductNumber.Equals(tepih.ProductNumber) && c.Length.Equals(tepih.Length) && c.Width.Equals(tepih.Width) && c.Color.Equals(tepih.Color) && c.Price.Equals(tepih.Price)).ToListAsync();
-                if (istiProizvod.Count == 1) {
+                var istiProizvod = await _context.Tepisi
+                    .Where(c => c.Name == tepih.Name && c.Model == tepih.Model &&
+                                c.ProductNumber == tepih.ProductNumber &&
+                                c.Length == tepih.Length && c.Width == tepih.Width &&
+                                c.Color == tepih.Color && c.PerM2 == tepih.PerM2)
+                    .ToListAsync();
+
+                if (istiProizvod.Count == 1)
+                {
                     istiProizvod[0].Quantity += tepih.Quantity;
+                    istiProizvod[0].Price = tepih.Price;
                     _tepihRepository.Update(istiProizvod[0]);
-                    ViewBag.OldProductUpdate = "Proizvod koji ste pokusali da kreirate vec postoji. Istom ce biti azurirana kolicina, a ID ovog proizvoda je " + istiProizvod[0].Id;
-                    return View(tepih);
+                    tepih.Id = istiProizvod[0].Id;
                 }
                 else
                 {
                     tepih.QRCodeUrl = url;
                     tepih.DateTime = time;
                     _tepihRepository.Add(tepih);
-                    return RedirectToAction("GenerateCloudinaryImagePdf", "Pdf", tepih);
                 }
+
+                // Save changes and redirect with the ID only
+                await _context.SaveChangesAsync(); // or use _tepihRepository.SaveChangesAsync() if applicable
+                return RedirectToAction("GenerateCloudinaryImagePdf", "Pdf", new { id = tepih.Id });
             }
+
             return View(tepih);
         }
+
 
         public async Task<IActionResult> GenerateQRCode(string data)
         {
@@ -124,7 +150,7 @@ namespace Inventar.Controllers
             using (var bitmap = new Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
             {
                 // Copy the pixel data to the bitmap
-                var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, bitmap.PixelFormat);
+                var bitmapData = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, bitmap.PixelFormat);
                 try
                 {
                     System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
@@ -173,8 +199,92 @@ namespace Inventar.Controllers
 
         public IActionResult ProcessQRCode(string data)
         {
-            // Search for the inventory item based on the QR code data
-            var item = _context.Tepisi.FirstOrDefault(i => i.DateTime == data);
+            var extractData = data.Split("/");
+            //var extractData = data.Split("\\");
+
+            var item = new Tepih();
+
+            if (extractData.Length == 8) {
+                if (decimal.TryParse(extractData[7], out decimal value))
+                {
+                    int decimalPlaces = extractData[7].Contains(".") ? extractData[7].Split('.')[1].Length : 0;
+
+                    if (decimalPlaces == 1)
+                    {
+                        extractData[7] = value.ToString("F2");
+                    }
+                    if (decimalPlaces == 0)
+                    {
+                        extractData[7] = value.ToString("F2");
+                    }
+                    if (decimalPlaces >= 2)
+                    {
+                        extractData[7] = value.ToString("F2");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid decimal");
+                }
+
+                if (String.IsNullOrEmpty(extractData[3]) && String.IsNullOrEmpty(extractData[4]))
+                {
+                    var itemm = _context.Tepisi.FirstOrDefault(i => i.Name == extractData[0]
+                    && i.Model == extractData[1]
+                    && i.ProductNumber == extractData[2]
+                    && i.Color == extractData[5]
+                    && i.PerM2.ToString() == extractData[6]
+                    && i.Price.ToString() == extractData[7]);
+                    if (itemm == null)
+                    {
+                        return Json(new { success = false, message = "Product not found" });
+                    }
+                    item = itemm;
+                }
+                else
+                {
+                    var itemm = _context.Tepisi.FirstOrDefault(i => i.Name == extractData[0]
+                    && i.Model == extractData[1]
+                    && i.ProductNumber == extractData[2]
+                    && i.Length.ToString() == extractData[3]
+                    && i.Width.ToString() == extractData[4]
+                    && i.Color == extractData[5]
+                    && i.PerM2.ToString() == extractData[6]
+                    && i.Price.ToString() == extractData[7]);
+                    if (itemm == null)
+                    {
+                        return Json(new { success = false, message = "Product not found" });
+                    }
+                    item = itemm;
+                }
+            }
+            else if (extractData.Length == 5)
+            {
+                if (String.IsNullOrEmpty(extractData[2]) && String.IsNullOrEmpty(extractData[3]))
+                {
+                    var itemm = _context.Tepisi.FirstOrDefault(i => i.Name == extractData[0]
+                    && i.Model == extractData[1]
+                    && i.Color == extractData[4]);
+                    if (itemm == null)
+                    {
+                        return Json(new { success = false, message = "Product not found" });
+                    }
+                    item = itemm;
+                }
+                else
+                {
+                    var itemm = _context.Tepisi.FirstOrDefault(i => i.Name == extractData[0]
+                    && i.Model == extractData[1]
+                    && i.Length.ToString() == extractData[3]
+                    && i.Width.ToString() == extractData[2]
+                    && i.Color == extractData[4]);
+                    if (itemm == null)
+                    {
+                        return Json(new { success = false, message = "Product not found" });
+                    }
+                    item = itemm;
+                }
+            }
 
             if (item != null)
             {
@@ -189,7 +299,10 @@ namespace Inventar.Controllers
                 if (matchingvalue != null)
                 {
                     matchingvalue.Quantity++;
-                    matchingvalue.M2Total = ((decimal)((int)item.Length * (int)item.Width) / 10000) * matchingvalue.Quantity;
+                    if (matchingvalue.PerM2)
+                    {
+                        matchingvalue.M2Total = ((decimal)((int)item.Length * (int)item.Width) / 10000) * matchingvalue.Quantity;
+                    }
                 }
                 else
                 {
@@ -202,12 +315,11 @@ namespace Inventar.Controllers
                         Quantity = 1,
                         Length = item.Length,
                         Width = item.Width,
-                        M2PerUnit = Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2),
-                        M2Total = Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000),2),
+                        M2PerUnit = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : null,
+                        M2Total = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000),2) : null,
                         Color = item.Color,
                         Price = item.Price,
                         PerM2 = item.PerM2,
-
                     };
                     if (!tepihVM.PerM2)
                     {
@@ -216,19 +328,16 @@ namespace Inventar.Controllers
                     if (tepihVM.PerM2)
                     {
                         tepihVM.PriceTotal = Math.Round((decimal)(tepihVM.Price * tepihVM.M2Total), 2);
-
                     }
 
                     scannedProds.Add(tepihVM);
                 }
 
                 HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProds));
-                return Ok();
-            }
+                return Json(new { success = true });
 
-            // If not found, show an error or handle accordingly
-            ViewBag.Error = "QR Code not found!";
-            return View("Error");
+            }
+            return Json(new { success = false, message = "QR Code not recognized." });
         }
 
         [HttpPost]
@@ -246,10 +355,10 @@ namespace Inventar.Controllers
                 }
                 if (matchingvalue.PerM2)
                 {
-                    matchingvalue.PriceTotal = (matchingvalue.Price * matchingvalue.M2Total);
+                    matchingvalue.PriceTotal = (matchingvalue.Price * (decimal)matchingvalue.M2Total);
                 }
 
-                if (matchingvalue.Rabat != null /*|| matchingvalue.Rabat != 0*/)
+                if (matchingvalue.Rabat != null)
                 {
                     var rbt = (decimal)matchingvalue.Rabat / (decimal)100;
                     matchingvalue.PriceTotal -= rbt * matchingvalue.PriceTotal;
@@ -309,15 +418,15 @@ namespace Inventar.Controllers
                 Color = tepih.Color,
                 Price = tepih.Price,
                 PerM2 = tepih.PerM2,
-
+                Description = tepih.Description
             };
 
             return View(tepihVM);
         }
+
         [HttpPost]
         public async Task<IActionResult> Edit(int id, EditTepihViewModel tepihVM)
         {
-
             if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "Editovanje tepiha nije uspjelo");
@@ -342,7 +451,7 @@ namespace Inventar.Controllers
                     Color = tepihVM.Color,
                     Price = tepihVM.Price,
                     PerM2 = tepihVM.PerM2,
-
+                    Description = tepihVM.Description
                 };
 
                 _tepihRepository.Update(tepihEdit);
@@ -382,6 +491,30 @@ namespace Inventar.Controllers
             spovm.PurchaseTime = DateTime.ParseExact(purchTime.ToString("HH:mm:ss dd/MM/yyyy"), "HH:mm:ss dd/MM/yyyy", null);
             spovm.Products = GetScannedProducts();
 
+            //var firstName = User.FindFirstValue(ClaimTypes.GivenName);
+            //var lastName = User.FindFirstValue(ClaimTypes.Surname);
+            var fullName = User.FindFirstValue(ClaimTypes.Name);
+            var firstName = "";
+            var lastName = "";
+
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                var index = fullName.Skip(1)
+                                    .Select((c, i) => new { c, i })
+                                    .FirstOrDefault(x => char.IsUpper(x.c))?.i;
+
+                if (index != null)
+                {
+                    index += 1; // adjust because we skipped first char
+                    firstName = fullName.Substring(0, index.Value);
+                    lastName = fullName.Substring(index.Value);
+                }
+                else
+                {
+                    firstName = fullName; // fallback if no capital letter found
+                }
+            }
+
             decimal toPay = 0;
             foreach (var prod in spovm.Products)
             {
@@ -392,6 +525,8 @@ namespace Inventar.Controllers
                     CustomerFullName = spovm.FullName,
                     VrijemeProdaje = spovm.PurchaseTime,
                     Price = prod.Price,
+                    PlannedPaymentType = spovm.PlannedPaymentType,
+                    Prodavac = $"{firstName} {lastName}"
                 };
                 _salesRepository.Add(sale);
 
@@ -417,43 +552,37 @@ namespace Inventar.Controllers
                 var kupacc = await _kupacRepository.GetByNameAsync(spovm.FullName);
                 kupacc.LeftToPay += toPay;
             }
-            Placanje placanje = new Placanje()
-            {
-                CustomerName = spovm.FullName,
-                PaymentTime = spovm.PurchaseTime,
-                Amount = spovm.AmountPaid
-            };
-            _placanjeRepository.Add(placanje);
+
             if (spovm.PrintPDF)
             {
                 using (MemoryStream stream = new MemoryStream())
                 {
                     PdfWriter writer = new PdfWriter(stream);
                     PdfDocument pdf = new PdfDocument(writer);
-                    Document document = new Document(pdf);
+                    Document document = new Document(pdf, PageSize.A5);
 
-                    // Add Customer Name and Date
-                    document.Add(new iText.Layout.Element.Paragraph($"Kupac: {spovm.FullName}"));
-                    document.Add(new iText.Layout.Element.Paragraph($"Datum: {spovm.PurchaseTime}"));
+                    // Optional: Set smaller margins for A5
+                    document.SetMargins(20, 10, 20, 10); // top, right, bottom, left
+                    document.SetFontSize(7);
+
+                    document.Add(new iText.Layout.Element.Paragraph($"Prodavac: {firstName} {lastName}").SetMarginBottom(1));
+                    document.Add(new iText.Layout.Element.Paragraph($"Kupac: {spovm.FullName}").SetMarginBottom(1));
+                    document.Add(new iText.Layout.Element.Paragraph($"Datum: {spovm.PurchaseTime}").SetMarginBottom(1));
                     document.Add(new iText.Layout.Element.Paragraph("\n"));
 
-                    // Create Table
-                    //Table table = new Table(9).UseAllAvailableWidth();
-                    //string[] headers = { "Id", "Ime", "Model", "Velicina", "m² ukupno", "Boja", "Cijena", "Kolicina", "Ukupna cijena" };
                     Table table = new Table(8).UseAllAvailableWidth();
-                    string[] headers = {"Sifra", "Ime", "Cijena", "Velicina", "Kolicina", "m²", "m² ukupno", "Ukupna cijena" };
-
+                    string[] headers = { "Sifra", "Ime", "Cijena", "Velicina", "Kol.", "m²", "ukupno m²", "Iznos" };
 
                     foreach (var header in headers)
                     {
                         table.AddHeaderCell(new Cell()
                             .Add(new iText.Layout.Element.Paragraph(header))
-                            .SetTextAlignment(TextAlignment.CENTER)  // Horizontal Center
-                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)  // Vertical Center
+                            .SetTextAlignment(TextAlignment.CENTER)
+                            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                             .SetBold()
                             .SetBackgroundColor(iText.Kernel.Colors.ColorConstants.LIGHT_GRAY)
-                            .SetPadding(5)
-                            .SetHeight(25)); // Adjust height if needed
+                            .SetPadding(1)
+                            .SetHeight(10));
                     }
                     var query = from product in spovm.Products
                                 group new { product } by new
@@ -470,12 +599,12 @@ namespace Inventar.Controllers
                                 {
                                     ProductNumber = grouped.Key.ProductNumber,
                                     Name = grouped.Key.Name,
-                                    Price = grouped.Average(g=>g.product.Price),
+                                    Price = grouped.Average(g => g.product.Price),
                                     Length = grouped.Key.Length,
                                     Width = grouped.Key.Width,
-                                    Size = $"{grouped.Key.Length} X {grouped.Key.Width}",
-                                    M2PerUnit = grouped.Key.M2PerUnit,
-                                    M2Total = grouped.Sum(g => g.product.M2Total),
+                                    Size = grouped.Key.Length != null && grouped.Key.Width != null ? $"{grouped.Key.Width}X{grouped.Key.Length}" : "",
+                                    M2PerUnit = grouped.Key.Length != null && grouped.Key.Width != null ? grouped.Key.M2PerUnit : null,
+                                    M2Total = grouped.Key.Length != null && grouped.Key.Width != null ? grouped.Sum(g => g.product.M2Total) : null,
                                     Quantity = grouped.Sum(g => g.product.Quantity),
                                     PriceTotal = grouped.Sum(g => g.product.PriceTotal)
                                 };
@@ -483,65 +612,43 @@ namespace Inventar.Controllers
                     var salesReport = query.ToList();
 
                     decimal? totalSum = 0;
-                    decimal totalM2 = 0;
+                    decimal? totalM2 = 0;
                     int totalQuantity = 0;
-                    // Add Table Data
+
                     foreach (var item in salesReport)
                     {
                         table.AddCell(CreateCenteredCell(item.ProductNumber));
                         table.AddCell(CreateCenteredCell(item.Name));
-                        table.AddCell(CreateCenteredCell(Math.Round(item.Price,2).ToString() + "€"));
-                        //table.AddCell(CreateCenteredCell(item.Length + "X" + item.Width));
+                        table.AddCell(CreateCenteredCell(Math.Round(item.Price, 2).ToString() + "€"));
                         table.AddCell(CreateCenteredCell(item.Size));
                         table.AddCell(CreateCenteredCell(item.Quantity.ToString()));
                         table.AddCell(CreateCenteredCell(item.M2PerUnit.ToString()));
                         table.AddCell(CreateCenteredCell(item.M2Total.ToString()));
                         table.AddCell(CreateCenteredCell(Math.Round(item.PriceTotal, 2).ToString() + "€"));
 
-                        totalSum += item.PriceTotal; // Calculate total
+                        totalSum += item.PriceTotal;
                         totalM2 += item.M2Total;
                         totalQuantity += item.Quantity;
                     }
 
-                    //decimal? totalSum = 0;
-                    //// Add Table Data
-                    //foreach (var item in spovm.Products)
-                    //{
-                    //    table.AddCell(CreateCenteredCell(item.Id.ToString()));
-                    //    table.AddCell(CreateCenteredCell(item.Name));
-                    //    table.AddCell(CreateCenteredCell(item.Model));
-                    //    table.AddCell(CreateCenteredCell(item.Length + "X" + item.Width));
-                    //    table.AddCell(CreateCenteredCell(item.M2Total.ToString()));
-                    //    table.AddCell(CreateCenteredCell(item.Color));
-                    //    table.AddCell(CreateCenteredCell(item.Price.ToString() + "€"));
-                    //    table.AddCell(CreateCenteredCell(item.Quantity.ToString()));
-                    //    table.AddCell(CreateCenteredCell(Math.Round(item.PriceTotal,2).ToString() + "€"));
-
-                    //    totalSum += item.PriceTotal; // Calculate total
-                    //}
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell("UKUPNO:"));
                     table.AddCell(CreateCenteredBoldCell(totalQuantity.ToString()));
                     table.AddCell(CreateCenteredBoldCell(""));
-                    table.AddCell(CreateCenteredBoldCell(Math.Round(totalM2, 2).ToString()));
+                    table.AddCell(CreateCenteredBoldCell(Math.Round((decimal)totalM2, 2).ToString()));
                     table.AddCell(CreateCenteredBoldCell(Math.Round((decimal)totalSum, 2).ToString() + "€"));
                     document.Add(table);
-
-                    // Add Total Sum Below the Table (Right-Aligned)
-                    //document.Add(new iText.Layout.Element.Paragraph($"Total: {Math.Round((decimal)totalSum,2)}€")
-                    //    .SetTextAlignment(TextAlignment.RIGHT)
-                    //    .SetBold()
-                    //    .SetMarginTop(10));
                     document.Close();
 
                     return File(stream.ToArray(), "application/pdf", "OrderDetails.pdf");
                 }
             }
-
-            return RedirectToAction("Index", "Sales");
+            TempData["SuccessMessage"] = "Uspješna prodaja";
+            return View("ScannedProductsToBePurchased", spovm);
         }
+
         [HttpPost]
         public IActionResult DeleteScannedProduct(int id)
         {
@@ -570,15 +677,21 @@ namespace Inventar.Controllers
                 {
                     item.Quantity -= 1;
                 }
-                item.M2Total = item.Quantity * item.M2PerUnit;
+
+                if (item.PerM2)
+                {
+                    item.M2Total = item.Quantity * item.M2PerUnit;
+                }
+
                 if (!item.PerM2)
                 {
                     item.PriceTotal = item.Price * item.Quantity;
                 }
-                if (item.PerM2)
+                else
                 {
-                    item.PriceTotal = (item.Price * item.M2Total);
+                    item.PriceTotal = (item.Price * (decimal)item.M2Total);
                 }
+
                 HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProds));
                 var response = new
                 {
@@ -586,8 +699,7 @@ namespace Inventar.Controllers
                     m2Total = item.M2Total,
                 };
 
-                return Json(response) ; // Return updated quantity to update UI
-                //item.Quantity
+                return Json(response) ;
             }
             return NotFound();
         }
@@ -603,15 +715,14 @@ namespace Inventar.Controllers
             return Json(matches);
         }
 
-        // Helper Method for Centering Cell Text
         private Cell CreateCenteredCell(string text)
         {
             return new Cell()
                 .Add(new iText.Layout.Element.Paragraph(text))
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                    .SetPadding(5)
-                    .SetHeight(25); // Ensures text is vertically centered
+                    .SetPadding(1)
+                    .SetHeight(10);
         }
         private Cell CreateCenteredBoldCell(string text)
         {
@@ -619,31 +730,31 @@ namespace Inventar.Controllers
                 .Add(new iText.Layout.Element.Paragraph(text))
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                    .SetPadding(5)
-                    .SetHeight(25) // Ensures text is vertically centered
+                    .SetPadding(1)
+                    .SetHeight(10)
                     .SetBold();
         }
         public IActionResult ManuallyAddProduct(int id)
         {
-            // Search for the inventory item based on the QR code data
-            //var item = await _tepihRepository.GetByIdAsyncNoTracking(id);
             var item = _context.Tepisi.FirstOrDefault(i => i.Id == id);
-
+            if (item == null)
+            {
+                TempData["ProductNotFound"] = "Product not found!";
+                return RedirectToAction("QRCodeScanning");
+            }
 
             if (item != null)
             {
                 List<ScannedProductViewModel> scannedProds = GetScannedProducts();
                 var matchingvalue = scannedProds.FirstOrDefault(i => i.Id == item.Id);
 
-                //bool isPageReload = Request.Headers["Cache-Control"].ToString().Contains("max-age=0");
-                //if (isPageReload)
-                //{
-                //    return View("QRCodeScanning", scannedProds);
-                //}
                 if (matchingvalue != null)
                 {
                     matchingvalue.Quantity++;
-                    matchingvalue.M2Total = ((decimal)((int)item.Length * (int)item.Width) / 10000) * matchingvalue.Quantity;
+                    if (matchingvalue.PerM2)
+                    {
+                        matchingvalue.M2Total = ((decimal)((int)item.Length * (int)item.Width) / 10000) * matchingvalue.Quantity;
+                    }
                 }
                 else
                 {
@@ -656,12 +767,11 @@ namespace Inventar.Controllers
                         Quantity = 1,
                         Length = item.Length,
                         Width = item.Width,
-                        M2PerUnit = Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2),
-                        M2Total = Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2),
+                        M2PerUnit = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : null,
+                        M2Total = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : null,
                         Color = item.Color,
                         Price = item.Price,
                         PerM2 = item.PerM2,
-
                     };
                     if (!tepihVM.PerM2)
                     {
@@ -676,13 +786,18 @@ namespace Inventar.Controllers
                 }
 
                 HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProds));
-                //return Ok();
                 return RedirectToAction("QRCodeScanning","InventoryItem");
             }
 
-            // If not found, show an error or handle accordingly
             ViewBag.Error = "QR Code not found!";
             return View("Error");
+        }
+
+        [HttpPost]
+        public IActionResult ClearSession()
+        {
+            HttpContext.Session.Remove("scannedProducts");
+            return Ok();
         }
     }
 }

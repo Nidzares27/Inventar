@@ -1,0 +1,72 @@
+﻿@using Inventar.ViewModels.Buyer
+@model BuyerActivityViewModel
+
+@{
+    ViewData["Title"] = "Buyer Activity";
+}
+
+<h2>@Inventar.Resources.Resource.ActivityFor @Model.BuyerName</h2>
+
+<form asp-action="BuyerActivity" method="get" class="mb-4">
+    <input type="hidden" name="buyerId" value="@Model.BuyerId" />
+    <div class="row">
+        <div class="col-md-3">
+            <label>@Inventar.Resources.Resource.StartDate</label>
+            <input type="date" id="minDate" class="form-control" name="startDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-3">
+            <label>@Inventar.Resources.Resource.EndDate</label>
+            <input type="date" id="maxDate" class="form-control" name="endDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-3 align-self-end">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </div>
+</form>
+
+<div id="activityTable">
+    @await Html.PartialAsync("_ActivityTable", Model.Activities)
+</div>
+
+<div class="mt-4">
+    <strong>@Inventar.Resources.Resource.TotalDebt: </strong><span id="totalDbt">@Math.Round(@Model.TotalDebt, 2)€</span>
+</div>
+
+<div>
+    <form asp-controller="Pdf" asp-action="ExportBuyerActivity" method="get" class="mt-3">
+        <input type="hidden" name="buyerId" value="@Model.BuyerId" />
+        <input type="hidden" name="startDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="endDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+        <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.Download PDF</button>
+    </form>
+    <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#ActivitiesTable').DataTable({
+                "paging": true,
+                "pageLength": 25,
+                "order": [[1, "desc"]],
+                "orderCellsTop": true,
+                "fixedHeader": true,
+            });
+
+            table.on('draw', function () {
+                var counter = 1;
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    var node = this.node();
+                    $('td:eq(0)', node).html(counter++);
+                });
+            });
+
+            table.draw();
+        });
+    </script>
+    <style>
+        #ActivitiesTable thead tr:first-child th {
+            background-color: khaki;
+        }
+    </style>
+}

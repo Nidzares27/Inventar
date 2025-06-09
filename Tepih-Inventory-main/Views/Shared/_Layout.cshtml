@@ -20,28 +20,66 @@
                 </button>
                     <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" id="navbarToggleExternalContent">
                     <ul class="nav nav-tabs" style="border-bottom:none !important">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">@Inventar.Resources.Resource.Inventory</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-area="" asp-controller="InventoryItem" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.QRCodes</a></li>
-                                <li><a class="dropdown-item" asp-area="" asp-controller="InventoryItem" asp-action="Create">@Inventar.Resources.Resource.CreateProduct</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">@Inventar.Resources.Resource.Sales</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.Sales</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="PerProducts">@Inventar.Resources.Resource.PerProducts</a></li>
-                                <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="PerDay">@Inventar.Resources.Resource.PerDay</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Buyer" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.Buyers</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/InventoryItem/QRCodeScanning">Scan QR</a>
-                        </li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item ">
+                                <a class="nav-link " asp-area="" asp-controller="Home" asp-action="Logout">
+                                    <button class="btn btn-sm btn-outline-danger">@Inventar.Resources.Resource.Logout</button>
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item ">
+                                <a class="nav-link  @(ViewData["ActivePage"] as string == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">@Inventar.Resources.Resource.Login</a>
+                            </li>
+                        }
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">@Inventar.Resources.Resource.Inventory</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="InventoryItem" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.QRCodes</a></li>
+                                    @if (User.IsInRole("admin"))
+                                    {
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="InventoryItem" asp-action="Create">@Inventar.Resources.Resource.CreateProduct</a></li>
+                                    }
+                                </ul>
+                            </li>
+                            @if (User.IsInRole("admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">@Inventar.Resources.Resource.Sales</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.SalesGrouped</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="AllSales" data-loading="true">@Inventar.Resources.Resource.Sales</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="PerProducts">@Inventar.Resources.Resource.PerProducts</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="PerDay">@Inventar.Resources.Resource.PerDay</a></li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Buyer" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.Buyers</a>
+                                </li>
+                            }
+                            @if (User.IsInRole("admin") || User.IsInRole("employee"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/InventoryItem/QRCodeScanning">Scan QR</a>
+                                </li>
+                            }
+                            @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">@Inventar.Resources.Resource.Accounts</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Register" data-loading="true">@Inventar.Resources.Resource.CreateAccount</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="AllAccounts" data-loading="true">@Inventar.Resources.Resource.AllAccounts</a></li>
+                                    </ul>
+                                </li>
+                            }
+                        }
+
                         <li class="nav-item ms-auto d-flex align-items-center">
                             <div class="dropdown">
                                 <a class="nav-link dropdown-toggle btn btn-sm btn-primary py-1 px-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -119,5 +157,36 @@
         height: 90px !important;
         width: 90px !important;
         animation-timing-function: ease !important;
+    }
+
+    input[readonly] {
+        background-color: #f0f0f0; /* Light grey background */
+        border: 1px solid #ccc; /* Optional: subtle border */
+        color: #555; /* Dim the text color slightly */
+        font-style: italic; /* Optional: makes it clear it's informational */
+        cursor: not-allowed; /* Indicates it can't be edited */
+    }
+
+    td {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    th {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    col {
+        border-style: ridge;
+    }
+
+    select {
+        margin-right: 0.5rem;
+    }
+
+    .tabela{
+        margin: 0;
+        width: 100% !important;
     }
 </style>

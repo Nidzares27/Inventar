@@ -1,5 +1,4 @@
-﻿@using Inventar.ViewModels;
-
+﻿@using Inventar.ViewModels.Sales
 @model EditProdajaViewModel
 @{
     ViewData["Title"] = "Edit";
@@ -15,6 +14,7 @@
         <input type="hidden" id="Length" asp-for="Length" />
         <input type="hidden" id="Width" asp-for="Width" />
         <input type="hidden" id="PerM2" asp-for="PerM2" />
+        <input type="hidden" name="returnFromDetails" value="@ViewBag.ReturnFromDetails" />
         <input type="hidden" name="returnUrl" value="@Context.Request.Query["returnUrl"]" />
         <div class="col-sm-3">
             <label asp-for="TepihId" class="control-label">@Inventar.Resources.Resource.ProductID</label>
@@ -31,24 +31,33 @@
             <input asp-for="CustomerFullName" class="form-control" />
             <span asp-validation-for="CustomerFullName" class="text-danger"></span>
         </div>
-        <div class="col-sm-12">
+        <div class="col-sm-6">
             <label asp-for="VrijemeProdaje" class="control-label">@Inventar.Resources.Resource.SaleTime</label>
             <input asp-for="VrijemeProdaje" class="form-control" readonly />
             <span asp-validation-for="VrijemeProdaje" class="text-danger"></span>
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-6">
+            <label asp-for="Prodavac" class="control-label">@Inventar.Resources.Resource.Seller</label>
+            <input asp-for="Prodavac" class="form-control" readonly />
+            <span asp-validation-for="Prodavac" class="text-danger"></span>
+        </div>
+        <div class="col-sm-3">
+            <label class="control-label">@Inventar.Resources.Resource.Size</label>
+            <input id="Size" class="form-control" value="@(Model.PerM2 ? $"{Model.Width}X{Model.Length}" : null)" readonly />
+        </div>
+        <div class="col-sm-3">
             <label asp-for="M2Total" class="control-label">@Inventar.Resources.Resource.M2Total</label>
             <input asp-for="M2Total" id="M2Total" class="form-control" readonly />
             <span asp-validation-for="M2Total" class="text-danger"></span>
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-3">
             <label asp-for="Price" class="control-label">@Inventar.Resources.Resource.Price</label>
             <input asp-for="Price" type="number" id="Price" class="form-control" readonly />
             <span asp-validation-for="Price" class="text-danger"></span>
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-3">
             <label class="control-label">@Inventar.Resources.Resource.TotalPrice</label>
-            <input type="number" step="any" min="0.1" class="form-control" id="TotalPrice" value="@Math.Round((Model.PerM2 ? Model.Price * Model.M2Total : Model.Price * Model.Quantity),2)" />
+            <input type="number" step="any" min="0.1" class="form-control" id="TotalPrice" value="@Math.Round((Model.PerM2 ? Model.Price * (decimal)Model.M2Total : Model.Price * Model.Quantity),2)" /> @* DODAT DECIMAL CAST *@
         </div>
         <div class="col-sm-3">
             <input type="submit" value="@Inventar.Resources.Resource.Edit" class="btn btn-primary" />
@@ -57,7 +66,7 @@
 </div>
 
 <div>
-    <a href="@Context.Request.Query["returnUrl"]" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+    <a href="@ViewBag.ReturnUrl" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
 </div>
 <style>
     label{
@@ -79,11 +88,6 @@
             let length = parseInt($("#Length").val()) || 0;
             let width = parseInt($("#Width").val()) || 0;
             let perM2 = $("#PerM2").val()
-
-            console.log(length);
-            console.log(quantity);
-            console.log(perM2);
-
 
             if (perM2 == "True") {
                 m2Total = (length * width / 10000) * quantity

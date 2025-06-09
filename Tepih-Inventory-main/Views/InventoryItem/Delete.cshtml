@@ -1,4 +1,5 @@
 ﻿@model Inventar.Models.Tepih
+<link rel="stylesheet" href="~/css/Details.css" asp-append-version="true" />
 
 @{
     ViewData["Title"] = "Delete";
@@ -9,74 +10,72 @@
 <h3>@Inventar.Resources.Resource.DeleteThis</h3>
 <div>
     <hr />
-    <dl class="row">
-        <dt class="col-sm-4">
-            @Html.DisplayNameFor(model => model.Id)
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Id)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.Name
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.ProductNumber
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.ProductNumber)
-        </dd>
-        <dt class="col-sm-4">
-            @Html.DisplayNameFor(model => model.Model)
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Model)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.DateTime
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.DateTime)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.Quantity
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Quantity)
-        </dd>
-        <dt class="col-sm-4">
-            @Html.DisplayNameFor(model => model.QRCodeUrl)
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.QRCodeUrl)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.Length
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Length)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.Width
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Width)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.Color
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Color)
-        </dd>
-        <dt class="col-sm-4">
-            @Inventar.Resources.Resource.Price
-        </dt>
-        <dd class="col-sm-8">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-    </dl>
+    <table class="custom-table">
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Id)</th>
+            <td>@Html.DisplayFor(model => model.Id)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Name</th>
+            <td>@Html.DisplayFor(model => model.Name)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.ProductNumber</th>
+            <td>@Html.DisplayFor(model => model.ProductNumber)</td>
+        </tr>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Model)</th>
+            <td>@Html.DisplayFor(model => model.Model)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.DateTime</th>
+            <td>@Html.DisplayFor(model => model.DateTime)</td>
+        </tr>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.QRCodeUrl)</th>
+            <td>
+                @Html.DisplayFor(model => model.QRCodeUrl)
+                <div>
+                    @if (!string.IsNullOrEmpty(Model.QRCodeUrl))
+                    {
+                        <img src="@Model.QRCodeUrl" alt="QR Code" class="img-fluid rounded" style="max-height:150px;" />
+                    }
+                    else
+                    {
+                        <span>N/A</span>
+                    }
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <td>@Html.DisplayFor(model => model.Quantity)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Length</th>
+            <td>@Html.DisplayFor(model => model.Length)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Width</th>
+            <td>@Html.DisplayFor(model => model.Width)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Color</th>
+            <td>@Html.DisplayFor(model => model.Color)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Price</th>
+            <td>@Html.DisplayFor(model => model.Price)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.PerM2</th>
+            <td>@Html.DisplayFor(model => model.PerM2)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Description</th>
+            <td>@Html.DisplayFor(model => model.Description)</td>
+        </tr>
+    </table>
 
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id" />

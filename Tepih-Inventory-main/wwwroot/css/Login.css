@@ -1,0 +1,34 @@
+﻿label {
+    margin-right: 1rem;
+    font-size: larger;
+    font-weight: 700;
+}
+
+/* ✅ Tablet-only styling */
+@media screen and (min-width: 768px) and (min-height: 768px) {
+    label{
+        font-size:xx-large;
+    }
+
+    input {
+        line-height: 2.5 !important;
+        margin-top: 1rem;
+        font-size: X-large !important;
+    }
+
+    .form-control {
+        border: solid 1px;
+    }
+
+    #confirmBtn {
+        font-size: x-large;
+        font-weight: bolder;
+        color: black;
+        margin-top: 2rem;
+    }
+
+    .naslov {
+        font-size: 3rem;
+        margin-bottom:4rem;
+    }
+}

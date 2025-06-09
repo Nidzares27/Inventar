@@ -117,11 +117,20 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Accounts" xml:space="preserve">
+    <value>Nalozi</value>
+  </data>
+  <data name="ActivityFor" xml:space="preserve">
+    <value>Aktivnosti za</value>
+  </data>
   <data name="AddNewProduct" xml:space="preserve">
     <value>Dodaj novi proizvod</value>
   </data>
   <data name="AddPayment" xml:space="preserve">
     <value>Dodaj uplatu</value>
+  </data>
+  <data name="AllAccounts" xml:space="preserve">
+    <value>Svi nalozi</value>
   </data>
   <data name="Amount" xml:space="preserve">
     <value>Iznos</value>
@@ -141,8 +150,20 @@
   <data name="Buys" xml:space="preserve">
     <value>Kupovine</value>
   </data>
+  <data name="BuysGrouped" xml:space="preserve">
+    <value>Grupisane kupovine</value>
+  </data>
   <data name="BuysPerProduct" xml:space="preserve">
     <value>Kupovine po proizvodima</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Otkaži</value>
+  </data>
+  <data name="Cash" xml:space="preserve">
+    <value>Gotovina</value>
+  </data>
+  <data name="ClearCart" xml:space="preserve">
+    <value>Isprazni korpu</value>
   </data>
   <data name="Color" xml:space="preserve">
     <value>Boja</value>
@@ -150,11 +171,20 @@
   <data name="Complete" xml:space="preserve">
     <value>Kompletiraj</value>
   </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Potvrdi šifru</value>
+  </data>
   <data name="ConfirmPurchase" xml:space="preserve">
     <value>Potvrdi kupovinu</value>
   </data>
+  <data name="CreateAccount" xml:space="preserve">
+    <value>Kreiraj nalog</value>
+  </data>
   <data name="CreateProduct" xml:space="preserve">
     <value>Kreiraj proizvod</value>
+  </data>
+  <data name="CreatingProduct" xml:space="preserve">
+    <value>Kreiranje proizvoda</value>
   </data>
   <data name="CustomerFullName" xml:space="preserve">
     <value>Puno ime kupca</value>
@@ -167,6 +197,9 @@
   </data>
   <data name="Delete" xml:space="preserve">
     <value>Obriši</value>
+  </data>
+  <data name="DeleteAccount" xml:space="preserve">
+    <value>Izbriši nalog</value>
   </data>
   <data name="DeleteBuyer" xml:space="preserve">
     <value>Obriši kupca</value>
@@ -183,6 +216,18 @@
   <data name="DeleteThis" xml:space="preserve">
     <value>Da li si siguran da želiš da obrišeš ovo?</value>
   </data>
+  <data name="DeleteUser?" xml:space="preserve">
+    <value>Da li ste sigurni da želite da izbrišete ovaj nalog?</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Opis</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Detalji</value>
+  </data>
+  <data name="Download" xml:space="preserve">
+    <value>Preuzmi</value>
+  </data>
   <data name="Edit" xml:space="preserve">
     <value>Izmijeni</value>
   </data>
@@ -195,14 +240,29 @@
   <data name="EditSale" xml:space="preserve">
     <value>Izmijeni prodaju</value>
   </data>
+  <data name="EmailAddress" xml:space="preserve">
+    <value>Email adresa</value>
+  </data>
   <data name="EndDate" xml:space="preserve">
     <value>Krajnji datum</value>
   </data>
   <data name="Filter" xml:space="preserve">
     <value>Filtriraj</value>
   </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>Ime</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>Zaboravili ste lozinku?</value>
+  </data>
   <data name="FullName" xml:space="preserve">
     <value>Puno ime</value>
+  </data>
+  <data name="GroupedPDF" xml:space="preserve">
+    <value>Grupisani PDF</value>
+  </data>
+  <data name="Grouping" xml:space="preserve">
+    <value>Grupisanje</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>Početna</value>
@@ -213,11 +273,26 @@
   <data name="InventoryItems" xml:space="preserve">
     <value>Inventar</value>
   </data>
+  <data name="LastName" xml:space="preserve">
+    <value>Prezime</value>
+  </data>
   <data name="LeftToPay" xml:space="preserve">
     <value>Ostalo za uplatu</value>
   </data>
   <data name="Length" xml:space="preserve">
     <value>Dužina</value>
+  </data>
+  <data name="Log-in" xml:space="preserve">
+    <value>Prijavi se</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Prijava</value>
+  </data>
+  <data name="LogInToYourAccount" xml:space="preserve">
+    <value>Uloguj se na svoj nalog</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Odjava</value>
   </data>
   <data name="M2PerProduct" xml:space="preserve">
     <value>m² po Proizvodu</value>
@@ -225,14 +300,35 @@
   <data name="M2Total" xml:space="preserve">
     <value>m² ukupno</value>
   </data>
+  <data name="MandatoryFields" xml:space="preserve">
+    <value>Polja sa * su obavezna</value>
+  </data>
   <data name="ManuallyEnterId" xml:space="preserve">
     <value>Ručno unesi Id</value>
   </data>
   <data name="Name" xml:space="preserve">
     <value>Ime</value>
   </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>Nova šifra</value>
+  </data>
+  <data name="NoAccount" xml:space="preserve">
+    <value>Nemate nalog?</value>
+  </data>
   <data name="NoResultsFound" xml:space="preserve">
     <value>Nema rezultata!</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Šifra</value>
+  </data>
+  <data name="PasswordRequirements" xml:space="preserve">
+    <value>*Nova šifra mora imati minimum 6 karaktera i uključivati barem jedno: veliko slovo, malo slovo, broj, i specijalni karakter poput #$%.</value>
+  </data>
+  <data name="PasswordResetLinkSent" xml:space="preserve">
+    <value>Link za resetovanje lozinke je poslat</value>
+  </data>
+  <data name="PasswordResetSuccessfully" xml:space="preserve">
+    <value>Uspješno promjenjena lozinka</value>
   </data>
   <data name="PaymentHistory" xml:space="preserve">
     <value>Istorija plaćanja</value>
@@ -243,6 +339,9 @@
   <data name="PaymentTime" xml:space="preserve">
     <value>Vrijeme plaćanja</value>
   </data>
+  <data name="PaymentType" xml:space="preserve">
+    <value>Tip plaćanja</value>
+  </data>
   <data name="PerDay" xml:space="preserve">
     <value>Po danu</value>
   </data>
@@ -251,6 +350,18 @@
   </data>
   <data name="PerProducts" xml:space="preserve">
     <value>Po proizvodima</value>
+  </data>
+  <data name="PerProductsDetailedGrouped" xml:space="preserve">
+    <value>Po proizvodima Detaljno (Grupisano)</value>
+  </data>
+  <data name="PerProductsDetailedUNGrouped" xml:space="preserve">
+    <value>Po proizvodima Detaljno (Negrupisano)</value>
+  </data>
+  <data name="PlannedPaymentType" xml:space="preserve">
+    <value>Planirani tip plaćanja</value>
+  </data>
+  <data name="PleaseCheckYourEmailToResetYourPassword" xml:space="preserve">
+    <value>Provjerite vaš email da bi resetovali lozinku.</value>
   </data>
   <data name="Price" xml:space="preserve">
     <value>Cijena</value>
@@ -267,17 +378,32 @@
   <data name="ProductNumber" xml:space="preserve">
     <value>Šifra</value>
   </data>
+  <data name="PurchasePayments" xml:space="preserve">
+    <value>Plaćanja &amp; uplate</value>
+  </data>
   <data name="QRCodes" xml:space="preserve">
     <value>QR kodovi</value>
   </data>
   <data name="Quantity" xml:space="preserve">
     <value>Količina</value>
   </data>
+  <data name="Register" xml:space="preserve">
+    <value>Registracija</value>
+  </data>
+  <data name="ResetPassword" xml:space="preserve">
+    <value>Resetuj šifru</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>Uloga</value>
+  </data>
   <data name="Sales" xml:space="preserve">
     <value>Prodaje</value>
   </data>
   <data name="SalesByDay" xml:space="preserve">
     <value>Prodaje po danu</value>
+  </data>
+  <data name="SalesGrouped" xml:space="preserve">
+    <value>Grupisane prodaje</value>
   </data>
   <data name="SalesReport" xml:space="preserve">
     <value>Izvještaj prodaja</value>
@@ -294,17 +420,38 @@
   <data name="Searching" xml:space="preserve">
     <value>Pretraga...</value>
   </data>
+  <data name="Seller" xml:space="preserve">
+    <value>Prodavac</value>
+  </data>
+  <data name="SellerPaymentType" xml:space="preserve">
+    <value>Prodavac/tip plaćanja</value>
+  </data>
+  <data name="SignUp" xml:space="preserve">
+    <value>Registruj se</value>
+  </data>
+  <data name="SignUpForaNewAccount" xml:space="preserve">
+    <value>Prijavi se za novi nalog</value>
+  </data>
   <data name="Size" xml:space="preserve">
     <value>Veličina</value>
   </data>
   <data name="StartDate" xml:space="preserve">
     <value>Početni datum</value>
   </data>
+  <data name="Submit" xml:space="preserve">
+    <value>Potvrdi</value>
+  </data>
   <data name="Time" xml:space="preserve">
     <value>Vrijeme</value>
   </data>
+  <data name="toLogin" xml:space="preserve">
+    <value>prijaviti</value>
+  </data>
   <data name="Total" xml:space="preserve">
     <value>Ukupno</value>
+  </data>
+  <data name="TotalDebt" xml:space="preserve">
+    <value>Ukupan dug</value>
   </data>
   <data name="TotalPrice" xml:space="preserve">
     <value>Ukupna cijena</value>
@@ -315,6 +462,12 @@
   <data name="TotalSpent" xml:space="preserve">
     <value>Ukupno potrošeno</value>
   </data>
+  <data name="Type" xml:space="preserve">
+    <value>Tip</value>
+  </data>
+  <data name="UngroupedPDF" xml:space="preserve">
+    <value>Negrupisani PDF</value>
+  </data>
   <data name="ViewPaymentHistory" xml:space="preserve">
     <value>Pogledaj istoriju plaćanaja</value>
   </data>
@@ -324,7 +477,19 @@
   <data name="ViewSalesReport" xml:space="preserve">
     <value>Pogledaj izvještaj prodaja</value>
   </data>
+  <data name="Waiting" xml:space="preserve">
+    <value>Čekanje</value>
+  </data>
   <data name="Width" xml:space="preserve">
     <value>Širina</value>
+  </data>
+  <data name="WithYourNewPassword" xml:space="preserve">
+    <value>sa tvojom novom lozinkom</value>
+  </data>
+  <data name="YouCanNow" xml:space="preserve">
+    <value>Sada se možeš</value>
+  </data>
+  <data name="YourPasswordHasBeenResetSuccessfully" xml:space="preserve">
+    <value>Vaša lozinka je uspješno promjenjena</value>
   </data>
 </root>

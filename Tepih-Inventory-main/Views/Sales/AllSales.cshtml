@@ -1,0 +1,258 @@
+﻿@using Inventar.ViewModels.Shared
+@model IEnumerable<ProdajaViewModel>
+
+<h2>@Inventar.Resources.Resource.Sales</h2>
+
+<table id="SalesTable" class="table stripe tabela" style="font-weight:500">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>@Inventar.Resources.Resource.SaleTime</th>
+            <th>Id</th>
+            <th>@Inventar.Resources.Resource.ProductNumber</th>
+            <th>@Inventar.Resources.Resource.Name</th>
+            <th>Model</th>
+            <th>@Inventar.Resources.Resource.Color</th>
+            <th>@Inventar.Resources.Resource.Size</th>
+            <th>m²</th>
+            <th>@Inventar.Resources.Resource.M2Total</th>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <th>@Inventar.Resources.Resource.Price</th>
+            <th>@Inventar.Resources.Resource.TotalPrice</th>
+            <th>@Inventar.Resources.Resource.CustomerFullName</th>
+            <th></th>
+        </tr>
+        <tr class="filters">
+            <th><input style="width:2rem" type="text" placeholder="" disabled></th>
+            <th>
+                <input type="date" id="minDate" placeholder="From">
+                <input type="date" id="maxDate" placeholder="To">
+            </th>
+            <th><input style="width:5rem" type="text" placeholder="Id"></th>
+            <th><input style="width:5rem" type="text" placeholder="ProductNumber"></th>
+            <th><input style="width:7.5rem" type="text" placeholder="Name"></th>
+            <th><input style="width:5rem" type="text" placeholder="Model"></th>
+            <th><input style="width:7.5rem" type="text" placeholder="Color"></th>
+            <th><input style="width:5rem" type="text" placeholder="Size"></th>
+            <th><input style="width:5rem" type="text" placeholder="m²"></th>
+            <th><input style="width:5rem" type="text" placeholder="m2Total"></th>
+            <th><input style="width:5rem" type="text" placeholder="Quantity"></th>
+            <th><input style="width:5rem" type="text" placeholder="Price"></th>
+            <th><input style="width:5rem" type="text" placeholder="TotalPrice"></th>
+            <th><input type="text" placeholder="Customer Full Name"></th>
+            <th><input style="width:5rem" type="text" placeholder="" disabled></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td></td>
+                <td>@item.VrijemeProdaje.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                <td>@item.Id</td>
+                <td>@item.ProductNumber</td>
+                <td>@item.Name</td>
+                <td>@item.Model</td>
+                <td>@item.Color</td>
+                @if (item.PerM2 || (!item.PerM2 && (item.Width != null && item.Length != null)))
+                {
+                    <td>
+                        @($"{item.Width}X{item.Length}")
+                    </td>
+                }
+                @if (!item.PerM2 && (item.Width == null || item.Length == null))
+                {
+                    <td></td>
+                }
+                <td>@(item.PerM2 ? Math.Round((decimal)item.M2PerUnit, 2) : "")</td>
+                <td>@(item.PerM2 ? Math.Round((decimal)item.M2Total, 2) : "")</td>
+                <td>@item.Quantity</td>
+                <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price</td>
+                <td>@Math.Round((item.PerM2 ? item.Price * (decimal)item.M2Total : item.Price * item.Quantity), 2)€</td>
+                <td>@item.CustomerFullName</td>
+                <td>
+                    <a href="@Url.Action("Edit", "Sales", new {id=item.Id, returnUrl = Context.Request.Path, returnFromDetails = ViewBag.ReturnUrl })">@Inventar.Resources.Resource.Edit</a>
+                    <a href="@Url.Action("Delete", "Sales", new {id=item.Id, returnUrl = Context.Request.Path, returnFromDetails = ViewBag.ReturnUrl })">@Inventar.Resources.Resource.Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button id="downloadAllSalesPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#SalesTable').DataTable({
+                "paging": true,
+                "pageLength": 10,
+                "order": [[1, "desc"]],
+                "orderCellsTop": true,
+                "fixedHeader": true,
+                initComplete: function () {
+                    updateTotals();
+                }
+            });
+
+            var quantityColumnIndex = 10;
+            var priceColumnIndex = 12;
+            var m2ColumnIndex = 9;
+
+
+            function parseCustomDate(dateString) {
+                if (!dateString) return null;
+
+                var parts = dateString.split(' ');
+                var dateParts = parts[0].split('-');
+                var timeParts = parts[1] ? parts[1].split(':') : [0, 0, 0];
+
+                return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0], timeParts[1], timeParts[2]);
+            }
+
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+
+                var minDate = $('#minDate').val();
+                var maxDate = $('#maxDate').val();
+                var purchaseTime = data[1];
+
+                var purchaseDate = parseCustomDate(purchaseTime);
+                if (!purchaseDate) return false;
+
+                var min = minDate ? new Date(minDate + "T00:00:00") : null;
+                var max = maxDate ? new Date(maxDate + "T23:59:59") : null;
+
+                if ((min === null || purchaseDate >= min) && (max === null || purchaseDate <= max)) {
+                    return true;
+                }
+                return false;
+            });
+
+            $('#minDate, #maxDate').on('change', function () {
+                table.draw();
+                updateTotals();
+            });
+
+            $('#SalesTable thead tr:eq(1) th').each(function (i) {
+                $('input', this).on('keyup change', function () {
+                    if (i === 1) {
+                        return;
+                    }
+                    table.column(i).search(this.value).draw();
+                });
+            });
+
+            function updateTotals() {
+                var table = $('#SalesTable').DataTable();
+                var totalQuantity = 0;
+                var totalPrice = 0;
+                var totalM2 = 0;
+
+                table.rows({ filter: 'applied' }).data().each(function (value, index) {
+                    totalQuantity += parseFloat(value[quantityColumnIndex]) || 0;
+                    totalPrice += parseFloat(value[priceColumnIndex]) || 0;
+                    totalM2 += parseFloat(value[m2ColumnIndex]) || 0;
+                });
+
+                $('#totalQuantity').text(totalQuantity);
+                $('#totalPrice').text(totalPrice.toFixed(2));
+                $('#totalM2').text(totalM2.toFixed(2));
+
+            }
+
+            $('#SalesTable').after(`
+                        <div style="margin-top: 10px; font-weight: bold;">
+        @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span>   |
+        @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span>   |
+        @Inventar.Resources.Resource.PriceTotal: <span id="totalPrice">0.00</span>€
+                        </div>
+                    `);
+
+            table.on('draw', function () {
+                updateTotals();
+
+                let counter = 1;
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    var node = this.node();
+                    $('td:eq(0)', node).html(counter++);
+                });
+            });
+
+            updateTotals();
+            table.draw();
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#downloadAllSalesPDF').on('click', function () {
+                var table = $('#SalesTable').DataTable();
+
+                var data = [];
+
+                table.rows({ search: 'applied' }).every(function () {
+                    var row = this.node();
+                    var rowData = [];
+                    $(row).find('td').each(function () {
+                        rowData.push($(this).text().trim());
+                    });
+                    data.push(rowData);
+                });
+
+                var filters = {};
+                $('#SalesTable thead tr:eq(1) th').each(function (i) {
+                    var input = $(this).find('input');
+                    if (input.length > 0) {
+                        filters[i] = input.val();
+                    }
+                });
+
+                var minDate = $('#minDate').val();
+                var maxDate = $('#maxDate').val();
+                var heading = $('h2').text();
+
+                var columnHeaders = [];
+                $('#SalesTable thead tr:eq(0) th').each(function (i, th) {
+                    if (i < $(this).closest('tr').children().length - 1) {
+                        columnHeaders.push($(th).text().trim());
+                    }
+                });
+
+                var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
+                var totalM2 = parseFloat($('#totalM2').text()) || 0;
+                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+
+                $.ajax({
+                    url: '@Url.Action("GenerateAllSalesPDF", "Pdf")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        heading: heading,
+                        data: data,
+                        filters: filters,
+                        minDate: minDate,
+                        maxDate: maxDate,
+                        columnHeaders: columnHeaders,
+                        totalQuantity: totalQuantity,
+                        totalM2: totalM2,
+                        totalPrice: totalPrice
+                    }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function (blob) {
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = 'Prodaje.pdf';
+                        link.click();
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        #SalesTable thead tr:first-child th {
+            background-color: khaki;
+        }
+    </style>
+}

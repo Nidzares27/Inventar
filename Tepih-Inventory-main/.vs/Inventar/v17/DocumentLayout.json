@@ -1,115 +1,12 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|c:\\users\\deskpc\\desktop\\tepih-inventory-main\\tepih-inventory-main\\views\\buyer\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:views\\buyer\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\views\\sales\\perproducts.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:views\\sales\\perproducts.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\views\\sales\\perday.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:views\\sales\\perday.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\resources\\resource.sr-latn.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}",
-      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:resources\\resource.sr-latn.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\resources\\resource.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}",
-      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:resources\\resource.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": [
-        {
-          "DockedWidth": 1262,
-          "SelectedChildIndex": 0,
-          "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Buyer\\Index.cshtml",
-              "RelativeDocumentMoniker": "Views\\Buyer\\Index.cshtml",
-              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Buyer\\Index.cshtml",
-              "RelativeToolTip": "Views\\Buyer\\Index.cshtml",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAACgAAACEAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-13T12:10:00.516Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "PerDay.cshtml",
-              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Sales\\PerDay.cshtml",
-              "RelativeDocumentMoniker": "Views\\Sales\\PerDay.cshtml",
-              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Sales\\PerDay.cshtml",
-              "RelativeToolTip": "Views\\Sales\\PerDay.cshtml",
-              "ViewState": "AQIAAHcAAAAAAAAAAAAAAJAAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-13T11:02:10.557Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Resource.sr-Latn.resx",
-              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Resources\\Resource.sr-Latn.resx",
-              "RelativeDocumentMoniker": "Resources\\Resource.sr-Latn.resx",
-              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Resources\\Resource.sr-Latn.resx",
-              "RelativeToolTip": "Resources\\Resource.sr-Latn.resx",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
-              "WhenOpened": "2025-04-13T09:28:12.879Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "Resource.resx",
-              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Resources\\Resource.resx",
-              "RelativeDocumentMoniker": "Resources\\Resource.resx",
-              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Resources\\Resource.resx",
-              "RelativeToolTip": "Resources\\Resource.resx",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
-              "WhenOpened": "2025-04-13T09:27:47.715Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "_Layout.cshtml",
-              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Shared\\_Layout.cshtml",
-              "RelativeDocumentMoniker": "Views\\Shared\\_Layout.cshtml",
-              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Shared\\_Layout.cshtml",
-              "RelativeToolTip": "Views\\Shared\\_Layout.cshtml",
-              "ViewState": "AQIAABcAAAAAAAAAAAAAACAAAACGAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-10T18:34:08.746Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "PerProducts.cshtml",
-              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Sales\\PerProducts.cshtml",
-              "RelativeDocumentMoniker": "Views\\Sales\\PerProducts.cshtml",
-              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Sales\\PerProducts.cshtml",
-              "RelativeToolTip": "Views\\Sales\\PerProducts.cshtml",
-              "ViewState": "AQIAACYAAAAAAAAAAAAAAE0AAAAbAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-13T10:55:54.399Z"
-            }
-          ]
-        }
-      ]
+      "DocumentGroups": []
     }
   ]
 }

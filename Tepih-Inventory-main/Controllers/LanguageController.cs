@@ -11,7 +11,6 @@ namespace Inventar.Controllers
 
         public IActionResult ChangeLanguage(string culture)
         {
-            // Save the selected culture to the session
             HttpContext.Session.SetString("culture", culture);
 
             // Redirect back to the previous page or home

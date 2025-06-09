@@ -1,0 +1,131 @@
+﻿@using Inventar.ViewModels.Shared
+@model IEnumerable<SummaryViewModel>
+
+<h2>@Inventar.Resources.Resource.BuysGrouped: @if (Model.Count() != 0)
+    {
+        @Model.FirstOrDefault().CustomerFullName
+    }</h2>
+
+<table id="SalesTable" class="display tabela" style="width:100%; font-weight:500">
+    <thead>
+        <tr>
+            <th>@Inventar.Resources.Resource.SaleTime</th>
+            <th>@Inventar.Resources.Resource.Seller</th>
+            <th>@Inventar.Resources.Resource.PlannedPaymentType</th>
+            <th></th>
+        </tr>
+        <tr>
+            <th>
+                <input type="date" id="minDate" placeholder="From">
+                <input type="date" id="maxDate" placeholder="To">
+            </th>
+            <th><input type="text" placeholder="" /></th>
+            <th><input type="text" placeholder="" /></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.VrijemeProdaje.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                <td>@item.Prodavac</td>
+                <td>@item.PlannedPaymentType</td>
+                <td>
+                    <a class="btn btn-primary" href="@Url.Action("Details", "Sales", new { customer = item.CustomerFullName, saleTime = item.VrijemeProdaje.ToString("o"), returnFromDetails = Url.Action("GroupedBuys", "Buyer", new { id = item.CustomerId }) @* returnFromDetails = ViewBag.ReturnFromDetails *@ })">@Inventar.Resources.Resource.SalesReport</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+</div>
+
+@section Scripts {
+    <script>
+        jQuery.extend(jQuery.fn.dataTable.ext.type.order, {
+            "datetime-custom-pre": function (d) {
+                if (!d) return 0;
+
+                var parts = d.split(' ');
+                var date = parts[0].split('-');
+                var time = parts[1] ? parts[1].split(':') : ['00', '00', '00'];
+
+                var iso = `${date[2]}-${date[1]}-${date[0]}T${time[0]}:${time[1]}:${time[2]}`;
+                return new Date(iso).getTime();
+            },
+            "datetime-custom-asc": function (a, b) {
+                return a - b;
+            },
+            "datetime-custom-desc": function (a, b) {
+                return b - a;
+            }
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#SalesTable').DataTable({
+                "paging": true,
+                "pageLength": 10,
+                "order": [[0, "desc"]],
+                "orderCellsTop": true,
+                "fixedHeader": true,
+                "columnDefs": [
+                    {
+                        targets: 0,
+                        type: "datetime-custom"
+                    }
+                ]
+            });
+
+            function parseCustomDate(dateString) {
+                if (!dateString) return null;
+
+                var parts = dateString.split(' ');
+                var dateParts = parts[0].split('-');
+                var timeParts = parts[1] ? parts[1].split(':') : [0, 0, 0];
+
+                return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0], timeParts[1], timeParts[2]);
+            }
+
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                var minDate = $('#minDate').val();
+                var maxDate = $('#maxDate').val();
+                var purchaseTime = data[0];
+
+                var purchaseDate = parseCustomDate(purchaseTime);
+                if (!purchaseDate) return false;
+
+                var min = minDate ? new Date(minDate + "T00:00:00") : null;
+                var max = maxDate ? new Date(maxDate + "T23:59:59") : null;
+
+                if ((min === null || purchaseDate >= min) && (max === null || purchaseDate <= max)) {
+                    return true;
+                }
+                return false;
+            });
+
+            $('#minDate, #maxDate').on('change', function () {
+                table.draw();
+                updateTotals();
+            });
+
+            $('#SalesTable thead tr:eq(1) th').each(function (i) {
+                $('input', this).on('keyup change', function () {
+                    if (i === 0) {
+                        return;
+                    }
+                    table.column(i).search(this.value).draw();
+                });
+            });
+        });
+    </script>
+    <style>
+        #SalesTable thead tr:first-child th {
+            background-color: khaki;
+        }
+    </style>
+}

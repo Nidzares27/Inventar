@@ -1,4 +1,5 @@
-﻿@model IEnumerable<Inventar.ViewModels.ScannedProductViewModel>
+﻿@using Inventar.ViewModels.Inventory
+@model IEnumerable<ScannedProductViewModel>
 @{
     ViewData["Title"] = "Scan QR Code";
 }
@@ -6,16 +7,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 
-
 <h2>@Inventar.Resources.Resource.ScanQRCode</h2>
+@if (TempData["ProductNotFound"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @TempData["ProductNotFound"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
-<!-- QR code scanner UI -->
 <div id="qr-reader" style="width:500px;"></div>
 <div id="result"></div>
-<form id="myForm" asp-action="ManuallyAddProduct" method="post" style="margin-top:1rem">
+<form id="myForm" asp-action="ManuallyAddProduct" method="post" style="margin-top:1rem; margin-bottom:1rem">
     <input type="number" id="manualId" name="id" style="vertical-align:middle" />
     <button type="submit" style="vertical-align:middle">@Inventar.Resources.Resource.ManuallyEnterId</button>
 </form>
+<button id="clearSessionBtn" class="btn btn-sm btn-danger">@Inventar.Resources.Resource.ClearCart</button>
 @if(Model != null)
 {
     <table id="productTable" class="table table-hover table-striped">
@@ -26,9 +33,7 @@
                 <th scope="col">@Inventar.Resources.Resource.Name</th>
                 <th scope="col">Model</th>
                 <th scope="col">@Inventar.Resources.Resource.Size</th>
-@*                 <th scope="col">Length</th>
-                <th scope="col">Width</th> *@
-                <th scope="col">@Inventar.Resources.Resource.M2PerProduct</th>
+                <th scope="col">m²</th>
                 <th scope="col">@Inventar.Resources.Resource.M2Total</th>
                 <th scope="col">@Inventar.Resources.Resource.Color</th>
                 <th scope="col">@Inventar.Resources.Resource.Price</th>
@@ -53,20 +58,21 @@
                     <td>
                         @item.Model
                     </td>
-                    <td style="white-space: nowrap">
-                        @item.Length X @item.Width
-                    </td>
-@*                     <td>
-                        @item.Length
-                    </td>
-                    <td>
-                        @item.Width
-                    </td> *@
+                    @if (item.PerM2 || (!item.PerM2 && (item.Width != null && item.Length != null)))
+                    {
+                        <td style="white-space: nowrap">
+                            @($"{item.Width}X{item.Length}")
+                        </td>
+                    }
+                    @if (!item.PerM2 && (item.Width == null || item.Length == null))
+                    {
+                        <td style="white-space: nowrap"></td>
+                    }
                     <td class="perUnit">
-                        @item.M2PerUnit
+                        @(item.PerM2 ? item.M2PerUnit : "")
                     </td>
                     <td id="m2Total-@item.Id" class="total">
-                        @item.M2Total
+                        @(item.PerM2 ? item.M2Total : "")
                     </td>
                     <td>
                         @item.Color
@@ -75,8 +81,7 @@
                         @item.Price €
                     </td>
                     <td id="quantity-@item.Id">
-@*                         <input type="number" class="quantity" value="@item.Quantity">
- *@                        @item.Quantity
+                       @item.Quantity
                     </td>
                     <td>
                         <button class="btn btn-primary btn-sm update-quantity" data-id="@item.Id" data-action="decrease">-</button>
@@ -102,36 +107,48 @@
  *@<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 
-    // Define callback for successful QR code scan
+    // function onScanSuccess(qrCodeMessage) {
+    //     document.getElementById('result').innerHTML = `<strong>QR Code Result: </strong> ${qrCodeMessage}`;
+
+    //     fetch(`/InventoryItem/ProcessQRCode?data=${qrCodeMessage}`)
+    //         .then(response => {
+    //             if (response.ok) {
+    //                 window.location.href = `/InventoryItem/QRCodeScanning`;
+    //             }
+    //         });
+    // }
     function onScanSuccess(qrCodeMessage) {
-        // Display the QR code message
-        document.getElementById('result').innerHTML = `<strong>QR Code Result: </strong> ${qrCodeMessage}`;
-
-        // window.location.href = `/InventoryItem/ProcessQRCode?data=${qrCodeMessage}`;
         fetch(`/InventoryItem/ProcessQRCode?data=${qrCodeMessage}`)
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = `/InventoryItem/QRCodeScanning`; // Redirect after success
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    window.location.href = `/InventoryItem/QRCodeScanning`;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            ${result.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>`;
                 }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                document.getElementById('result').innerHTML = `
+                    <div class="alert alert-danger">Error processing QR code.</div>`;
             });
-
-        // Optional: Handle the result (e.g., send to backend or redirect)
-
     }
 
-    // Define callback for scan errors
+
     function onScanError(errorMessage) {
         console.warn(`QR Code scan error: ${errorMessage}`);
     }
 
-    // Initialize the Html5QrcodeScanner
     var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
     html5QrcodeScanner.render(onScanSuccess, onScanError);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
     $(document).ready(function () {
-        // Increase or decrease quantity
         $(".update-quantity").click(function () {
             var itemId = $(this).data("id");
             var action = $(this).data("action");
@@ -142,7 +159,7 @@
                 data: { id: itemId, action: action },
                 success: function (newQuantity) {
                     $("#quantity-" + itemId).text(newQuantity.qty);
-                    $("#m2Total-" + itemId).text(newQuantity.m2Total);// Update quantity on UI
+                    $("#m2Total-" + itemId).text(newQuantity.m2Total);
                 },
                 error: function () {
                     alert("Error updating quantity.");
@@ -156,9 +173,27 @@
         var idInput = document.getElementById("manualId").value.trim();
 
         if (idInput === "") {
-            e.preventDefault(); // Prevent form submission
+            e.preventDefault();
             document.getElementById("errorMessage").textContent = "Name field cannot be empty!";
         }
+    });
+</script>
+<script>
+    document.getElementById("clearSessionBtn").addEventListener("click", function () {
+        fetch('/InventoryItem/ClearSession', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     });
 </script>
 <style>

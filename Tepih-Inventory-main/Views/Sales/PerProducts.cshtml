@@ -1,16 +1,13 @@
-﻿@model Inventar.ViewModels.PerProductViewModel
+﻿@using Inventar.ViewModels.Sales
+@model PerProductViewModel
 @{
     ViewData["Title"] = "Sales Report";
 }
-<p>
+<h2>@Inventar.Resources.Resource.PerProducts</h2>
+<p id="salesReportWithName">
     @Inventar.Resources.Resource.SalesReport: <strong style="font-weight:900">@Model.CustomerFullName</strong>
 </p>
-@* @if (Model.StartDate.HasValue && Model.EndDate.HasValue)
-{
-    <p><b style="color:mediumblue">@Model.StartDate</b> --- <b style="color:mediumblue">@Model.EndDate</b></p>
-} *@
 
-<!-- Filter Form -->
 <form id="myForm">
     @if (!string.IsNullOrEmpty(Model.CustomerFullName))
     {
@@ -20,23 +17,36 @@
     <label>@Inventar.Resources.Resource.StartDate:</label>
     <input type="date" name="startDate" />
 
-    <label>@Inventar.Resources.Resource.EndDate:</label>
+    <label style="margin-left:1rem">@Inventar.Resources.Resource.EndDate:</label>
     <input type="date" name="endDate" />
+
+    <label style="margin-right:1rem; margin-left:1rem">
+        @Inventar.Resources.Resource.Grouping:
+        <input type="checkbox" name="grouped" value="true" />
+    </label>
 
     <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.Filter</button>
 </form>
 
-<!-- Results Table -->
 <div id="salesReportTable">
     @await Html.PartialAsync("_SalesReportTable", Model)
 </div>
+
+<div style="display:inline-block; margin-right:3rem">
+    <button id="downloadSalesUngroupedPDF" class="btn btn-danger btn-sm" style="margin-top: 10px; display:none;">
+        @Inventar.Resources.Resource.UngroupedPDF
+    </button>
+    <button id="downloadSalesGroupedPDF" class="btn btn-info btn-sm" style="margin-top: 10px; display:none;">
+        @Inventar.Resources.Resource.GroupedPDF
+    </button>
+</div>
+
 @if (!string.IsNullOrEmpty(Model.CustomerFullName))
 {
     <div>
         <a asp-action="Index" asp-controller="Buyer" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
     </div>
 }
-<!-- Spinner -->
 <div id="loading-spinner" class="spinner-wrapper" style="display:none; text-align: center;">
     <div class="spinner-border text-danger" role="status">
         <span class="sr-only" id="loadingText"></span>
@@ -50,23 +60,31 @@
             $('#myForm').submit(function (e) {
                 e.preventDefault();
 
-                // Show loading spinner
-                $('#loading-spinner').css('display', 'flex');  // Show and center
+                $('#loading-spinner').css('display', 'flex');
 
                 $.ajax({
-                    url: '@Url.Action("PerProductsPartial", "Sales")', // Change to match your controller name
+                    url: '@Url.Action("PerProductsPartial", "Sales")',
                     type: 'POST',
                     data: $(this).serialize(),
                     success: function (result) {
                         $('#salesReportTable').html(result);
 
+                        // Show only the relevant PDF button based on the checkbox state
+                        if ($('input[name="grouped"]').is(':checked')) {
+                            $('#downloadSalesGroupedPDF').show();
+                            $('#downloadSalesUngroupedPDF').hide();
+                        } else {
+                            $('#downloadSalesGroupedPDF').hide();
+                            $('#downloadSalesUngroupedPDF').show();
+                        }
+
                         $(document).ready(function () {
                             var table = $('#PerProductsTable').DataTable({
                                 "paging": true,
                                 "pageLength": 10,
-                                "order": [[0, "desc"]], // Sorts the first column (ID) in descending order
-                                "orderCellsTop": true, // Ensures ordering is applied to the first row only
-                                "fixedHeader": true // Keeps the filters visible when scrolling
+                                "order": [[1, "desc"]],
+                                "orderCellsTop": true,
+                                "fixedHeader": true
                             });
                             $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
                                 $('input', this).on('keyup change', function () {
@@ -75,20 +93,77 @@
                                     }
                                 });
                             });
+                            function updateTotals() {
+                                var table = $('#PerProductsTable').DataTable();
+                                var totalQuantity = 0;
+                                var totalPrice = 0;
+                                var totalM2 = 0;
+
+                                // Determine table type by checking number of columns
+                                const columnCount = $('#PerProductsTable thead tr:first th').length;
+
+                                // Index mapping based on table mode
+                                let indexes = {
+                                    quantity: 6,
+                                    price: 7,
+                                    m2: 5
+                                };
+
+                                if (columnCount === 11) {
+                                    indexes = {
+                                        quantity: 9,
+                                        price: 10,
+                                        m2: 8
+                                    };
+                                }
+
+                                // Loop through filtered data
+                                table.rows({ filter: 'applied' }).data().each(function (value) {
+                                    totalQuantity += parseFloat(value[indexes.quantity]) || 0;
+                                    totalPrice += parseFloat(value[indexes.price]) || 0;
+                                    totalM2 += parseFloat(value[indexes.m2]) || 0;
+                                });
+
+                                $('#totalQuantity').text(totalQuantity);
+                                $('#totalPrice').text(totalPrice.toFixed(2));
+                                $('#totalM2').text(totalM2.toFixed(2));
+                            }
+
+
+                            $('#PerProductsTable').after(`
+                    <div style="margin-top: 10px; font-weight: bold;">
+        @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span> |
+        @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span> |
+        @Inventar.Resources.Resource.PriceTotal: <span id="totalPrice">0.00</span>€
+                    </div>
+                `);
+
+                            table.on('draw', function () {
+                                updateTotals();
+
+                                let counter = 1;
+                                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                                    var node = this.node();
+                                    $('td:eq(0)', node).html(counter++);
+                                });
+                            });
+
+                            updateTotals();
+                            table.draw();
+
                         });
                     },
                     error: function () {
                         alert("Error loading data.");
                     },
                     complete: function () {
-                        // Always hide spinner when done (success or error)
-                        $('#loading-spinner').css('display', 'none');  // Hide
+                        $('#loading-spinner').css('display', 'none');
                     }
                 });
             });
         });
-    </script>
-    <script>
+       </script>
+       <script>
         $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
             $('input', this).on('keyup change', function () {
                 if (table.column(i).search() !== this.value) {
@@ -96,154 +171,165 @@
                 }
             });
         });
+
     </script>
-    <style>
-        td {
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
 
-        th {
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-
-        col {
-            border-style: ridge;
-        }
-
-        select {
-            margin-right: 0.5rem;
-        }
-
-        #TepisiTable {
-            margin: 0;
-            width: 100% !important;
-        }
-    </style>
-}
-
-@* @model Inventar.ViewModels.PerProductViewModel
-@{
-    ViewData["Title"] = "Sales Report";
-}
-
-<p>
-    @Inventar.Resources.Resource.SalesReport: <strong style="font-weight:900">@Model.CustomerFullName</strong>
-</p>
-@if (Model.StartDate.HasValue && Model.EndDate.HasValue)
-{
-    <p><b style="color:mediumblue">@Model.StartDate</b> --- <b style="color:mediumblue">@Model.EndDate</b></p>
-}
-
-<!-- Filter Form -->
-<form asp-action="PerProducts" id="myForm" method="post">
-    @if (!string.IsNullOrEmpty(Model.CustomerFullName))
-    {
-        <input type="hidden" name="customerFullName" value="@Model.CustomerFullName" />
-    }
-    <label style="vertical-align:middle">@Inventar.Resources.Resource.StartDate:</label>
-    <input style="vertical-align:middle; margin-right:0.5rem" type="date" name="startDate" />
-
-    <label style="vertical-align:middle">@Inventar.Resources.Resource.EndDate:</label>
-    <input style="vertical-align:middle; margin-right:0.5rem" type="date" name="endDate" />
-
-    <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.Filter</button>
-</form>
-
-<!-- Results Table -->
-@if (Model.SalesReport != null && Model.SalesReport.Any())
-{
-    <table id="PerProductsTable" class="table">
-        <thead>
-            <tr>
-                <th>@Inventar.Resources.Resource.ProductID</th>
-                <th>@Inventar.Resources.Resource.Name</th>
-                <th>Model</th>
-                <th>@Inventar.Resources.Resource.Size</th>
-                <th>@Inventar.Resources.Resource.M2PerProduct</th>
-                <th>@Inventar.Resources.Resource.M2Total</th>
-                <th>@Inventar.Resources.Resource.Color</th>
-                <th>@Inventar.Resources.Resource.TotalQuantity</th>
-                <th>@Inventar.Resources.Resource.TotalPrice</th>
-            </tr>
-            <tr class="filters">
-                <th><input style="width:5rem" type="text" placeholder="Product ID"></th>
-                <th><input style="width:10rem" type="text" placeholder="Name"></th>
-                <th><input style="width:10rem" type="text" placeholder="Model"></th>
-                <th><input style="width:5rem" type="text" placeholder="Size"></th>
-                <th><input style="width:5rem" type="text" placeholder="M2PerProduct"></th>
-                <th><input style="width:5rem" type="text" placeholder="M2Total"></th>
-                <th><input style="width:10rem" type="text" placeholder="Color"></th>
-                <th><input style="width:5rem" type="text" placeholder="Total Quantity"></th>
-                <th><input style="width:5rem" type="text" placeholder="Total Price"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.SalesReport)
-            {
-                <tr>
-                    <td>@item.ProductId</td>
-                    <td>@item.Name</td>
-                    <td>@item.Model</td>
-                    <td>@item.Size</td>
-                    <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2))</td>
-                    <td>@(Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.TotalQuantity), 2))</td>
-                    <td>@item.Color</td>
-                    <td>@item.TotalQuantity</td>
-                    <td>@string.Format("{0:F2}", item.TotalPrice)€</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>@Inventar.Resources.Resource.NoResultsFound</p>
-}
-
-@section Scripts {
     <script>
         $(document).ready(function () {
-            var table = $('#PerProductsTable').DataTable({
-                "paging": true,
-                "pageLength": 10,
-                "order": [[0, "desc"]], // Sorts the first column (ID) in descending order
-                "orderCellsTop": true, // Ensures ordering is applied to the first row only
-                "fixedHeader": true // Keeps the filters visible when scrolling
+            $('#downloadSalesUngroupedPDF').on('click', function () {
+                var table = $('#PerProductsTable').DataTable();
+
+                var data = [];
+
+                table.rows({ search: 'applied' }).every(function () {
+                    var row = this.node();
+                    var rowData = [];
+                    $(row).find('td').each(function () {
+                        rowData.push($(this).text().trim());
+                    });
+                    data.push(rowData);
+                });
+
+                // Get filter values
+                var filters = {};
+                $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
+                    var input = $(this).find('input');
+                    if (input.length > 0) {
+                        filters[i] = input.val();
+                    }
+                });
+
+                // Get heading text
+                var heading1 = $('h2').text();
+                var heading2 = $('#salesReportWithName').text();
+                var heading3 = $('#dateStartEnd').text();
+
+
+                // Get column headers (excluding last one)
+                var columnHeaders = [];
+                $('#PerProductsTable thead tr:eq(0) th').each(function (i, th) {
+                    if (i < $(this).closest('tr').children().length/*  - 1 */) { // exclude last column
+                        columnHeaders.push($(th).text().trim());
+                    }
+                });
+
+                // Get totals from your DOM or compute here
+                var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
+                var totalM2 = parseFloat($('#totalM2').text()) || 0;
+                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+
+                var customerName = '@Model.CustomerFullName';
+
+                $.ajax({
+                    url: '@Url.Action("GeneratePerProductsUngroupedPDF", "Pdf")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        heading1: heading1,
+                        heading2: heading2,
+                        heading3: heading3,
+                        customerName: customerName,
+                        data: data,
+                        filters: filters,
+                        columnHeaders: columnHeaders,
+                        totalQuantity: totalQuantity,
+                        totalM2: totalM2,
+                        totalPrice: totalPrice
+                    }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function (blob) {
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = `Po_proizvodima_(Negrupisano)_${customerName}.pdf`;
+                        link.click();
+                    }
+                });
             });
-            $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
-                $('input', this).on('keyup change', function () {
-                    if (table.column(i).search() !== this.value) {
-                        table.column(i).search(this.value).draw();
+
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#downloadSalesGroupedPDF').on('click', function () {
+                var table = $('#PerProductsTable').DataTable();
+
+                var data = [];
+
+                table.rows({ search: 'applied' }).every(function () {
+                    var row = this.node();
+                    var rowData = [];
+                    $(row).find('td').each(function () {
+                        rowData.push($(this).text().trim());
+                    });
+                    data.push(rowData);
+                });
+
+                // Get filter values
+                var filters = {};
+                $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
+                    var input = $(this).find('input');
+                    if (input.length > 0) {
+                        filters[i] = input.val();
+                    }
+                });
+
+                // Get heading text
+                var heading1 = $('h2').text();
+                var heading2 = $('#salesReportWithName').text();
+                var heading3 = $('#dateStartEnd').text();
+
+
+                // Get column headers (excluding last one)
+                var columnHeaders = [];
+                $('#PerProductsTable thead tr:eq(0) th').each(function (i, th) {
+                    if (i < $(this).closest('tr').children().length/*  - 1 */) { // exclude last column
+                        columnHeaders.push($(th).text().trim());
+                    }
+                });
+
+                // Get totals from your DOM or compute here
+                var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
+                var totalM2 = parseFloat($('#totalM2').text()) || 0;
+                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+
+                var customerName = '@Model.CustomerFullName';
+
+                // Send data to server
+                $.ajax({
+                    url: '@Url.Action("GeneratePerProductsGroupedPDF", "Pdf")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        heading1: heading1,
+                        heading2: heading2,
+                        heading3: heading3,
+                        customerName: customerName,
+                        data: data,
+                        filters: filters,
+                        columnHeaders: columnHeaders,
+                        totalQuantity: totalQuantity,
+                        totalM2: totalM2,
+                        totalPrice: totalPrice
+                    }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function (blob) {
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = `Po_proizvodima_(Grupisano)_${customerName}.pdf`;
+                        link.click();
                     }
                 });
             });
         });
     </script>
-
     <style>
-        td {
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-
-        th {
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-
-        col {
-            border-style: ridge;
-        }
-
-        select {
-            margin-right: 0.5rem;
-        }
-
-        #TepisiTable {
-            margin: 0;
-            width: 100% !important;
+        #PerProductsTable thead tr:first-child th {
+            background-color: khaki;
         }
     </style>
-} *@
+}

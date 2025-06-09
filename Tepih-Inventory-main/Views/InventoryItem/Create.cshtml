@@ -2,46 +2,58 @@
 
 <h2>@Inventar.Resources.Resource.CreateProduct</h2>
 <h6 style="color:green">@ViewBag.OldProductUpdate</h6>
+<small style="color:red">@Inventar.Resources.Resource.MandatoryFields</small>
+@if (TempData["MissingLengthWidth"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @TempData["MissingLengthWidth"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 <br />
 
-<form class="row g-3" asp-action="Create" method="post">
+<form id="createForm" class="row g-3" asp-action="Create" method="post" style="margin-top:0.5rem">
     <input type="hidden" class="form-control" asp-for="DateTime" />
     <input type="hidden" class="form-control" asp-for="Prodaje" />
     <div class="col-sm-3">
-        <label for="ProductNumber">@Inventar.Resources.Resource.ProductNumber</label>
+        <label for="ProductNumber">@Inventar.Resources.Resource.ProductNumber<span style="color:red">*</span></label>
         <input type="text" class="form-control" asp-for="ProductNumber" />
     </div>
     <div class="col-sm-6">
-        <label for="Name">@Inventar.Resources.Resource.Name</label>
+        <label for="Name">@Inventar.Resources.Resource.Name<span style="color:red">*</span></label>
         <input type="text" class="form-control" asp-for="Name" />
     </div>
     <div class="col-sm-3">
-        <label for="Model">Model</label>
+        <label for="Model">Model<span style="color:red">*</span></label>
         <input type="text" class="form-control" asp-for="Model" />
     </div>
     <div class="col-sm-6">
-        <label for="Color">@Inventar.Resources.Resource.Color</label>
+        <label for="Color">@Inventar.Resources.Resource.Color<span style="color:red">*</span></label>
         <input type="text" class="form-control" asp-for="Color" />
     </div>
     <div class="col-sm-3">
         <label for="Length">@Inventar.Resources.Resource.Length</label>
-        <input type="number" step="any" class="form-control" asp-for="Length" />
+        <input id="Length" type="number" step="any" class="form-control" asp-for="Length" />
     </div>
     <div class="col-sm-3">
         <label for="Width">@Inventar.Resources.Resource.Width</label>
-        <input type="number" step="any" class="form-control" asp-for="Width" />
+        <input id="Width" type="number" step="any" class="form-control" asp-for="Width" />
     </div>
     <div class="col-sm-6">
-        <label for="Quantity">@Inventar.Resources.Resource.Quantity</label>
+        <label for="Quantity">@Inventar.Resources.Resource.Quantity<span style="color:red">*</span></label>
         <input type="number" class="form-control" asp-for="Quantity" />
     </div>
     <div class="col-sm-6">
-        <label for="Price">@Inventar.Resources.Resource.Price</label>
+        <label for="Price">@Inventar.Resources.Resource.Price<span style="color:red">*</span></label>
         <input type="number" step="any" class="form-control" asp-for="Price" />
+    </div>
+    <div class="col-sm-6">
+        <label for="Description">@Inventar.Resources.Resource.Description</label>
+        <textarea class="form-control" asp-for="Description"></textarea>
     </div>
     <div class="col-12">
         <div class="form-check">
-            <input type="checkbox" asp-for="PerM2" style="vertical-align:middle" />
+            <input type="checkbox" id="PerM2" asp-for="PerM2" style="vertical-align:middle" />
             <label for="PerM2" style="vertical-align:middle; margin-bottom:0">@Inventar.Resources.Resource.PerM2</label>
         </div>
     </div>
@@ -49,10 +61,49 @@
         <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.CreateProduct</button>
     </div>
 </form>
+<div id="loading-spinner-prodCreate" class="spinner-wrapper" style="display:none; text-align: center;">
+    <div class="spinner-border text-danger" role="status">
+        <span class="sr-only" id="loadingText"></span>
+    </div>
+    <div style="color:firebrick; font-size:larger">@Inventar.Resources.Resource.CreatingProduct</div>
+</div>
+<script>
+    document.getElementById("createForm").addEventListener("submit", function (event) {
+        document.getElementById("loading-spinner-prodCreate").style.display = "flex";
+
+        setTimeout(function () {
+            document.getElementById("loading-spinner-prodCreate").style.display = "none";
+        }, 3000);
+    });
+</script>
+@* <script>
+    function toggleDimensions() {
+        const perM2Checkbox = document.getElementById("PerM2");
+        const lengthInput = document.getElementById("Length");
+        const widthInput = document.getElementById("Width");
+
+        const shouldEnable = perM2Checkbox.checked;
+
+        lengthInput.disabled = !shouldEnable;
+        widthInput.disabled = !shouldEnable;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Set initial state
+        toggleDimensions();
+
+        // Add event listener
+        document.getElementById("PerM2").addEventListener("change", toggleDimensions);
+    });
+</script> *@
 <style>
     label{
         margin-bottom: 0.5rem;
         font-weight: 700;
+    }
+
+    textarea{
+        border: 1.5px solid blueviolet !important;
     }
 
     input {

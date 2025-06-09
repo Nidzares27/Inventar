@@ -1,100 +1,31 @@
-﻿@* @model Inventar.ViewModels.PerDayViewModel
+﻿@using Inventar.ViewModels.Sales
+@model PerDayViewModel
 @{
     ViewData["Title"] = "Per Day Sales Report";
 }
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" />
 
-<h2>@Inventar.Resources.Resource.SalesByDay</h2>
+<h2>
+    @Inventar.Resources.Resource.SalesByDay
+</h2>
 
-<form id="filterForm" asp-action="PerDay" method="post">
-    <label>@Inventar.Resources.Resource.Day:</label>
-    <input id="datepicker" type="date" name="date" required class="form-control d-inline w-auto" />
-    <button type="submit" class="btn btn-primary" data-loading="true">@Inventar.Resources.Resource.Filter</button>
-</form>
-<div id="loadingSpinner" class="spinner-wrapper" style="display: none; text-align: center;">
-    <div class="spinner-border text-danger" role="status">
-        <span class="sr-only" id="loadingText">Loading...</span>
-    </div>
-    <div style="color:firebrick; font-size:larger">Pretraga reda voznje...</div>
-</div>
-
-<hr />
-
-<!-- AJAX Container -->
-<div id="resultsContainer">
-    @if (Model.SalesReport?.Any() == true)
-    {
-        await Html.RenderPartialAsync("_PerDayTablePartial", Model);
-    }
-</div>
-
-@section Scripts {
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
-
-    <script>
-        function initializeDataTable() {
-            var table = $('#PerDayTable').DataTable({
-                orderCellsTop: true,
-                fixedHeader: true,
-                paging: true,
-                pageLength: 10
-            });
-
-            $('#PerDayTable thead tr:eq(1) th input').on('keyup change', function () {
-                const index = $(this).parent().index();
-                table.column(index).search(this.value).draw();
-            });
-        }
-
-        $(document).ready(function () {
-            initializeDataTable();
-
-            $('#filterForm').on('submit', function (e) {
-                e.preventDefault();
-                $.ajax({
-                    url: '@Url.Action("PerDay")',
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    success: function (result) {
-                        $('#resultsContainer').html(result);
-                        initializeDataTable();
-                    },
-                    error: function () {
-                        alert('Error loading data.');
-                    }
-                });
-            });
-        });
-    </script>
-} *@
-@model Inventar.ViewModels.PerDayViewModel
-@{
-    ViewData["Title"] = "Per Day Sales Report";
-}
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" />
-
-<h2>@Inventar.Resources.Resource.SalesByDay</h2>
-
-<!-- Filter Form -->
 <form id="filterForm" asp-action="PerDay" method="post">
     <label>@Inventar.Resources.Resource.Day:</label>
     <input id="datepicker" type="date" name="date" required class="form-control d-inline w-auto" />
     <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.Filter</button>
 </form>
-
-
-
 <hr />
-
-<!-- AJAX Result Container -->
 <div id="resultsContainer">
     @if (Model.SalesReport?.Any() == true)
     {
         await Html.RenderPartialAsync("_PerDayTablePartial", Model);
     }
 </div>
-<!-- Spinner -->
+
+<div id="pdfDownloadContainer" style="margin-top:1rem; display:none;">
+    <button id="downloadPerDayPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+</div>
+
 <div id="loading-spinner" class="spinner-wrapper" style="display:none; text-align: center;">
     <div class="spinner-border text-danger" role="status">
         <span class="sr-only" id="loadingText"></span>
@@ -119,6 +50,47 @@
                 const index = $(this).parent().index();
                 table.column(index).search(this.value).draw();
             });
+
+            table.on('draw', function () {
+                // Add row numbers
+                table.rows({ search: 'applied', order: 'applied' }).every(function (rowIdx) {
+                    var node = this.node();
+                    $('td:eq(0)', node).html(rowIdx + 1);
+                });
+
+                updateFooterTotals(table);
+            });
+
+            table.draw();
+
+        }
+
+        function updateFooterTotals(table) {
+            let totalSpent = 0;
+            let totalM2 = 0;
+            let totalQuantity = 0;
+
+            table.rows({ search: 'applied' }).every(function () {
+                const row = this.node();
+
+                // Get text content from the correct cells
+                const spentText = $('td:eq(2)', row).text().replace(/[^\d.-]/g, '');
+                const m2Text = $('td:eq(3)', row).text().replace(/[^\d.-]/g, '');
+                const quantityText = $('td:eq(4)', row).text();
+
+                const spent = parseFloat(spentText) || 0;
+                const m2 = parseFloat(m2Text) || 0;
+                const qty = parseInt(quantityText) || 0;
+
+                totalSpent += spent;
+                totalM2 += m2;
+                totalQuantity += qty;
+            });
+
+            $('#totalSpentDisplay').text(totalSpent.toFixed(2) + ' €');
+            $('#totalM2Display').text(totalM2.toFixed(2) + ' m²');
+            $('#totalQuantityDisplay').text(totalQuantity);
+
         }
 
         $(document).ready(function () {
@@ -127,9 +99,7 @@
             $('#filterForm').on('submit', function (e) {
                 e.preventDefault();
 
-                // Show loading spinner
-                $('#loading-spinner').css('display', 'flex');  // Show and center
-
+                $('#loading-spinner').css('display', 'flex');
 
                 $.ajax({
                     url: '@Url.Action("PerDay")',
@@ -138,16 +108,110 @@
                     success: function (result) {
                         $('#resultsContainer').html(result);
                         initializeDataTable();
+                        $('#pdfDownloadContainer').show(); // Show button when data present
+
+                        // Update the date text next to title:
+                        var pickedDate = $('#datepicker').val();
+                        if (pickedDate) {
+                            // Format pickedDate from yyyy-mm-dd to dd-MM-yyyy
+                            var parts = pickedDate.split('-');
+                            var formattedDate = parts[2] + '-' + parts[1] + '-' + parts[0];
+                            $('#selectedDate').text(formattedDate);
+                        } else {
+                            $('#selectedDate').text('');
+                        }
                     },
                     error: function () {
                         alert('Error loading data.');
                     },
                     complete: function () {
-                        // Always hide spinner when done (success or error)
-                        $('#loading-spinner').css('display', 'none');  // Hide
+                        $('#loading-spinner').css('display', 'none');
                     }
                 });
             });
         });
     </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#downloadPerDayPDF').on('click', function () {
+                var table = $('#PerDayTable').DataTable();
+
+                var data = [];
+
+                table.rows({ search: 'applied' }).every(function () {
+                    var row = this.node();
+                    var rowData = [];
+                    $(row).find('td').each(function () {
+                        rowData.push($(this).text().trim());
+                    });
+                    data.push(rowData);
+                });
+
+                // Get filter values
+                var filters = {};
+                $('#PerDayTable thead tr:eq(1) th').each(function (i) {
+                    var input = $(this).find('input');
+                    if (input.length > 0) {
+                        filters[i] = input.val();
+                    }
+                });
+
+                // Get heading text
+                var heading1 = $('h2').text();
+                var heading2 = $('p').text();
+
+                // Get column headers (excluding last one)
+                var columnHeaders = [];
+                $('#PerDayTable thead tr:eq(0) th').each(function (i, th) {
+                    if (i < $(this).closest('tr').children().length/*  - 1 */) { // exclude last column
+                        columnHeaders.push($(th).text().trim());
+                    }
+                });
+
+                // Get totals from your DOM or compute here
+                var totalQuantity = parseInt($('#totalQuantityDisplay').text()) || 0;
+                var totalM2 = parseFloat($('#totalM2Display').text()) || 0;
+                var totalPrice = parseFloat($('#totalSpentDisplay').text()) || 0;
+
+                // Send data to server
+                $.ajax({
+                    url: '@Url.Action("GeneratePerDayPDF", "Pdf")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        heading1: heading1,
+                        heading2: heading2,
+                        data: data,
+                        filters: filters,
+                        columnHeaders: columnHeaders,
+                        totalQuantity: totalQuantity,
+                        totalM2: totalM2,
+                        totalPrice: totalPrice
+                    }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function (blob) {
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = 'Po_danu.pdf';
+                        link.click();
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        #PerDayTable_length{
+            margin-bottom: 1rem;
+        }
+
+        #PerDayTable_filter {
+            margin-bottom: 1rem;
+        }
+        #PerDayTable thead tr:first-child th {
+            background-color: khaki;
+        }
+    </style>
 }
