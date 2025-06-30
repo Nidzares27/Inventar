@@ -22,5 +22,8 @@ namespace Inventar.ViewModels.Shared
         public decimal PriceTotal { get; set; }
         [Range(0, int.MaxValue)]
         public int Quantity { get; set; }
+        public bool Disabled { get; set; }
+        public string Seller { get; set; } //dodato
+
     }
 }

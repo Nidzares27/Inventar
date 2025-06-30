@@ -8,8 +8,8 @@ namespace Inventar.ViewModels.Shared
         [DisplayFormat(DataFormatString = "{0:dd-MM-yyyy HH:mm:ss}", ApplyFormatInEditMode = true)]
         [Display(Name = "Sale Time")]
         public DateTime VrijemeProdaje { get; set; }
-        public string? PlannedPaymentType { get; set; }
-        public string? Prodavac { get; set; }
+        public string PlannedPaymentType { get; set; }
+        public string Prodavac { get; set; }
         public decimal? M2Total { get; set; }
         public decimal TotalPrice { get; set; }
         public int TotalQuantity { get; set; }

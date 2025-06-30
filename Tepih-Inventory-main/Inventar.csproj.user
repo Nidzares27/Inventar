@@ -6,7 +6,7 @@
     <View_SelectedScaffolderID>RazorViewEmptyScaffolder</View_SelectedScaffolderID>
     <View_SelectedScaffolderCategoryPath>root/Common/MVC/View</View_SelectedScaffolderCategoryPath>
     <ActiveDebugProfile>Inventar</ActiveDebugProfile>
-    <NameOfLastUsedPublishProfile>C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Properties\PublishProfiles\Smarter asp - profile.pubxml</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Properties\PublishProfiles\Produkcija.pubxml</NameOfLastUsedPublishProfile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>

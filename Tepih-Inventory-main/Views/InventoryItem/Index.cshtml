@@ -10,11 +10,11 @@
             {
                 <th style="display:none">Id</th>
             }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee")))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin")))
             {
                 <th>Id</th>
             }
-           @if (User.Identity.IsAuthenticated && User.IsInRole("admin"))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
             {
                 <th>@Inventar.Resources.Resource.ProductNumber</th>
             }
@@ -28,17 +28,17 @@
             <th>@Inventar.Resources.Resource.Size</th>
             <th>m²</th>
             <th>@Inventar.Resources.Resource.M2Total</th>
-            @if (User.Identity.IsAuthenticated && User.IsInRole("user"))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
             {
                 <th style="display:none">@* @Inventar.Resources.Resource.Price *@</th>
             }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee")))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
             {
                 <th>@Inventar.Resources.Resource.Price</th>
             }
 @*             <th>@Inventar.Resources.Resource.Price</th>
  *@            <th>@Inventar.Resources.Resource.Quantity</th>
-            @if (User.Identity.IsAuthenticated && User.IsInRole("admin"))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
             {
                 <th></th>
             }
@@ -53,11 +53,11 @@
             {
                 <th style="display:none"></th>
             }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee")))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin")))
             {
                 <th><input style="width:5rem" type="text" placeholder="Id"></th>
             }
-            @if (User.Identity.IsAuthenticated && User.IsInRole("admin"))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
             {
                 <th><input style="width:5rem" type="text" placeholder="ProductNumber"></th>
             }
@@ -71,16 +71,16 @@
             <th><input style="width:5rem" type="text" placeholder="Size"></th>
             <th><input style="width:5rem" type="text" placeholder="m²"></th>
             <th><input style="width:5rem" type="text" placeholder="M2Total"></th>
-            @if (User.Identity.IsAuthenticated && User.IsInRole("user"))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
             {
                 <th style="display:none"></th>
             }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee")))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
             {
                 <th><input style="width:5rem" type="text" placeholder="Price"></th>
             }
             <th><input style="width:5rem" type="text" placeholder="Quantity"></th>
-            @if (User.Identity.IsAuthenticated && User.IsInRole("admin"))
+            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
             {
                 <th><input style="width:5rem" type="text" placeholder="" disabled></th>
             }
@@ -99,11 +99,11 @@
                 {
                     <td style="display:none"></td>
                 }
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee")))
+                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin")))
                 {
                     <td><a asp-area="" asp-controller="InventoryItem" asp-action="Details" asp-route-id="@item.Id">@item.Id</a></td>
                 }
-                @if (User.Identity.IsAuthenticated && User.IsInRole("admin"))
+                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
                 {
                     <td>@item.ProductNumber</td>
                 }
@@ -135,16 +135,16 @@
                 }
                 <td>@(item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : "")</td>
                 <td>@(item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.Quantity), 2) : "")</td>
-                @if (User.Identity.IsAuthenticated && User.IsInRole("user"))
+                @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
                 {
                     <td style="display:none"></td>
                 }
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee")))
+                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
                 {
                     <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price €</td>
                 }
                 <td>@item.Quantity</td>
-                @if (User.Identity.IsAuthenticated && User.IsInRole("admin"))
+                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
                 {
                     <td>
                         <a asp-area="" asp-controller="InventoryItem" asp-action="Edit" asp-route-id="@item.Id">@Inventar.Resources.Resource.Edit</a>
@@ -159,7 +159,7 @@
         }
     </tbody>
 </table>
-@if (User.Identity.IsAuthenticated && User.IsInRole("admin"))
+@if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
 {
     <a class="btn btn-primary btn-success" href="/InventoryItem/Create">@Inventar.Resources.Resource.AddNewProduct</a>
     <button id="downloadPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
@@ -169,17 +169,17 @@
     var columnVisibility = new List<bool>
     {
         true,
-        User.IsInRole("admin") || User.IsInRole("employee"),                       
-        User.IsInRole("admin"),  
+        User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"),
+        User.IsInRole("admin") || User.IsInRole("superadmin"),
         true,                                          
         true,
         true,
         true,
         true,
         true,
-        User.IsInRole("admin") || User.IsInRole("employee"),                     
+        User.IsInRole("admin") /* || User.IsInRole("employee") */ || User.IsInRole("superadmin"),
         true,
-        User.IsInRole("admin")
+        User.IsInRole("admin") || User.IsInRole("superadmin")
     };
 
     var visibilityJson = System.Text.Json.JsonSerializer.Serialize(
@@ -194,7 +194,7 @@
             var table = $('#TepisiTable').DataTable({
                 "paging": true,
                 "pageLength": 10,
-                // "order": [[0, "desc"]],
+                "order": [[1, "desc"]],
                 "orderCellsTop": true,
                 "fixedHeader": true,
                 "columnDefs": @Html.Raw(visibilityJson)

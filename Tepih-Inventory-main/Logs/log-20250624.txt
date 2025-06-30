@@ -1,0 +1,33 @@
+2025-06-24 12:40:18.164 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 12:40:18.164 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 12:40:18.164 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 12:40:39.359 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 12:41:05.049 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:37.646 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:37.754 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:37.887 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:38.020 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:38.133 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:38.270 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:48.599 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:48.736 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:48.867 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:49.002 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:49.137 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:38:49.273 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:39:34.433 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:39:34.554 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:39:34.679 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 15:39:34.810 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: SILA/SL606/160/230/CREAM-BEIGE
+2025-06-24 16:08:19.371 +02:00 [ERR] [AdminAdmin] Applying discount or changing price mannualy went wrong.
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Inventar.Controllers.InventoryItemController.<>c__DisplayClass18_0.<Update>b__0(ScannedProductViewModel i) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\InventoryItemController.cs:line 473
+   at System.Linq.Enumerable.TryGetFirst[TSource](IEnumerable`1 source, Func`2 predicate, Boolean& found)
+   at System.Linq.Enumerable.FirstOrDefault[TSource](IEnumerable`1 source, Func`2 predicate)
+   at Inventar.Controllers.InventoryItemController.Update(ScannedProductViewModel modell) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\InventoryItemController.cs:line 473
+2025-06-24 16:09:55.982 +02:00 [ERR] [AdminAdmin] Applying discount or changing price mannualy went wrong.
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Inventar.Controllers.InventoryItemController.<>c__DisplayClass18_0.<Update>b__0(ScannedProductViewModel i) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\InventoryItemController.cs:line 473
+   at System.Linq.Enumerable.TryGetFirst[TSource](IEnumerable`1 source, Func`2 predicate, Boolean& found)
+   at System.Linq.Enumerable.FirstOrDefault[TSource](IEnumerable`1 source, Func`2 predicate)
+   at Inventar.Controllers.InventoryItemController.Update(ScannedProductViewModel modell) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\InventoryItemController.cs:line 473

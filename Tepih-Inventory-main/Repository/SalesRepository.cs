@@ -30,6 +30,16 @@ namespace Inventar.Repository
             return await _context.Prodaje.ToListAsync();
         }
 
+        public async Task<IEnumerable<Prodaja>> GetAllByNameAsync(string name)
+        {
+            return await _context.Prodaje.Where(i => i.CustomerFullName == name).ToListAsync();
+        }
+
+        public async Task<List<Prodaja>> GetAllWithTepih()
+        {
+            return await _context.Prodaje.Include(p => p.Tepih).ToListAsync();
+        }
+
         public async Task<Prodaja> GetByIdAsync(int id)
         {
             return await _context.Prodaje.FirstOrDefaultAsync(i => i.Id == id);

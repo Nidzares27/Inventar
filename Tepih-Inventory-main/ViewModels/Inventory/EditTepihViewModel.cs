@@ -13,7 +13,7 @@ namespace Inventar.ViewModels.Inventory
         public string? DateTime { get; set; }
         [Range(0, int.MaxValue)]
         public int Quantity { get; set; }
-        public string? QRCodeUrl { get; set; }
+        public string? QRCodeUrl { get; set; }//provjeriti da li je obavezno
         [Range(0, int.MaxValue)]
         public int? Length { get; set; }
         public int? Width { get; set; }
@@ -22,5 +22,6 @@ namespace Inventar.ViewModels.Inventory
         public decimal Price { get; set; }
         public bool PerM2 { get; set; }
         public string? Description { get; set; }
+        public bool Disabled { get; set; }
     }
 }

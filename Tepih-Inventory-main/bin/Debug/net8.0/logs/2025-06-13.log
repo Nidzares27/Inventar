@@ -1,0 +1,8 @@
+2025-06-13 11:54:40.7040 INFO Entering the login controller. Login method
+2025-06-13 11:54:42.6809 INFO Login method - User found by email!
+2025-06-13 11:54:42.7868 INFO Login method - Users password is correct!
+2025-06-13 11:54:43.0699 INFO Exiting Login method - User logged in!
+2025-06-13 12:05:04.2421 INFO Entering the login controller. Login method
+2025-06-13 12:05:05.7954 INFO Login method - User found by email!
+2025-06-13 12:05:05.8887 INFO Login method - Users password is correct!
+2025-06-13 12:05:06.1312 INFO Exiting Login method - User logged in!

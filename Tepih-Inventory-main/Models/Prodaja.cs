@@ -19,9 +19,10 @@ namespace Inventar.Models
         public DateTime VrijemeProdaje { get; set; }
         public decimal Price { get; set; } /*double*/
         [StringLength(20)]
-        public string? PlannedPaymentType { get; set; } //obavezno
+        public string PlannedPaymentType { get; set; } 
         [StringLength(50)]
-        public string? Prodavac {  get; set; }//obavezno
+        public string Prodavac {  get; set; }
+        public bool Disabled { get; set; }
 
         [ForeignKey("TepihId")]
         [InverseProperty("Prodaje")]

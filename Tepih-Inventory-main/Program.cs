@@ -18,6 +18,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Inventar.Utils;
 using Microsoft.AspNetCore.Authorization;
+using Serilog;
+using Serilog.Core;
+using Inventar.Middleware;
 
 
 
@@ -26,13 +29,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
-builder.Services.AddScoped<ITepihRepository,TepihRepository>();
+builder.Services.AddScoped<ITepihRepository, TepihRepository>();
 builder.Services.AddScoped<IKupacRepository, KupacRepository>();
-builder.Services.AddScoped<ISalesRepository,SalesRepository>();
+builder.Services.AddScoped<ISalesRepository, SalesRepository>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IPlacanjeRepository, PlacanjeRepository>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsPrincipalFactory>();
+builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddHttpContextAccessor();
+
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
@@ -70,6 +76,22 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    var httpContextAccessor = services.GetRequiredService<IHttpContextAccessor>();
+
+    configuration
+        .MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Error)
+        .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Error)
+        .Enrich.FromLogContext()
+        .Enrich.With(new UserEnricher(httpContextAccessor))
+        .WriteTo.File(
+            path: "Logs/log-.txt",
+            rollingInterval: RollingInterval.Day,
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{UserName}] {Message:lj}{NewLine}{Exception}"
+        );
+});
 
 var app = builder.Build();
 
@@ -82,10 +104,11 @@ if (args.Length == 1 && args[0].ToLower() == "seeddata")
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    //app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseStaticFiles();
 app.UseSession();

@@ -1,0 +1,11 @@
+2025-06-17 11:25:24.387 +02:00 [ERR] [Admin1Admin1] Exception of type 'System.Exception' was thrown.
+2025-06-17 11:38:15.811 +02:00 [ERR] [Admin1Admin1] Sales Controller - Delete: Couldn't find a sale with an ID: 4281
+2025-06-17 19:14:41.766 +02:00 [ERR] [Admin1Admin1] QR code URL is missing for a product with an ID: 1164 for generating Cloudinary image!
+2025-06-17 19:22:39.585 +02:00 [ERR] [Admin1Admin1] QR code URL is missing for a product with an ID: 1165 for generating Cloudinary image!
+2025-06-17 19:26:51.723 +02:00 [ERR] [Admin1Admin1] Data for writting QR code is missing
+2025-06-17 19:26:51.887 +02:00 [ERR] [Admin1Admin1] QR code URL is missing for a product with an ID: 1165 for generating Cloudinary image!
+2025-06-17 19:53:37.274 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure:  LEGACYE149A60X2000CREAM BEIGE
+2025-06-17 19:53:37.405 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure:  LEGACYE149A60X2000CREAM BEIGE
+2025-06-17 19:53:37.489 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure:  LEGACYE149A60X2000CREAM BEIGE
+2025-06-17 19:53:37.616 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure:  LEGACYE149A60X2000CREAM BEIGE
+2025-06-17 19:53:37.740 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure:  LEGACYE149A60X2000CREAM BEIGE

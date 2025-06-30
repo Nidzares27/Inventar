@@ -1,0 +1,11 @@
+2025-06-20 10:10:25.521 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:10:25.521 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:10:25.521 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:10:25.521 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:11:09.607 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:11:10.889 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:11:11.876 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:11:12.936 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:11:46.467 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:11:46.467 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-20 10:11:58.098 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE

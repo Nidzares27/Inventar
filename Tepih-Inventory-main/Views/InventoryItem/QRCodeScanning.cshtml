@@ -36,7 +36,14 @@
                 <th scope="col">m²</th>
                 <th scope="col">@Inventar.Resources.Resource.M2Total</th>
                 <th scope="col">@Inventar.Resources.Resource.Color</th>
-                <th scope="col">@Inventar.Resources.Resource.Price</th>
+                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+                {
+                    <th scope="col">@Inventar.Resources.Resource.Price</th>
+                }
+                else
+                {
+                    <th style="display:none" scope="col">@Inventar.Resources.Resource.Price</th>
+                }
                 <th scope="col">@Inventar.Resources.Resource.Quantity</th>
                 <th scope="col"></th>
 
@@ -69,17 +76,26 @@
                         <td style="white-space: nowrap"></td>
                     }
                     <td class="perUnit">
-                        @(item.PerM2 ? item.M2PerUnit : "")
+                        @(item.PerM2 ? Math.Round((decimal)item.M2PerUnit, 2) : "")
                     </td>
                     <td id="m2Total-@item.Id" class="total">
-                        @(item.PerM2 ? item.M2Total : "")
+                        @(item.PerM2 ? Math.Round((decimal)item.M2Total,2) : "")
                     </td>
                     <td>
                         @item.Color
                     </td>
-                    <td>
-                        @item.Price €
-                    </td>
+                    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+                    {
+                        <td>
+                            @item.Price €
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="display:none">
+                            @item.Price €
+                        </td>
+                    }
                     <td id="quantity-@item.Id">
                        @item.Quantity
                     </td>
@@ -106,17 +122,6 @@
 @* <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
  *@<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-
-    // function onScanSuccess(qrCodeMessage) {
-    //     document.getElementById('result').innerHTML = `<strong>QR Code Result: </strong> ${qrCodeMessage}`;
-
-    //     fetch(`/InventoryItem/ProcessQRCode?data=${qrCodeMessage}`)
-    //         .then(response => {
-    //             if (response.ok) {
-    //                 window.location.href = `/InventoryItem/QRCodeScanning`;
-    //             }
-    //         });
-    // }
     function onScanSuccess(qrCodeMessage) {
         fetch(`/InventoryItem/ProcessQRCode?data=${qrCodeMessage}`)
             .then(response => response.json())
@@ -138,13 +143,20 @@
             });
     }
 
-
     function onScanError(errorMessage) {
         console.warn(`QR Code scan error: ${errorMessage}`);
     }
 
-    var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
-    html5QrcodeScanner.render(onScanSuccess, onScanError);
+    // Delay scanner initialization after page load
+    window.addEventListener("load", function () {
+        setTimeout(() => {
+            const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+            html5QrcodeScanner.render(onScanSuccess, onScanError);
+        }, 1500); // Delay by 3 seconds (adjust as needed)
+    });
+
+    // var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+    // html5QrcodeScanner.render(onScanSuccess, onScanError);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>

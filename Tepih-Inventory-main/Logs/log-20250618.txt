@@ -1,0 +1,28 @@
+2025-06-18 11:55:31.515 +02:00 [WRN] [Admin1Admin1] ManuallyAddProduct: product with id 45 was not found!
+2025-06-18 11:57:27.913 +02:00 [ERR] [Admin1Admin1] Failed to manually add product with id 45
+System.Exception: Exception of type 'System.Exception' was thrown.
+   at Inventar.Controllers.InventoryItemController.ManuallyAddProduct(Int32 id) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\InventoryItemController.cs:line 1267
+2025-06-18 20:00:12.249 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure: proizvod4prpr222333BIEGETrue44
+2025-06-18 20:00:12.645 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure: proizvod4prpr222333BIEGETrue44
+2025-06-18 20:00:12.762 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure: proizvod4prpr222333BIEGETrue44
+2025-06-18 20:00:12.885 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure: proizvod4prpr222333BIEGETrue44
+2025-06-18 20:00:13.020 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure: proizvod4prpr222333BIEGETrue44
+2025-06-18 20:00:13.150 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: QR Code data doesn't follow required structure: proizvod4prpr222333BIEGETrue44
+2025-06-18 20:03:41.485 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-18 20:03:41.486 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-18 20:03:41.489 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-18 20:03:41.493 +02:00 [WRN] [Admin1Admin1] ProcessQRCode: Couldn't find a product with properties matching QR Code data: GALATA/GL103/60/2000/BEIGE
+2025-06-18 20:15:27.398 +02:00 [ERR] [Admin1Admin1] QR code processing went wrong.
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Inventar.Controllers.InventoryItemController.ProcessQRCode(String data) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\InventoryItemController.cs:line 288
+2025-06-18 20:15:34.217 +02:00 [ERR] [Admin1Admin1] QR code processing went wrong.
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Inventar.Controllers.InventoryItemController.ProcessQRCode(String data) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\InventoryItemController.cs:line 288
+2025-06-18 20:20:21.885 +02:00 [ERR] [Admin1Admin1] QR code processing went wrong for QR code with data: null.
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Inventar.Controllers.InventoryItemController.ProcessQRCode(String data) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\InventoryItemController.cs:line 288
+2025-06-18 20:20:25.673 +02:00 [ERR] [Admin1Admin1] QR code processing went wrong for QR code with data: null.
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at Inventar.Controllers.InventoryItemController.ProcessQRCode(String data) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\InventoryItemController.cs:line 288
+2025-06-18 20:40:20.235 +02:00 [ERR] [Admin1Admin1] Error occurred during creation of a new user for email marko@gmail.com
+2025-06-18 20:41:54.348 +02:00 [WRN] [Admin1Admin1] Tried to create new user with an email address that's already in use: nikolapetricevic11@gmail.com

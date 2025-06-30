@@ -16,7 +16,7 @@
         <th>@Inventar.Resources.Resource.Name</th>
         <td>@Html.DisplayFor(model => model.Name)</td>
     </tr>
-    @if (User.Identity.IsAuthenticated && User.IsInRole("admin"))
+    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
     {
         <tr>
             <th>@Inventar.Resources.Resource.ProductNumber</th>
@@ -63,10 +63,13 @@
         <th>@Inventar.Resources.Resource.Color</th>
         <td>@Html.DisplayFor(model => model.Color)</td>
     </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Price</th>
-        <td>@Html.DisplayFor(model => model.Price)</td>
-    </tr>
+    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+    {
+        <tr>
+            <th>@Inventar.Resources.Resource.Price</th>
+            <td>@Html.DisplayFor(model => model.Price)</td>
+        </tr>
+    }
     <tr>
         <th>@Inventar.Resources.Resource.PerM2</th>
         <td>@Html.DisplayFor(model => model.PerM2)</td>

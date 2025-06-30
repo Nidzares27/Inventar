@@ -1,0 +1,12 @@
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.csproj.AssemblyReference.cache
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.Resources.Resource.resources
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.Resources.Resource.sr-Latn.resources
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.csproj.GenerateResource.cache
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.AssemblyInfoInputs.cache
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.AssemblyInfo.cs
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.csproj.CoreCompileInputs.cache
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.RazorAssemblyInfo.cache
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.RazorAssemblyInfo.cs
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Release\net8.0\Inventar.sourcelink.json

@@ -11,5 +11,6 @@ namespace Inventar.Models
         [StringLength(20)]
         public string? PaymentType { get; set; }
         public DateTime PaymentTime { get; set; }
+        public bool Disabled { get; set; }
     }
 }

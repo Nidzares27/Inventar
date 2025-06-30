@@ -14,6 +14,7 @@
         <input type="hidden" id="Length" asp-for="Length" />
         <input type="hidden" id="Width" asp-for="Width" />
         <input type="hidden" id="PerM2" asp-for="PerM2" />
+        <input type="hidden" id="PlannedPaymentType" asp-for="PlannedPaymentType" />
         <input type="hidden" name="returnFromDetails" value="@ViewBag.ReturnFromDetails" />
         <input type="hidden" name="returnUrl" value="@Context.Request.Query["returnUrl"]" />
         <div class="col-sm-3">
@@ -28,7 +29,7 @@
         </div>
         <div class="col-sm-6">
             <label asp-for="CustomerFullName" class="control-label">@Inventar.Resources.Resource.CustomerFullName</label>
-            <input asp-for="CustomerFullName" class="form-control" />
+            <input asp-for="CustomerFullName" class="form-control" readonly />
             <span asp-validation-for="CustomerFullName" class="text-danger"></span>
         </div>
         <div class="col-sm-6">

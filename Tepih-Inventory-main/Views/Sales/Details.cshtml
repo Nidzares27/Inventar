@@ -41,29 +41,29 @@
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
-                <td></td>
-                <td>@item.Id</td>
-                <td>@item.ProductNumber</td>
-                <td>@item.Name</td>
-                <td>@item.Model</td>
-                <td>@item.Color</td>
+            <tr class="dataRows">
+                <td style="color:@(item.Disabled == true ? "gray" : "black")"></td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">@item.Id</td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">@item.ProductNumber</td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">@item.Name</td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">@item.Model</td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">@item.Color</td>
                 @if (item.PerM2 || (!item.PerM2 && (item.Width != null && item.Length != null)))
                 {
-                    <td>
+                    <td style="color:@(item.Disabled == true ? "gray" : "black")">
                         @($"{item.Width}X{item.Length}")
                     </td>
                 }
                 @if (!item.PerM2 && (item.Width == null || item.Length == null))
                 {
-                    <td></td>
+                    <td style="color:@(item.Disabled == true ? "gray" : "black")"></td>
                 }
-                <td>@(item.PerM2 ? Math.Round((decimal)item.M2PerUnit, 2) : "")</td>
-                <td>@(item.PerM2 ? Math.Round((decimal)item.M2Total, 2) : "")</td>
-                <td>@item.Quantity</td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">@(item.PerM2 ? Math.Round((decimal)item.M2PerUnit, 2) : "")</td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">@(item.PerM2 ? Math.Round((decimal)item.M2Total, 2) : "")</td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">@item.Quantity</td>
                 <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price€</td>
-                <td>@Math.Round((item.PerM2 ? item.Price * (decimal)item.M2Total : item.Price * item.Quantity), 2)€</td>
-                <td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">@Math.Round((item.PerM2 ? item.Price * (decimal)item.M2Total : item.Price * item.Quantity), 2)€</td>
+                <td style="color:@(item.Disabled == true ? "gray" : "black")">
                     <a href="@Url.Action("Edit", "Sales", new {id=item.Id, returnUrl = ViewBag.ReturnUrl, returnFromDetails = ViewBag.ReturnFromDetails })">@Inventar.Resources.Resource.Edit</a>
                     <a href="@Url.Action("Delete", "Sales", new {id=item.Id, returnUrl = ViewBag.ReturnUrl, returnFromDetails = ViewBag.ReturnFromDetails })">@Inventar.Resources.Resource.Delete</a>
                 </td>
@@ -79,6 +79,40 @@
 </div>
 
 <button id="downloadDetailsPDF" class="btn btn-primary" style="margin-top: 1rem;">@Inventar.Resources.Resource.PrintPDF</button>
+@if(Model.Count() > 0)
+{
+    <form asp-controller="Pdf"
+          asp-action="Faktura"
+          method="post">
+
+        <input type="hidden" name="custName" value="@ViewBag.CustomerFullName" />
+        <input type="hidden" name="vrijemeProdaje" value="@ViewBag.SaleTime" />
+
+        @for (int i = 0; i < Model.Count(); i++)
+        {
+            <input type="hidden" name="model[@i].Id" value="@Model.ElementAt(i).Id" />
+            <input type="hidden" name="model[@i].ProductNumber" value="@Model.ElementAt(i).ProductNumber" />
+            <input type="hidden" name="model[@i].Name" value="@Model.ElementAt(i).Name" />
+            <input type="hidden" name="model[@i].Model" value="@Model.ElementAt(i).Model" />
+            <input type="hidden" name="model[@i].Color" value="@Model.ElementAt(i).Color" />
+            <input type="hidden" name="model[@i].Width" value="@Model.ElementAt(i).Width" />
+            <input type="hidden" name="model[@i].Length" value="@Model.ElementAt(i).Length" />
+            <input type="hidden" name="model[@i].M2PerUnit" value="@Model.ElementAt(i).M2PerUnit" />
+            <input type="hidden" name="model[@i].M2Total" value="@Model.ElementAt(i).M2Total" />
+            <input type="hidden" name="model[@i].Quantity" value="@Model.ElementAt(i).Quantity" />
+            <input type="hidden" name="model[@i].Price" value="@Model.ElementAt(i).Price" />
+            <input type="hidden" name="model[@i].PerM2" value="@Model.ElementAt(i).PerM2" />
+            <input type="hidden" name="model[@i].Seller" value="@Model.ElementAt(i).Seller" />
+            <input type="hidden" name="model[@i].PriceTotal" value="@Math.Round((Model.ElementAt(i).PerM2 ? Model.ElementAt(i).Price * (decimal)Model.ElementAt(i).M2Total : Model.ElementAt(i).Price * Model.ElementAt(i).Quantity), 2)" />
+
+        }
+
+        <button type="submit" class="btn btn-primary btn-success" style="margin-top: 1rem;">
+            Faktura
+        </button>
+    </form>
+}
+
 
 <div>
     @if (!Model.Any())

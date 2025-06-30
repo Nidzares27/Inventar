@@ -1,5 +1,7 @@
-﻿@using Inventar.ViewModels.Shared
-@model List<BuyerActivityItem>
+﻿@using Inventar.ViewModels.Buyer
+@* @using Inventar.ViewModels.Shared*@
+@model BuyerActivityViewModel 
+@* List<BuyerActivityItem> *@
 
 <table id="ActivitiesTable" class="table table-striped tabela">
     <thead>
@@ -10,18 +12,28 @@
             <th>@Inventar.Resources.Resource.Amount</th>
             <th>@Inventar.Resources.Resource.SellerPaymentType</th>
         </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td>Prethodni dug</td>
+            <td>@Math.Round(Model.PastTotalDebt, 2)€ </td>
+            <td></td>
+        </tr>
     </thead>
     <tbody>
-        @foreach (var activity in Model)
+        @foreach (var activity in Model.Activities)
         {
-            var rowClass = activity.Type == "Prodaja" ? "table-danger" : "table-success";
-            <tr class="@rowClass">
-                <td></td>
-                <td>@activity.ActivityTime.ToString("dd-MM-yyyy HH:mm")</td>
-                <td>@activity.Type</td>
-                <td>@Math.Round(@activity.Amount, 2)€ </td>
-                <td>@activity.Info</td>
-            </tr>
+            if (activity.Disabled != true)
+            {
+                var rowClass = activity.Type == "Prodaja" ? "table-danger" : "table-success";
+                <tr class="@rowClass">
+                    <td></td>
+                    <td>@activity.ActivityTime.ToString("dd-MM-yyyy HH:mm")</td>
+                    <td>@activity.Type</td>
+                    <td>@Math.Round(@activity.Amount, 2)€ </td>
+                    <td>@activity.Info</td>
+                </tr>
+            }
         }
     </tbody>
 </table>

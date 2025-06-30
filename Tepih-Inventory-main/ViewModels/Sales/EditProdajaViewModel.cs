@@ -21,5 +21,7 @@ namespace Inventar.ViewModels.Sales
         [Range(1, int.MaxValue)]
         public int? Width { get; set; }
         public string? Prodavac { get; set; }
+        public string PlannedPaymentType { get; set; }
+
     }
 }

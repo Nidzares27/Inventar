@@ -134,6 +134,9 @@ namespace Inventar.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("PaymentTime")
                         .HasColumnType("datetime2");
 
@@ -159,7 +162,11 @@ namespace Inventar.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PlannedPaymentType")
+                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -167,6 +174,7 @@ namespace Inventar.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Prodavac")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -204,6 +212,9 @@ namespace Inventar.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("Length")
                         .HasColumnType("int");

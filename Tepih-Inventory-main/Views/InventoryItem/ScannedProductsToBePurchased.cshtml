@@ -9,7 +9,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
-<form asp-action="ScannedProductsToBePurchased" method="post">
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+<form asp-action="ScannedProductsToBePurchased" method="post" onsubmit="return validateForm()">
     <input type="hidden" class="form-control" asp-for="PurchaseTime" />
     <div class="form-group">
         <div class="row g-3" style="margin-bottom:1rem">
@@ -56,10 +63,18 @@
             <th scope="col">@Inventar.Resources.Resource.Size</th>
             <th scope="col">@Inventar.Resources.Resource.M2Total</th>
             <th scope="col">@Inventar.Resources.Resource.Color</th>
-            <th scope="col">Rabat %</th>
-            <th scope="col">@Inventar.Resources.Resource.Price</th>
+@*             @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+            {
+                <th scope="col">@Inventar.Resources.Resource.Price</th>
+            }
+            else
+            {
+                <th style="display:none" scope="col">@Inventar.Resources.Resource.Price</th>
+            } *@
+            <th style="display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")" scope="col">Rabat %</th>
+            <th style="display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")" scope="col">@Inventar.Resources.Resource.Price</th>
             <th scope="col">@Inventar.Resources.Resource.Quantity</th>
-            <th scope="col">@Inventar.Resources.Resource.PriceTotal</th>
+            <th style="display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")" scope="col">@Inventar.Resources.Resource.PriceTotal</th>
         </tr>
     </thead>
     <tbody>
@@ -94,23 +109,23 @@
                 <td>
                     @item.Color
                 </td>
-                <td>
+                <td style="display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")">
                     <input type="number" style="width:5rem" class="rabat" value="@item.Rabat" min="0" max="100">
                 </td>
-                <td>
-                    <input type="number" style="width:5rem" class="price" value="@item.Price" min="0.1">
+                <td style="display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")">
+                    <input type="number" style="width:5rem" class="price" value="@item.Price" min="0.1" required>
                 </td>
                 <td id="quantity-@item.Id" class="quantity">
                     @item.Quantity
                 </td>
-                <td id="priceTotal-@item.Id" class="priceTotal" style="color:@(item.PerM2 ? "green" : "black")">
+                <td id="priceTotal-@item.Id" class="priceTotal" style="color:@(item.PerM2 ? "green" : "black"); display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")">
                     @(Math.Round(item.PriceTotal,2)) €
                 </td>
             </tr>
         }
     </tbody>
 </table>
-<div style="text-align: right; margin-top: 10px;">
+<div style="text-align: right; margin-top: 10px; display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "block" : "none")">
     <strong>@Inventar.Resources.Resource.Total: <span id="totalPrice">0</span>€</strong>
 </div>
 
@@ -121,6 +136,11 @@
     input{
         border: 2px solid #111 !important;
     }
+
+        input.is-invalid {
+            border-color: red !important;
+            background-color: #ffe6e6;
+        }
 
     #suggestions {
         border: 1px solid #ccc;
@@ -199,11 +219,23 @@
     calculateTotal();
     document.addEventListener("DOMContentLoaded", function () {
         function updateRow(row) {
+            let priceInput = row.querySelector(".price");
+            let rabatInput = row.querySelector(".rabat");
+
             let price = parseFloat(row.querySelector(".price").value);
             let pm2 = row.dataset.perm2;
             let quantity = parseInt(row.querySelector(".quantity").textContent) || 0;
             let m2Total = parseFloat(row.querySelector(".m2Total").textContent) || 0;
             let rabat = parseInt(row.querySelector(".rabat").value);
+
+            // Basic validation
+            if (isNaN(price) || price < 0) {
+                priceInput.classList.add("is-invalid");
+                return; // skip update if invalid
+            } else {
+                priceInput.classList.remove("is-invalid");
+            }
+
             let totalPricePerUnit = price * quantity;
             let totalPricePerM2 = price * m2Total;
 
@@ -295,4 +327,19 @@
             }
         });
     });
+</script>
+<script>
+    function validateForm() {
+        let valid = true;
+        document.querySelectorAll(".price").forEach(input => {
+            if (!input.value || parseFloat(input.value) < 0) {
+                input.classList.add("is-invalid");
+                valid = false;
+            } else {
+                input.classList.remove("is-invalid");
+            }
+        });
+
+        return valid;
+    }
 </script>

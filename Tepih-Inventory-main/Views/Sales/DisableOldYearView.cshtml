@@ -1,0 +1,24 @@
+﻿@{
+    ViewData["Title"] = "Disable Records from Previous Year";
+}
+
+<h2>@Inventar.Resources.Resource.DeleteRecordsFromYear</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<form asp-action="DisableOldYearRecords" method="post" onsubmit="return confirmDisable();">
+    <button type="submit" class="btn btn-danger">
+        @Inventar.Resources.Resource.DeleteRecordsFromYear
+    </button>
+</form>
+
+@section Scripts {
+    <script>
+        function confirmDisable() {
+            return confirm("@Inventar.Resources.Resource.DeleteRecordsPrompt " + (new Date().getFullYear() - 2) + "?");
+        }
+    </script>
+}

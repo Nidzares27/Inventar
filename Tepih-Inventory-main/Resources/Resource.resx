@@ -195,6 +195,9 @@
   <data name="Day" xml:space="preserve">
     <value>Day</value>
   </data>
+  <data name="Debt" xml:space="preserve">
+    <value>Debt</value>
+  </data>
   <data name="Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
@@ -209,6 +212,18 @@
   </data>
   <data name="DeleteProduct" xml:space="preserve">
     <value>Delete Product</value>
+  </data>
+  <data name="DeleteRecords" xml:space="preserve">
+    <value>DeleteRecords</value>
+  </data>
+  <data name="DeleteRecordsConfirmation" xml:space="preserve">
+    <value>You have succesfully deleted all sales and payments for year</value>
+  </data>
+  <data name="DeleteRecordsFromYear" xml:space="preserve">
+    <value>Delete records from 2 years ago</value>
+  </data>
+  <data name="DeleteRecordsPrompt" xml:space="preserve">
+    <value>Are you sure you want to delete all sales and payments from</value>
   </data>
   <data name="DeleteSale" xml:space="preserve">
     <value>Delete Sale</value>
@@ -365,6 +380,9 @@
   </data>
   <data name="PleaseCheckYourEmailToResetYourPassword" xml:space="preserve">
     <value>Please check your email to reset your password.</value>
+  </data>
+  <data name="PreviousDebt" xml:space="preserve">
+    <value>Previous debt</value>
   </data>
   <data name="Price" xml:space="preserve">
     <value>Price</value>

@@ -40,13 +40,13 @@
                                 <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">@Inventar.Resources.Resource.Inventory</a>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" asp-area="" asp-controller="InventoryItem" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.QRCodes</a></li>
-                                    @if (User.IsInRole("admin"))
+                                    @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
                                     {
                                         <li><a class="dropdown-item" asp-area="" asp-controller="InventoryItem" asp-action="Create">@Inventar.Resources.Resource.CreateProduct</a></li>
                                     }
                                 </ul>
                             </li>
-                            @if (User.IsInRole("admin"))
+                            @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
                             {
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">@Inventar.Resources.Resource.Sales</a>
@@ -62,7 +62,7 @@
                                     <a class="nav-link" asp-area="" asp-controller="Buyer" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.Buyers</a>
                                 </li>
                             }
-                            @if (User.IsInRole("admin") || User.IsInRole("employee"))
+                            @if (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link" href="/InventoryItem/QRCodeScanning">Scan QR</a>
@@ -75,6 +75,7 @@
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Register" data-loading="true">@Inventar.Resources.Resource.CreateAccount</a></li>
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="AllAccounts" data-loading="true">@Inventar.Resources.Resource.AllAccounts</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="DisableOldYearView" data-loading="true">@Inventar.Resources.Resource.DeleteRecords</a></li>
                                     </ul>
                                 </li>
                             }

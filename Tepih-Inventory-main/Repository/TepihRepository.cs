@@ -30,6 +30,11 @@ namespace Inventar.Repository
             return await _context.Tepisi.ToListAsync();
         }
 
+        public async Task<IEnumerable<Tepih>> GetAllUndisabledAsync()
+        {
+            return await _context.Tepisi.Where(i => i.Disabled == false).ToListAsync();
+        }
+
         public async Task<Tepih> GetByIdAsync(int id)
         {
             return await _context.Tepisi.FirstOrDefaultAsync(i => i.Id == id);

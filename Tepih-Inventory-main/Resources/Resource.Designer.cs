@@ -295,6 +295,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debt.
+        /// </summary>
+        public static string Debt {
+            get {
+                return ResourceManager.GetString("Debt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Delete {
@@ -336,6 +345,42 @@ namespace Inventar.Resources {
         public static string DeleteProduct {
             get {
                 return ResourceManager.GetString("DeleteProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DeleteRecords.
+        /// </summary>
+        public static string DeleteRecords {
+            get {
+                return ResourceManager.GetString("DeleteRecords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have succesfully deleted all sales and payments for year.
+        /// </summary>
+        public static string DeleteRecordsConfirmation {
+            get {
+                return ResourceManager.GetString("DeleteRecordsConfirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete records from 2 years ago.
+        /// </summary>
+        public static string DeleteRecordsFromYear {
+            get {
+                return ResourceManager.GetString("DeleteRecordsFromYear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete all sales and payments from.
+        /// </summary>
+        public static string DeleteRecordsPrompt {
+            get {
+                return ResourceManager.GetString("DeleteRecordsPrompt", resourceCulture);
             }
         }
         
@@ -804,6 +849,15 @@ namespace Inventar.Resources {
         public static string PleaseCheckYourEmailToResetYourPassword {
             get {
                 return ResourceManager.GetString("PleaseCheckYourEmailToResetYourPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Previous debt.
+        /// </summary>
+        public static string PreviousDebt {
+            get {
+                return ResourceManager.GetString("PreviousDebt", resourceCulture);
             }
         }
         

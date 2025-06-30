@@ -1,0 +1,75 @@
+2025-06-16 11:54:30.960 +02:00 [WRN] [Admin1Admin1] Font file not found: C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\wwwroot\fonts\arialll.ttf
+2025-06-16 11:54:37.561 +02:00 [WRN] [Admin1Admin1] Font file not found: C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\wwwroot\fonts\arialll.ttf
+2025-06-16 11:56:29.494 +02:00 [WRN] [Admin1Admin1] Font file not found: C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\wwwroot\fonts\arialll.ttf
+2025-06-16 11:56:31.990 +02:00 [WRN] [Admin1Admin1] Font file not found: C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\wwwroot\fonts\arialll.ttf
+2025-06-16 11:56:34.888 +02:00 [WRN] [Admin1Admin1] Font file not found: C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\wwwroot\fonts\arialll.ttf
+2025-06-16 12:43:00.479 +02:00 [ERR] [Admin1Admin1] Couldn't find a buyer with provided id 3058
+2025-06-16 12:43:08.198 +02:00 [ERR] [Admin1Admin1] Couldn't find a buyer with provided id 3058
+2025-06-16 18:08:25.942 +02:00 [ERR] [Admin1Admin1] Couldn't find a buyer with an ID: 3057
+2025-06-16 18:11:41.785 +02:00 [ERR] [Admin1Admin1] Couldn't find a buyer with an ID: 3058
+2025-06-16 18:38:14.506 +02:00 [ERR] [Admin1Admin1] Delete Buyer: Couldn't find a buyer with an ID: 3058
+2025-06-16 18:39:08.882 +02:00 [ERR] [Admin1Admin1] Delete Buyer: Couldn't find a buyer with an ID: 3057
+2025-06-16 20:35:31.536 +02:00 [WRN] [Admin1Admin1] Buyer Activity: Tried to filter buyers activity, but only provided start date!
+2025-06-16 20:35:49.262 +02:00 [ERR] [Admin1Admin1] An unhandled exception has occurred while executing the request.
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at AspNetCoreGeneratedDocument.Views_Shared_Error.ExecuteAsync() in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Views\Shared\Error.cshtml:line 9
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderPageCoreAsync(IRazorPage page, ViewContext context)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderPageAsync(IRazorPage page, ViewContext context, Boolean invokeViewStarts)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderAsync(ViewContext context)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ViewContext viewContext, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ViewContext viewContext, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ActionContext actionContext, IView view, ViewDataDictionary viewData, ITempDataDictionary tempData, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewResultExecutor.ExecuteAsync(ActionContext context, ViewResult result)
+   at Microsoft.AspNetCore.Mvc.ViewResult.ExecuteResultAsync(ActionContext context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResultFilterAsync>g__Awaited|30_0[TFilter,TFilterAsync](ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResultExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.ResultNext[TFilter,TFilterAsync](State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeResultFilters()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Program.<>c.<<<Main>$>b__0_5>d.MoveNext() in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Program.cs:line 153
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+2025-06-16 20:38:49.220 +02:00 [WRN] [Admin1Admin1] Buyer Activity: Tried to filter buyers activity, but only provided start date!
+2025-06-16 20:38:54.745 +02:00 [ERR] [Admin1Admin1] An unhandled exception has occurred while executing the request.
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at AspNetCoreGeneratedDocument.Views_Shared_Error.ExecuteAsync() in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Views\Shared\Error.cshtml:line 9
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderPageCoreAsync(IRazorPage page, ViewContext context)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderPageAsync(IRazorPage page, ViewContext context, Boolean invokeViewStarts)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderAsync(ViewContext context)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ViewContext viewContext, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ViewContext viewContext, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ActionContext actionContext, IView view, ViewDataDictionary viewData, ITempDataDictionary tempData, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewResultExecutor.ExecuteAsync(ActionContext context, ViewResult result)
+   at Microsoft.AspNetCore.Mvc.ViewResult.ExecuteResultAsync(ActionContext context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResultFilterAsync>g__Awaited|30_0[TFilter,TFilterAsync](ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResultExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.ResultNext[TFilter,TFilterAsync](State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeResultFilters()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Program.<>c.<<<Main>$>b__0_5>d.MoveNext() in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Program.cs:line 153
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+2025-06-16 20:45:36.514 +02:00 [WRN] [Admin1Admin1] Buyer Activity: Tried to filter buyers activity, but only provided start date!
+2025-06-16 20:45:50.687 +02:00 [WRN] [Admin1Admin1] Buyer Activity: Tried to filter buyers activity, but only provided start date!
+2025-06-16 20:53:13.957 +02:00 [WRN] [Admin1Admin1] Buyer Activity: Tried to filter buyers activity, but only provided start date!
+2025-06-16 20:53:15.696 +02:00 [WRN] [Admin1Admin1] Buyer Activity: Tried to filter buyers activity, but only provided start date!

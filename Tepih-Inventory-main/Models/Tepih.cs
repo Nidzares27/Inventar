@@ -26,6 +26,7 @@ namespace Inventar.Models
         public decimal Price { get; set; } /*double*/
         public bool PerM2 { get; set; }
         public string? Description { get; set; }
+        public bool Disabled { get; set; } 
         public virtual ICollection<Prodaja> Prodaje { get; set; }
     }
 }

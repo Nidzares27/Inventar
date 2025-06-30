@@ -195,6 +195,9 @@
   <data name="Day" xml:space="preserve">
     <value>Dan</value>
   </data>
+  <data name="Debt" xml:space="preserve">
+    <value>Dug</value>
+  </data>
   <data name="Delete" xml:space="preserve">
     <value>Obriši</value>
   </data>
@@ -209,6 +212,18 @@
   </data>
   <data name="DeleteProduct" xml:space="preserve">
     <value>Obriši proizvod</value>
+  </data>
+  <data name="DeleteRecords" xml:space="preserve">
+    <value>Obriši zapise</value>
+  </data>
+  <data name="DeleteRecordsConfirmation" xml:space="preserve">
+    <value>Obrisane su sve prodaje i plaćanja za godinu</value>
+  </data>
+  <data name="DeleteRecordsFromYear" xml:space="preserve">
+    <value>Obriši zapise iz pretprošle godine</value>
+  </data>
+  <data name="DeleteRecordsPrompt" xml:space="preserve">
+    <value>Da li si siguran da zelis da obrises sve prodaje i placanja iz</value>
   </data>
   <data name="DeleteSale" xml:space="preserve">
     <value>Obriši prodaju</value>
@@ -362,6 +377,9 @@
   </data>
   <data name="PleaseCheckYourEmailToResetYourPassword" xml:space="preserve">
     <value>Provjerite vaš email da bi resetovali lozinku.</value>
+  </data>
+  <data name="PreviousDebt" xml:space="preserve">
+    <value>Prethodni dug</value>
   </data>
   <data name="Price" xml:space="preserve">
     <value>Cijena</value>

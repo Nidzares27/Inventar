@@ -10,5 +10,10 @@ namespace Inventar.ViewModels.Buyer
         public DateTime? EndDate { get; set; }
         public List<BuyerActivityItem> Activities { get; set; }
         public decimal TotalDebt { get; set; }
+        //public decimal TotalDebtDisabled { get; set; }
+        public decimal TotalDebtUndisabled { get; set; }
+        public decimal PastTotalDebt { get; set; }
+
+
     }
 }

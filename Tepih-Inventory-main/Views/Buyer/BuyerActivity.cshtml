@@ -23,13 +23,15 @@
         </div>
     </div>
 </form>
-
 <div id="activityTable">
-    @await Html.PartialAsync("_ActivityTable", Model.Activities)
+    @await Html.PartialAsync("_ActivityTable", Model)
 </div>
 
 <div class="mt-4">
-    <strong>@Inventar.Resources.Resource.TotalDebt: </strong><span id="totalDbt">@Math.Round(@Model.TotalDebt, 2)€</span>
+    <strong>@Inventar.Resources.Resource.Debt: </strong><span id="">@Math.Round((decimal)@Model.TotalDebtUndisabled, 2)€ | </span>
+@*     <strong>@Inventar.Resources.Resource.PreviousDebt: </strong><span id="">@Math.Round((decimal)@Model.TotalDebtDisabled, 2)€ | </span>
+    *@    <strong>@Inventar.Resources.Resource.PreviousDebt: </strong><span id="">@Math.Round((decimal)@Model.PastTotalDebt, 2)€ | </span>
+ <strong>@Inventar.Resources.Resource.TotalDebt: </strong><span id="totalDbt">@Math.Round(@Model.TotalDebt, 2)€</span>
 </div>
 
 <div>

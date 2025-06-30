@@ -11,24 +11,25 @@
     <form asp-action="Edit" class="row g-3" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Disabled" />
             <div class="col-sm-6">
                 <label asp-for="Name" class="control-label">@Inventar.Resources.Resource.Name</label>
-                <input asp-for="Name" class="form-control" />
+            <input asp-for="Name" class="form-control" readonly />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="col-sm-3">
                 <label asp-for="ProductNumber" class="control-label">@Inventar.Resources.Resource.ProductNumber</label>
-                <input asp-for="ProductNumber" class="form-control" />
+            <input asp-for="ProductNumber" class="form-control" readonly />
                 <span asp-validation-for="ProductNumber" class="text-danger"></span>
             </div>
             <div class="col-sm-3">
                 <label asp-for="Model" class="control-label"></label>
-                <input asp-for="Model" class="form-control" />
+            <input asp-for="Model" class="form-control" readonly />
                 <span asp-validation-for="Model" class="text-danger"></span>
             </div>
         <div class="col-sm-6">
             <label asp-for="Color" class="control-label">@Inventar.Resources.Resource.Color</label>
-            <input asp-for="Color" class="form-control" />
+            <input asp-for="Color" class="form-control" readonly />
             <span asp-validation-for="Color" class="text-danger"></span>
         </div>
         <div class="col-sm-6">
@@ -48,17 +49,17 @@
             </div>
             <div class="col-sm-4">
                 <label asp-for="Length" class="control-label">@Inventar.Resources.Resource.Length</label>
-                <input asp-for="Length" step="any" class="form-control" />
+            <input asp-for="Length" step="any" class="form-control" readonly />
                 <span asp-validation-for="Length" class="text-danger"></span>
             </div>            
             <div class="col-sm-4">
                 <label asp-for="Width" class="control-label">@Inventar.Resources.Resource.Width</label>
-                <input asp-for="Width" step="any" class="form-control" />
+            <input asp-for="Width" step="any" class="form-control" readonly />
                 <span asp-validation-for="Width" class="text-danger"></span>
             </div>                       
             <div class="col-sm-4">
                 <label asp-for="Price" class="control-label">@Inventar.Resources.Resource.Price</label>
-                <input asp-for="Price" step="any" class="form-control" />
+            <input asp-for="Price" step="any" class="form-control" />
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
         <div class="col-sm-6">

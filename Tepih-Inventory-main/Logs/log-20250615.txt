@@ -1,0 +1,12 @@
+2025-06-15 17:08:24.237 +02:00 [WRN] [Admin1Admin1] Colud not find an user with this email: dsfsfsf
+2025-06-15 17:08:44.572 +02:00 [WRN] [Admin1Admin1] User entered an incorrect password!
+2025-06-15 17:11:42.488 +02:00 [WRN] [Anonymous] Colud not find an user with this email: gsfs
+2025-06-15 17:11:49.086 +02:00 [WRN] [Anonymous] User entered an incorrect password!
+2025-06-15 17:40:00.772 +02:00 [WRN] [Admin1Admin1] Tried to create new user with an email address that's already in use: admin@gmail.com
+2025-06-15 17:41:15.914 +02:00 [ERR] [Admin1Admin1] Error occurred during creation of a new user for email testniUser@gmail.com
+2025-06-15 17:45:55.715 +02:00 [ERR] [Admin1Admin1] Error occurred during creation of a new user for email admin4@gmail.com
+2025-06-15 17:46:50.327 +02:00 [ERR] [Admin1Admin1] Error occurred during creation of a new user for email admin5@gmail.com
+2025-06-15 17:59:24.532 +02:00 [ERR] [Admin1Admin1] Error occurred during creation of a new user for email odvojeno@gmail.com
+2025-06-15 18:03:27.735 +02:00 [ERR] [Admin1Admin1] Error occurred during creation of a new user for email odvojeno@gmail.com
+2025-06-15 18:04:10.500 +02:00 [ERR] [Admin1Admin1] Error occurred during creation of a new user for email odvojeno@gmail.com
+2025-06-15 18:06:37.392 +02:00 [ERR] [Admin1Admin1] Error occurred during creation of a new user for email odvojeno@gmail.com
