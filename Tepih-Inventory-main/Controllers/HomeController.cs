@@ -33,23 +33,6 @@ namespace Inventar.Controllers
         [Authorize]
         public async Task<IActionResult> AllAccounts()
         {
-            //var users = _userManager.Users.ToList();
-            //var userList = new List<UserWithRoleViewModel>();
-
-            //foreach (var user in users)
-            //{
-            //    var roles = await _userManager.GetRolesAsync(user);
-            //    userList.Add(new UserWithRoleViewModel
-            //    {
-            //        FirstName = user.FirstName,
-            //        LastName = user.LastName,
-            //        Email = user.Email,
-            //        Role = roles.FirstOrDefault() ?? ""
-            //    });
-            //}
-            //IEnumerable<UserWithRoleViewModel> vvv = userList;
-
-            //return View(vvv);
             try
             {
                 var users = _userManager.Users.ToList();
@@ -72,7 +55,7 @@ namespace Inventar.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while loading user accounts.");
-                return View("Index"); // Or a custom fallback view
+                return View("Index");
             }
         }
 
@@ -86,25 +69,6 @@ namespace Inventar.Controllers
         {
             if (!ModelState.IsValid) return View(LoginViewModel);
 
-            //var user = await _userManager.FindByEmailAsync(LoginViewModel.EmailAddress);
-
-            //if (user != null)
-            //{
-            //    var passwordCheck = await _userManager.CheckPasswordAsync(user, LoginViewModel.Password);
-            //    if (passwordCheck)
-            //    {
-            //        var result = await _signInManager.PasswordSignInAsync(user, LoginViewModel.Password, false, false);
-            //        if (result.Succeeded)
-            //        {
-            //            ViewBag.FullName = $"{user.FirstName} {user.LastName}";
-            //            return RedirectToAction("Index", "InventoryItem");
-            //        }
-            //    }
-            //    TempData["Error"] = "Wrong credentials. Please try again";
-            //    return View(LoginViewModel);
-            //}
-            //TempData["Error"] = "Wrong credentials. Please try again";
-            //return View(LoginViewModel);
             try
             {
                 var user = await _userManager.FindByEmailAsync(LoginViewModel.EmailAddress);
@@ -151,38 +115,6 @@ namespace Inventar.Controllers
         {
             if (!ModelState.IsValid) return View(registerViewModel);
 
-            //var user = await _userManager.FindByEmailAsync(registerViewModel.EmailAddress);
-
-            //if (user != null)
-            //{
-            //    TempData["Error"] = "This email address is already in use";
-            //    return View(registerViewModel);
-            //}
-
-            //var newUser = new AppUser()
-            //{
-            //    FirstName = registerViewModel.FirstName,
-            //    LastName = registerViewModel.LastName,
-            //    Email = registerViewModel.EmailAddress,
-            //    UserName = registerViewModel.FirstName + registerViewModel.LastName,
-            //};
-
-            //var newUserResponse = await _userManager.CreateAsync(newUser, registerViewModel.Password);
-
-            //if (newUserResponse.Succeeded)
-            //{
-            //    await _userManager.AddToRoleAsync(newUser, registerViewModel.UserRole);
-            //    //await _userManager.AddToRoleAsync(newUser, UserRoles.Admin);
-            //}
-            //else
-            //{
-            //    foreach (var error in newUserResponse.Errors)
-            //    {
-            //        ModelState.AddModelError(string.Empty, error.Description);
-            //    }
-            //    return View();
-            //}
-            //return RedirectToAction("Index", "Home");
             try
             {
                 var user = await _userManager.FindByEmailAsync(registerViewModel.EmailAddress);
@@ -327,23 +259,6 @@ namespace Inventar.Controllers
         [HttpPost]
         public async Task<IActionResult> ChangePassword(string email, string newPassword)
         {
-            //var user = await _userManager.FindByEmailAsync(email);
-            //if (user == null)
-            //{
-            //    return NotFound();
-            //}
-
-            //var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            //var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-
-            //if (result.Succeeded)
-            //{
-            //    TempData["SuccessMessage"] = $"Password reset for {email} was successful.";
-            //}
-            //else
-            //{
-            //    TempData["ErrorMessage"] = $"Failed to reset password: {string.Join(", ", result.Errors.Select(e => e.Description))}";
-            //}
             try
             {
                 var user = await _userManager.FindByEmailAsync(email);
@@ -382,23 +297,6 @@ namespace Inventar.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUser(string email)
         {
-            //var user = await _userManager.FindByEmailAsync(email);
-            //if (user == null)
-            //{
-            //    TempData["ErrorMessage"] = "User not found.";
-            //    return RedirectToAction("AllAccounts");
-            //}
-
-            //var result = await _userManager.DeleteAsync(user);
-
-            //if (result.Succeeded)
-            //{
-            //    TempData["SuccessMessage"] = "User successfully deleted.";
-            //}
-            //else
-            //{
-            //    TempData["ErrorMessage"] = "Failed to delete user.";
-            //}
             try
             {
                 var user = await _userManager.FindByEmailAsync(email);
@@ -440,17 +338,6 @@ namespace Inventar.Controllers
 
         public IActionResult ChangeLanguage (string lang)
         {
-            //if (!string.IsNullOrEmpty(lang))
-            //{
-            //    Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture(lang);
-            //    Thread.CurrentThread.CurrentUICulture = new CultureInfo(lang);
-            //}
-            //else
-            //{
-            //    Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en");
-            //    Thread.CurrentThread.CurrentUICulture = new CultureInfo("en");
-            //}
-            //Response.Cookies.Append("Language", lang);
             try
             {
                 if (!string.IsNullOrEmpty(lang))

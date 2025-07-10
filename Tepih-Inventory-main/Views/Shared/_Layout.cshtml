@@ -58,8 +58,14 @@
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="PerDay">@Inventar.Resources.Resource.PerDay</a></li>
                                     </ul>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-area="" asp-controller="Buyer" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.Buyers</a>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">@Inventar.Resources.Resource.Buyers</a>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="nav-link" asp-area="" asp-controller="Buyer" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.Buyers</a>
+                                        </li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Buyer" asp-action="Debt" data-loading="true">@Inventar.Resources.Resource.AddDebt</a></li>
+                                    </ul>
                                 </li>
                             }
                             @if (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"))

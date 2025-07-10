@@ -9,7 +9,6 @@ C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\Inventar.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\Inventar.RazorAssemblyInfo.cache
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\Inventar.RazorAssemblyInfo.cs
-C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\Inventar.sourcelink.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\appsettings.Development.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\appsettings.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\Inventar.staticwebassets.runtime.json

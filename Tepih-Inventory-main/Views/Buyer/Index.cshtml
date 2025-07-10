@@ -41,6 +41,7 @@
                         @Inventar.Resources.Resource.ViewPaymentHistory
                     </a> | <a asp-area="" asp-controller="Buyer" asp-action="MakePayment" asp-route-id="@item.Id" style="color:green">@Inventar.Resources.Resource.AddPayment</a>
                     | <a asp-area="" asp-controller="Buyer" asp-action="BuyerActivity" asp-route-buyerId="@item.Id" style="color:orange">@Inventar.Resources.Resource.PurchasePayments</a>
+                    | <a asp-area="" asp-controller="Buyer" asp-action="DebtHistory" asp-route-buyerId="@item.Id" style="color:red">@Inventar.Resources.Resource.Debts</a>
                 </td>
                 <td>
                     <a asp-area="" asp-controller="Buyer" asp-action="ShowBuys" asp-route-id="@item.Id" data-loading="true">@Inventar.Resources.Resource.Buys</a> | 

@@ -1,0 +1,212 @@
+﻿@using Inventar.Models
+@model IEnumerable<Dug>
+
+<h2>
+    @Inventar.Resources.Resource.Debts: @if (Model.Count() != 0)
+    {
+        @Model.FirstOrDefault().CustomerFullName
+    }</h2>
+
+<table id="DebtTable" class="table stripe tabela" style="font-weight:500">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>@Inventar.Resources.Resource.Time</th>
+            <th>@Inventar.Resources.Resource.DebtAmount</th>
+            <th></th>
+        </tr>
+        <tr class="filters">
+            <th><input style="width:2rem" type="text" placeholder="" disabled></th>
+            <th>
+                <input type="date" id="minDate" placeholder="@Inventar.Resources.Resource.From">
+                <input type="date" id="maxDate" placeholder="@Inventar.Resources.Resource.To">
+            </th>
+            <th><input style="width:5rem" type="text" placeholder=""></th>
+            <th><input style="width:5rem" type="text" placeholder="" disabled></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td></td>
+                <td>@item.DebtTime.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                <td>@item.DebtAmount€</td>
+                <td>
+                    <a href="@Url.Action("EditDebt", "Buyer", new {id=item.Id, returnUrl = Context.Request.Path, returnFromDetails = ViewBag.ReturnUrl })">@Inventar.Resources.Resource.Edit</a>
+                    <a href="@Url.Action("DeleteDebt", "Buyer", new {id=item.Id, returnUrl = Context.Request.Path, returnFromDetails = ViewBag.ReturnUrl })">@Inventar.Resources.Resource.Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div id="pdfDownloadContainer" style="margin-top:1rem;">
+    <button id="downloadDebtPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+</div>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#DebtTable').DataTable({
+                "paging": true,
+                "pageLength": 10,
+                "order": [[1, "desc"]],
+                "orderCellsTop": true,
+                "fixedHeader": true
+            });
+
+            function parseCustomDate(dateString) {
+                if (!dateString) return null;
+
+                var parts = dateString.split(' ');
+                var dateParts = parts[0].split('-');
+                var timeParts = parts[1] ? parts[1].split(':') : [0, 0, 0];
+
+                return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0], timeParts[1], timeParts[2]);
+            }
+
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+
+                var minDate = $('#minDate').val();
+                var maxDate = $('#maxDate').val();
+                var purchaseTime = data[1];
+
+                var purchaseDate = parseCustomDate(purchaseTime);
+                if (!purchaseDate) return false;
+
+                var min = minDate ? new Date(minDate + "T00:00:00") : null;
+                var max = maxDate ? new Date(maxDate + "T23:59:59") : null;
+
+                if ((min === null || purchaseDate >= min) && (max === null || purchaseDate <= max)) {
+                    return true;
+                }
+                return false;
+            });
+
+            $('#minDate, #maxDate').on('change', function () {
+                table.draw();
+                updateTotals();
+            });
+
+            $('#DebtTable thead tr:eq(1) th').each(function (i) {
+                $('input', this).on('keyup change', function () {
+                    if (i === 1) {
+                        return;
+                    }
+                    table.column(i).search(this.value).draw();
+                });
+            });
+
+            function updateTotals() {
+                var table = $('#DebtTable').DataTable();
+                var totalDebt = 0;
+
+                table.rows({ filter: 'applied' }).data().each(function (value, index) {
+                    totalDebt += parseFloat(value[2]) || 0;
+                });
+
+                $('#totalDebt').text(totalDebt.toFixed(2));
+            }
+
+            $('#DebtTable').after(`
+                                        <div style="margin-top: 10px; font-weight: bold;">
+        @Inventar.Resources.Resource.Total: <span id="totalDebt">0.00</span>€
+                                        </div>
+                                    `);
+
+            table.on('draw', function () {
+                updateTotals();
+
+                let counter = 1;
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    var node = this.node();
+                    $('td:eq(0)', node).html(counter++);
+                });
+            });
+
+            updateTotals();
+            table.draw();
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#downloadDebtPDF').on('click', function () {
+                var table = $('#DebtTable').DataTable();
+
+                var data = [];
+
+                table.rows({ search: 'applied' }).every(function () {
+                    var row = this.node();
+                    var rowData = [];
+                    $(row).find('td').each(function () {
+                        rowData.push($(this).text().trim());
+                    });
+                    data.push(rowData);
+                });
+
+                // Get filter values
+                var filters = {};
+                $('#DebtTable thead tr:eq(1) th').each(function (i) {
+                    var input = $(this).find('input');
+                    if (input.length > 0) {
+                        filters[i] = input.val();
+                    }
+                });
+
+                // Get date range
+                var minDate = $('#minDate').val();
+                var maxDate = $('#maxDate').val();
+
+                // Get heading text
+                var heading = $('h2').text();
+
+                // Get column headers (excluding last one)
+                var columnHeaders = [];
+                $('#DebtTable thead tr:eq(0) th').each(function (i, th) {
+                    if (i < $(this).closest('tr').children().length - 1) { // exclude last column
+                        columnHeaders.push($(th).text().trim());
+                    }
+                });
+
+                // Get totals from your DOM or compute here
+                var totalDebt = parseFloat($('#totalDebt').text()) || 0;
+
+                // Send data to server
+                $.ajax({
+                    url: '@Url.Action("GenerateDebtHistoryPdf", "Pdf")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        heading: heading,
+                        data: data,
+                        filters: filters,
+                        minDate: minDate,
+                        maxDate: maxDate,
+                        columnHeaders: columnHeaders,
+                        totalDebt: totalDebt
+                    }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function (blob) {
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = `IstorijaDugovanja.pdf`;
+                        link.click();
+                    }
+                });
+            });
+
+        });
+    </script>
+    <style>
+        #DebtTable thead tr:first-child th {
+            background-color: khaki;
+        }
+    </style>
+}

@@ -1,7 +1,5 @@
 ﻿@using Inventar.ViewModels.Buyer
-@* @using Inventar.ViewModels.Shared*@
 @model BuyerActivityViewModel 
-@* List<BuyerActivityItem> *@
 
 <table id="ActivitiesTable" class="table table-striped tabela">
     <thead>
@@ -25,7 +23,7 @@
         {
             if (activity.Disabled != true)
             {
-                var rowClass = activity.Type == "Prodaja" ? "table-danger" : "table-success";
+                var rowClass = activity.Type == "Prodaja" ? "table-danger" : activity.Type == "Uplata" ? "table-success" : "table-warning";
                 <tr class="@rowClass">
                     <td></td>
                     <td>@activity.ActivityTime.ToString("dd-MM-yyyy HH:mm")</td>

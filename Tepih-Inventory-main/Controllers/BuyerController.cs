@@ -21,8 +21,9 @@ namespace Inventar.Controllers
         private readonly ISalesRepository _salesRepository;
         private readonly IPlacanjeRepository _placanjeRepository;
         private readonly ILogger<BuyerController> _logger;
+        private readonly IDugRepository _dugRepository;
 
-        public BuyerController(ApplicationDbContext context, IKupacRepository kupacRepository, ITepihRepository tepihRepository, ISalesRepository salesRepository, IPlacanjeRepository placanjeRepository, ILogger<BuyerController> logger)
+        public BuyerController(ApplicationDbContext context, IKupacRepository kupacRepository, ITepihRepository tepihRepository, ISalesRepository salesRepository, IPlacanjeRepository placanjeRepository, ILogger<BuyerController> logger, IDugRepository dugRepository)
         {
             this._context = context;
             this._kupacRepository = kupacRepository;
@@ -30,40 +31,9 @@ namespace Inventar.Controllers
             this._salesRepository = salesRepository;
             this._placanjeRepository = placanjeRepository;
             this._logger = logger;
+            this._dugRepository = dugRepository;
         }
-        //public async Task<IActionResult> Index()
-        //{
-        //    var kupci = await _kupacRepository.GetAll();
-        //    var kupcii = new List<BuyerViewModel>();
-        //    foreach (var item in kupci)
-        //    {
-        //        decimal platio = 0;
-        //        decimal dug = 0;
 
-        //        var placanja = await _placanjeRepository.GetAllByNameAsync(item.CustomerFullName);
-        //        var kupovine = await _salesRepository.GetAllByNameAsync(item.CustomerFullName);
-
-        //        foreach (var item1 in placanja)
-        //        {
-        //            platio += item1.Amount;
-        //        }
-        //        foreach (var item2 in kupovine)
-        //        {
-        //            var proizvod = await _tepihRepository.GetByIdAsyncNoTracking(item2.TepihId);
-        //            dug += (proizvod.PerM2 ? item2.Price * (((decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000) * item2.Quantity) : item2.Price * item2.Quantity);
-        //        }
-        //        var kupac = new BuyerViewModel
-        //        {
-        //            Id = item.Id,
-        //            CustomerFullName = item.CustomerFullName,
-        //            LeftToPay = @Math.Round(dug, 2), /*item.LeftToPay*/
-        //            Paid = platio,
-        //        };
-        //        kupcii.Add(kupac);
-
-        //    }
-        //    return View(kupcii);
-        //}
         public async Task<IActionResult> Index()
         {
             try
@@ -73,6 +43,7 @@ namespace Inventar.Controllers
                 // Pre-fetch all relevant data
                 var allPayments = await _placanjeRepository.GetAll();
                 var allSales = await _salesRepository.GetAllWithTepih();
+                var allDebts = await _dugRepository.GetAll();
                 var buyerViewModels = new List<BuyerViewModel>();
 
                 foreach (var buyer in buyers)
@@ -83,6 +54,12 @@ namespace Inventar.Controllers
 
                     var buyerSales = allSales
                         .Where(s => s.CustomerFullName == buyer.CustomerFullName);
+
+                    var buyerDebts = allDebts
+                        .Where(p => p.CustomerFullName == buyer.CustomerFullName)
+                        .Sum(p => p.DebtAmount);
+
+                    //var buyerDebt = buyerDebts ?? 0;
 
                     decimal totalDebt = 0;
                     foreach (var sale in buyerSales)
@@ -98,6 +75,7 @@ namespace Inventar.Controllers
 
                         totalDebt += unitPrice * area * quantity;
                     }
+                    totalDebt += buyerDebts;
 
                     buyerViewModels.Add(new BuyerViewModel
                     {
@@ -117,38 +95,6 @@ namespace Inventar.Controllers
             }
 
         }
-
-        //public async Task<IActionResult> ShowBuys(int id)
-        //{
-        //    Kupac kupac = await _kupacRepository.GetByIdAsyncNoTracking(id);
-        //    var kupovine = await _context.Prodaje.Where(c => c.CustomerFullName.Equals(kupac.CustomerFullName)).ToListAsync();
-        //    IEnumerable<Tepih> proizvodi = await _tepihRepository.GetAll();
-
-        //    var query = (from kupovina in kupovine
-        //                 join proizvod in proizvodi on kupovina.TepihId equals proizvod.Id
-        //                 where proizvod.Disabled != true && kupovina.Disabled != true
-        //                 select new ProdajaViewModel
-        //                 {
-        //                     Id = kupovina.Id,
-        //                     TepihId = kupovina.TepihId,
-        //                     Name = proizvod.Name,
-        //                     Model = proizvod.Model,
-        //                     Length = proizvod.Length,
-        //                     Width = proizvod.Width,
-        //                     Color = proizvod.Color,
-        //                     Price = kupovina.Price,
-        //                     PerM2 = proizvod.PerM2,
-        //                     Quantity = kupovina.Quantity,
-        //                     CustomerFullName = kupovina.CustomerFullName,
-        //                     VrijemeProdaje = kupovina.VrijemeProdaje,
-        //                     M2PerUnit = proizvod.PerM2 ? (decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000 : null,
-        //                     M2Total = proizvod.PerM2 ? ((decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000) * kupovina.Quantity : null,
-
-        //                 });
-        //    var referer = Request.Scheme.ToString() + "://" + Request.Host.Value.ToString() + Request.Path.Value.ToString() + Request.QueryString.Value.ToString();
-        //    ViewBag.ReturnUrl = referer;
-        //    return View(query);
-        //}
 
         public async Task<IActionResult> ShowBuys(int id)
         {
@@ -204,31 +150,6 @@ namespace Inventar.Controllers
             }
         }
 
-
-        //public async Task<IActionResult> GroupedBuys(int id)
-        //{
-        //    Kupac kupac = await _kupacRepository.GetByIdAsyncNoTracking(id);
-        //    var prodaje = await _context.Prodaje.Where(c => c.CustomerFullName.Equals(kupac.CustomerFullName)).ToListAsync();
-        //    var proizvodi = await _tepihRepository.GetAll();
-
-        //    var query = (from prodaja in prodaje
-        //                 join proizvod in proizvodi on prodaja.TepihId equals proizvod.Id
-        //                 where prodaja.Disabled != true
-        //                 group prodaja by new { prodaja.CustomerFullName, prodaja.VrijemeProdaje, prodaja.Prodavac, prodaja.PlannedPaymentType } into g
-        //                 select new SummaryViewModel
-        //                 {
-        //                     CustomerFullName = g.Key.CustomerFullName,
-        //                     VrijemeProdaje = g.Key.VrijemeProdaje,
-        //                     Prodavac = g.Key.Prodavac,
-        //                     PlannedPaymentType = g.Key.PlannedPaymentType,
-        //                     CustomerId = id
-
-        //                 }).ToList();
-        //    var referer = Request.Scheme.ToString() + "://" + Request.Host.Value.ToString() + Request.Path.Value.ToString();
-        //    ViewBag.ReturnFromDetails = referer;
-        //    return View(query);
-        //}
-
         public async Task<IActionResult> GroupedBuys(int id)
         {
             try
@@ -277,11 +198,6 @@ namespace Inventar.Controllers
             }
         }
 
-        //public async Task<IActionResult> Delete(int id)
-        //{
-        //    Kupac kupac = await _kupacRepository.GetByIdAsyncNoTracking(id);
-        //    return View(kupac);
-        //}
         public async Task<IActionResult> Delete(int id)
         {
             var kupac = await _kupacRepository.GetByIdAsyncNoTracking(id);
@@ -292,21 +208,6 @@ namespace Inventar.Controllers
             }
             return View(kupac);
         }
-
-        //[HttpPost, ActionName("Delete")]
-        //public async Task<IActionResult> DeleteKupac(int id)
-        //{
-        //    Kupac kupac = await _kupacRepository.GetByIdAsync(id);
-        //    var kupovine = await _context.Prodaje.Where(c => c.CustomerFullName.Equals(kupac.CustomerFullName)).ToListAsync();
-        //    foreach (var item in kupovine)
-        //    {
-        //        _salesRepository.Delete(item);
-        //    }
-
-        //    _kupacRepository.Delete(kupac);
-
-        //    return RedirectToAction("Index");
-        //}
 
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteKupac(int id)
@@ -329,6 +230,12 @@ namespace Inventar.Controllers
                 foreach (var item in kupovine)
                 {
                     _salesRepository.Delete(item);
+                }
+
+                var dugovi = await _context.Dugovanja.Where(c => c.CustomerFullName == kupac.CustomerFullName).ToListAsync();
+                foreach (var item in dugovi)
+                {
+                    _dugRepository.Delete(item);
                 }
 
                 _kupacRepository.Delete(kupac);
@@ -365,21 +272,6 @@ namespace Inventar.Controllers
 
             return View(uplata);
         }
-
-        //[HttpPost]
-        //public async Task<IActionResult> MakePayment(MakePaymentViewModel vm)
-        //{
-        //    var kupac = await _kupacRepository.GetByIdAsyncNoTracking(vm.Id);
-        //    Placanje uplata = new Placanje()
-        //    {
-        //        CustomerName = kupac.CustomerFullName,
-        //        Amount = vm.AmountPaid,
-        //        PaymentTime = DateTime.Now,
-        //        PaymentType = vm.PaymentType,
-        //    };
-        //    _placanjeRepository.Add(uplata);
-        //    return RedirectToAction("Index");
-        //}
 
         [HttpPost]
         public async Task<IActionResult> MakePayment(MakePaymentViewModel vm)
@@ -422,22 +314,6 @@ namespace Inventar.Controllers
             ViewBag.CustomerName = kupac.CustomerFullName;
             return View(unDisabledUplate);
         }
-
-        //public async Task<IActionResult> DeletePayment(int id)
-        //{
-        //    Placanje placanje = await _placanjeRepository.GetByIdAsync(id);
-        //    Kupac kupac = await _kupacRepository.GetByNameAsync(placanje.CustomerName);
-        //    var data = new DeleteEditPaymentViewModel
-        //    {
-        //        Id = id,
-        //        CustomerName = kupac.CustomerFullName,
-        //        Amount = placanje.Amount,
-        //        PaymentTime = placanje.PaymentTime,
-        //        BuyerId = kupac.Id,
-        //        PaymentType = placanje.PaymentType,
-        //    };
-        //    return View(data);
-        //}
 
         public async Task<IActionResult> DeletePayment(int id)
         {
@@ -517,39 +393,6 @@ namespace Inventar.Controllers
             return View(data);
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> EditPayment(int id, int buyerId, DeleteEditPaymentViewModel vm)
-        //{
-
-        //    if (!ModelState.IsValid)
-        //    {
-        //        ModelState.AddModelError("", "Editovanje placanja nije uspjelo");
-        //        return View("EditPayment", vm);
-        //    }
-
-        //    var payment = await _placanjeRepository.GetByIdAsyncNoTracking(id);
-
-        //    if (payment != null)
-        //    {
-        //        var placanjeEdit = new Placanje
-        //        {
-        //            Id = id,
-        //            CustomerName = vm.CustomerName,
-        //            Amount = vm.Amount,
-        //            PaymentTime = vm.PaymentTime,
-        //            PaymentType = vm.PaymentType,
-        //        };
-
-        //        _placanjeRepository.Update(placanjeEdit);
-
-        //        return RedirectToAction("PaymentHistory", new { id = vm.BuyerId });
-        //    }
-        //    else
-        //    {
-        //        return View(vm);
-        //    }
-        //}
-
         [HttpPost]
         public async Task<IActionResult> EditPayment(int id, DeleteEditPaymentViewModel vm)
         {
@@ -600,8 +443,12 @@ namespace Inventar.Controllers
                     .Include(p => p.Tepih)
                     .Where(p => p.CustomerFullName == buyer.CustomerFullName);
 
+                var debtsQuery = _context.Dugovanja
+                    .Where(p => p.CustomerFullName == buyer.CustomerFullName);
+
                 var pastPaymentsQuery = paymentsQuery;
                 var pastSalesQuery = salesQuery;
+                var pastDebtsQuery = debtsQuery;
 
                 var endDateModified = new DateTime();
                 if (endDate != null)
@@ -613,20 +460,26 @@ namespace Inventar.Controllers
                 {
                     paymentsQuery = paymentsQuery.Where(p => p.PaymentTime >= startDate.Value);
                     salesQuery = salesQuery.Where(p => p.VrijemeProdaje >= startDate.Value);
+                    debtsQuery = debtsQuery.Where(p => p.DebtTime >= startDate.Value);
                     pastPaymentsQuery = pastPaymentsQuery.Where(p => p.PaymentTime < startDate.Value);
                     pastSalesQuery = pastSalesQuery.Where(p => p.VrijemeProdaje < startDate.Value);
+                    pastDebtsQuery = pastDebtsQuery.Where(p => p.DebtTime < startDate.Value);
                 }
 
                 if (endDate.HasValue)
                 {
                     paymentsQuery = paymentsQuery.Where(p => p.PaymentTime <= endDateModified);
                     salesQuery = salesQuery.Where(p => p.VrijemeProdaje <= endDateModified);
+                    debtsQuery = debtsQuery.Where(p => p.DebtTime <= endDateModified);
+
                 }
 
                 var payments = await paymentsQuery.ToListAsync();
                 var sales = await salesQuery.ToListAsync();
                 var pastPayments = await pastPaymentsQuery.ToListAsync();
                 var pastSales = await pastSalesQuery.ToListAsync();
+                var debts = await debtsQuery.ToListAsync();
+                var pastDebts = await pastDebtsQuery.ToListAsync();
 
                 var groupedSales = sales
                     .GroupBy(p => new { p.VrijemeProdaje, p.Prodavac, p.Disabled })
@@ -652,8 +505,19 @@ namespace Inventar.Controllers
                     Disabled = p.Disabled
                 });
 
+                var debtItems = debts.Select(p => new BuyerActivityItem
+                {
+                    ActivityTime = p.DebtTime,
+                    Type = "Dugovanje",
+                    Amount = p.DebtAmount,
+                    Info = "N/A",
+                    Disabled = false
+                });
+
                 IEnumerable<BuyerActivityItem> pastGroupedSales;
                 IEnumerable<BuyerActivityItem> pastPaymentItems;
+                IEnumerable<BuyerActivityItem> pastDebtItems;
+
 
                 if (startDate.HasValue)
                 {
@@ -680,41 +544,42 @@ namespace Inventar.Controllers
                         Info = p.PaymentType ?? "N/A",
                         Disabled = p.Disabled
                     });
+
+                    pastDebtItems = pastDebts.Select(p => new BuyerActivityItem
+                    {
+                        ActivityTime = p.DebtTime,
+                        Type = "Dugovanje",
+                        Amount = p.DebtAmount,
+                        Info = "N/A",
+                        Disabled = false
+                    });
                 }
                 else
                 {
                     pastGroupedSales = groupedSales.Where(s => s.Disabled == true);
                     pastPaymentItems = paymentItems.Where(s => s.Disabled == true);
-                }
+                    pastDebtItems = debtItems.Where(s => s.Disabled == true);//nije neophodno posto je Ienumerable svakako prazan
 
-                //var salesDisabled = groupedSales.Where(s => s.Disabled == true);
-                //var paymentsDisabled = paymentItems.Where(s => s.Disabled == true);
+                }
 
                 var salesUndisabled = groupedSales.Where(s => s.Disabled != true);
                 var paymentsUndisabled = paymentItems.Where(s => s.Disabled != true);
 
-                //var totalSalesDisabled = salesDisabled.Sum(s => s.Amount);
-                //var totalPaymentsDisabled = paymentsDisabled.Sum(p => p.Amount);
-                //var totalDebtDisabled = totalSalesDisabled - totalPaymentsDisabled;
-
-                //NOVO
                 var pastTotalSales = pastGroupedSales.Sum(s => s.Amount);
                 var pastTotalPayments = pastPaymentItems.Sum(p => p.Amount);
-                var pastTotalDebt = pastTotalSales - pastTotalPayments;
+                var pastTotalDugovanja = pastDebtItems.Sum(p => p.Amount);
+                var pastTotalDebt = pastTotalSales + pastTotalDugovanja - pastTotalPayments;
 
                 var totalSalesUndisabled = salesUndisabled.Sum(s => s.Amount);
                 var totalPaymentsUndisabled = paymentsUndisabled.Sum(p => p.Amount);
-                var totalDebtUndisabled = totalSalesUndisabled - totalPaymentsUndisabled;
+                var totalDugovanjaUndisabled = debtItems.Sum(p => p.Amount);
+                var totalDebtUndisabled = totalSalesUndisabled + totalDugovanjaUndisabled - totalPaymentsUndisabled;
 
-                //var totalSales = groupedSales.Sum(s => s.Amount);
-                //var totalPayments = paymentItems.Sum(p => p.Amount);
-
-                //var totalDebt = totalSales - totalPayments;
                 var totalDebt = totalDebtUndisabled + pastTotalDebt;
-
 
                 var activities = groupedSales
                     .Concat(paymentItems)
+                    .Concat(debtItems)
                     .OrderByDescending(a => a.ActivityTime)
                     .ToList();
 
@@ -726,7 +591,6 @@ namespace Inventar.Controllers
                     EndDate = endDate,
                     Activities = activities,
                     TotalDebt = totalDebt,
-                    //TotalDebtDisabled = totalDebtDisabled,
                     TotalDebtUndisabled = totalDebtUndisabled,
                     PastTotalDebt = pastTotalDebt
                 };
@@ -740,5 +604,149 @@ namespace Inventar.Controllers
             }
         }
 
+        public async Task<IActionResult> Debt()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Debt(string buyerName, decimal debtAmount)
+        {
+            if (!ModelState.IsValid)
+                return View();
+
+            try
+            {
+                var kupac = await _kupacRepository.GetByNameAsync(buyerName.ToUpper().Trim());
+
+                if (kupac == null)
+                {
+                    _kupacRepository.Add(new Kupac { CustomerFullName = buyerName.ToUpper().Trim() });
+                }
+                _dugRepository.Add(new Dug { CustomerFullName = buyerName.ToUpper().Trim(), DebtAmount = Math.Round(debtAmount, 2), DebtTime = DateTime.Now });
+
+                TempData["SuccessMessage"] = "Uspješno dodat dug!";
+                return View();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while adding new debt: Buyer name = {name}; Debt amount = {amount}", buyerName,debtAmount);
+                return StatusCode(500, "An error occurred while adding new debt!!!");
+            }
+
+        }
+
+        public async Task<IActionResult> DebtHistory(int buyerId)
+        {
+            var kupac = await _kupacRepository.GetByIdAsyncNoTracking(buyerId);
+            if (kupac == null)
+            {
+                _logger.LogError("Debt History: Couldn't find a buyer with an ID: {id}", buyerId);
+                return NotFound("Buyer not found!!! Please try with another one to see if the error keeps happening.");
+            }
+            var dugovanja = await _dugRepository.GetAllByNameAsync(kupac.CustomerFullName);
+            ViewBag.CustomerName = kupac.CustomerFullName;
+            return View(dugovanja);
+        }
+
+        public async Task<IActionResult> DeleteDebt(int id)
+        {
+            var dug = await _dugRepository.GetByIdAsync(id);
+            if (dug == null)
+            {
+                _logger.LogError("Delete Debt: Couldn't find a debt with an ID of: {id}", id);
+                return NotFound("Debt not found!!! Please try with another one to see if the error keeps happening.");
+            }
+            var kupac = await _kupacRepository.GetByNameAsync(dug.CustomerFullName);
+            if (kupac == null)
+            {
+                _logger.LogError("Delete Debt: Couldn't find a buyer with a name of: {name}", dug.CustomerFullName);
+                return NotFound("Buyer not found!!! Please try with another one to see if the error keeps happening.");
+            }
+
+            var data = new DeleteEditDebtViewModel
+            {
+                Id = id,
+                CustomerFullName = kupac.CustomerFullName,
+                DebtAmount = dug.DebtAmount,
+                DebtTime = dug.DebtTime,
+                BuyerId = kupac.Id
+            };
+
+            return View(data);
+        }
+
+
+        [HttpPost, ActionName("DeleteDebt")]
+        public async Task<IActionResult> DeleteDebtt(int id, int buyerId)
+        {
+            Dug dug = await _dugRepository.GetByIdAsync(id);
+            if (dug == null)
+            {
+                _logger.LogError("Delete Debt Post: Couldn't find a debt with an ID of: {id}", id);
+                return NotFound("Debt not found!!! Please try with another one to see if the error keeps happening.");
+            }
+
+            _dugRepository.Delete(dug);
+
+            return RedirectToAction("DebtHistory", new { buyerId = buyerId });
+        }
+
+        public async Task<IActionResult> EditDebt(int id)
+        {
+            Dug dug = await _dugRepository.GetByIdAsyncNoTracking(id);
+            if (dug == null)
+            {
+                _logger.LogError("Edit Debt: Couldn't find a debt with an ID of: {id}", id);
+                return NotFound("Debt not found!!! Please try with another one to see if the error keeps happening.");
+            }
+            var kupac = await _kupacRepository.GetByNameAsync(dug.CustomerFullName);
+            if (kupac == null)
+            {
+                _logger.LogError("Edit Debt: Couldn't find a buyer with a name of: {name}", dug.CustomerFullName);
+                return NotFound("Buyer not found!!! Please try with another one to see if the error keeps happening.");
+            }
+
+            var data = new DeleteEditDebtViewModel
+            {
+                Id = id,
+                CustomerFullName = kupac.CustomerFullName,
+                DebtAmount = dug.DebtAmount,
+                DebtTime = dug.DebtTime,
+                BuyerId = kupac.Id
+            };
+
+            return View(data);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditDebt(int id, DeleteEditDebtViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", "Editovanje plaćanja nije uspjelo.");
+                return View("EditPayment", vm);
+            }
+
+            var dug = await _dugRepository.GetByIdAsyncNoTracking(id);
+            if (dug == null)
+            {
+                ModelState.AddModelError("", "Dug nije pronađen.");
+                _logger.LogError("Edit Debt Post: Couldn't find a debt with an ID of: {id}", id);
+                return View("EditDebt", vm);
+            }
+
+            var updatedDebt = new Dug
+            {
+                Id = id,
+                CustomerFullName = vm.CustomerFullName,
+                DebtAmount = vm.DebtAmount,
+                DebtTime = vm.DebtTime
+            };
+
+            _dugRepository.Update(updatedDebt);
+
+            return RedirectToAction("DebtHistory", new { buyerId = vm.BuyerId });
+        }
     }
 }

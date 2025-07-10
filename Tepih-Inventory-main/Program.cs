@@ -34,6 +34,7 @@ builder.Services.AddScoped<IKupacRepository, KupacRepository>();
 builder.Services.AddScoped<ISalesRepository, SalesRepository>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IPlacanjeRepository, PlacanjeRepository>();
+builder.Services.AddScoped<IDugRepository, DugRepository>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsPrincipalFactory>();
 builder.Services.AddScoped<ISessionService, SessionService>();

@@ -79,6 +79,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add Debt.
+        /// </summary>
+        public static string AddDebt {
+            get {
+                return ResourceManager.GetString("AddDebt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add New Product.
         /// </summary>
         public static string AddNewProduct {
@@ -138,6 +147,15 @@ namespace Inventar.Resources {
         public static string BuyerInfo {
             get {
                 return ResourceManager.GetString("BuyerInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Buyer Name.
+        /// </summary>
+        public static string BuyerName {
+            get {
+                return ResourceManager.GetString("BuyerName", resourceCulture);
             }
         }
         
@@ -304,6 +322,24 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debt Amount.
+        /// </summary>
+        public static string DebtAmount {
+            get {
+                return ResourceManager.GetString("DebtAmount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debts.
+        /// </summary>
+        public static string Debts {
+            get {
+                return ResourceManager.GetString("Debts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Delete {
@@ -327,6 +363,15 @@ namespace Inventar.Resources {
         public static string DeleteBuyer {
             get {
                 return ResourceManager.GetString("DeleteBuyer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Debt.
+        /// </summary>
+        public static string DeleteDebt {
+            get {
+                return ResourceManager.GetString("DeleteDebt", resourceCulture);
             }
         }
         
@@ -444,6 +489,15 @@ namespace Inventar.Resources {
         public static string Edit {
             get {
                 return ResourceManager.GetString("Edit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Debt.
+        /// </summary>
+        public static string EditDebt {
+            get {
+                return ResourceManager.GetString("EditDebt", resourceCulture);
             }
         }
         
@@ -934,6 +988,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Receipt.
+        /// </summary>
+        public static string Receipt {
+            get {
+                return ResourceManager.GetString("Receipt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Register.
         /// </summary>
         public static string Register {
@@ -1186,7 +1249,7 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to View Payment History.
+        ///   Looks up a localized string similar to Payment History.
         /// </summary>
         public static string ViewPaymentHistory {
             get {

@@ -97,6 +97,30 @@ namespace Inventar.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Inventar.Models.Dug", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("CustomerFullName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("DebtAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("DebtTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Dugovanja");
+                });
+
             modelBuilder.Entity("Inventar.Models.Kupac", b =>
                 {
                     b.Property<int>("Id")

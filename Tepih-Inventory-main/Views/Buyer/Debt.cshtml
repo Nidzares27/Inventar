@@ -1,0 +1,20 @@
+﻿<link rel="stylesheet" href="~/css/MakePayment.css" asp-append-version="true" />
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+<form asp-controller="Buyer" asp-action="Debt" method="post">
+    <div class="form-group divZaAmount">
+        <label class="bigFont">@Inventar.Resources.Resource.BuyerName: </label>
+        <input class="bigAmountInput" name="buyerName" type="text" required>
+    </div>
+    <div class="form-group divZaAmount">
+        <label class="bigFont">@Inventar.Resources.Resource.DebtAmount: </label>
+        <input class="bigAmountInput" name="debtAmount" type="number" step="0.1" min="0.1"  required>
+        €
+    </div>
+    <button type="submit" class="btn btn-primary btn-success addPaymentbtn">@Inventar.Resources.Resource.AddDebt</button>
+</form>

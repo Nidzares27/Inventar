@@ -1,0 +1,37 @@
+﻿@using Inventar.ViewModels.Buyer
+@model DeleteEditDebtViewModel
+<link rel="stylesheet" href="~/css/DeleteBuyer.css" asp-append-version="true" />
+
+@{
+    ViewData["Title"] = "DeleteDebt";
+}
+
+<h1 class="bigFont">@Inventar.Resources.Resource.DeleteDebt</h1>
+
+<h3 class="naslov">@Inventar.Resources.Resource.DeleteThis</h3>
+<div>
+    <table class="custom-table">
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Id)</th>
+            <td>@Html.DisplayFor(model => model.Id)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.CustomerFullName</th>
+            <td>@Html.DisplayFor(model => model.CustomerFullName)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Amount</th>
+            <td>@Html.DisplayFor(model => model.DebtAmount)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Time</th>
+            <td>@Html.DisplayFor(model => model.DebtTime)</td>
+        </tr>
+    </table>
+    <form asp-action="DeleteDebt">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="BuyerId" />
+        <input type="submit" value="@Inventar.Resources.Resource.Delete" class="btn btn-danger deleteBtn" />
+    </form>
+    <a class="btn btn-secondary btn-sm backToListBtn" style="margin-top:1rem" asp-action="DebtHistory" asp-route-buyerId="@Model.BuyerId">@Inventar.Resources.Resource.BackToList</a>
+</div>

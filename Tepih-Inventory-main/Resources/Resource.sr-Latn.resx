@@ -123,6 +123,9 @@
   <data name="ActivityFor" xml:space="preserve">
     <value>Aktivnosti za</value>
   </data>
+  <data name="AddDebt" xml:space="preserve">
+    <value>Dodaj dug</value>
+  </data>
   <data name="AddNewProduct" xml:space="preserve">
     <value>Dodaj novi proizvod</value>
   </data>
@@ -143,6 +146,9 @@
   </data>
   <data name="BuyerInfo" xml:space="preserve">
     <value>Informacije o kupcu</value>
+  </data>
+  <data name="BuyerName" xml:space="preserve">
+    <value>Ime kupca</value>
   </data>
   <data name="Buyers" xml:space="preserve">
     <value>Kupci</value>
@@ -198,6 +204,12 @@
   <data name="Debt" xml:space="preserve">
     <value>Dug</value>
   </data>
+  <data name="DebtAmount" xml:space="preserve">
+    <value>Iznos duga</value>
+  </data>
+  <data name="Debts" xml:space="preserve">
+    <value>Dugovanja</value>
+  </data>
   <data name="Delete" xml:space="preserve">
     <value>Obriši</value>
   </data>
@@ -206,6 +218,9 @@
   </data>
   <data name="DeleteBuyer" xml:space="preserve">
     <value>Obriši kupca</value>
+  </data>
+  <data name="DeleteDebt" xml:space="preserve">
+    <value>Obriši dug</value>
   </data>
   <data name="DeletePayment" xml:space="preserve">
     <value>Obriši plaćanje</value>
@@ -245,6 +260,9 @@
   </data>
   <data name="Edit" xml:space="preserve">
     <value>Izmijeni</value>
+  </data>
+  <data name="EditDebt" xml:space="preserve">
+    <value>Izmjeni dug</value>
   </data>
   <data name="EditPayment" xml:space="preserve">
     <value>Izmijeni plaćanje</value>
@@ -405,6 +423,9 @@
   <data name="Quantity" xml:space="preserve">
     <value>Količina</value>
   </data>
+  <data name="Receipt" xml:space="preserve">
+    <value>Faktura</value>
+  </data>
   <data name="Register" xml:space="preserve">
     <value>Registracija</value>
   </data>
@@ -487,7 +508,7 @@
     <value>Negrupisani PDF</value>
   </data>
   <data name="ViewPaymentHistory" xml:space="preserve">
-    <value>Pogledaj istoriju plaćanaja</value>
+    <value>Istorija plaćanaja</value>
   </data>
   <data name="ViewPayments" xml:space="preserve">
     <value>Pogledaj plaćanja</value>

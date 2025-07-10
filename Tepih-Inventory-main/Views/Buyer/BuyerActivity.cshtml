@@ -29,9 +29,8 @@
 
 <div class="mt-4">
     <strong>@Inventar.Resources.Resource.Debt: </strong><span id="">@Math.Round((decimal)@Model.TotalDebtUndisabled, 2)€ | </span>
-@*     <strong>@Inventar.Resources.Resource.PreviousDebt: </strong><span id="">@Math.Round((decimal)@Model.TotalDebtDisabled, 2)€ | </span>
-    *@    <strong>@Inventar.Resources.Resource.PreviousDebt: </strong><span id="">@Math.Round((decimal)@Model.PastTotalDebt, 2)€ | </span>
- <strong>@Inventar.Resources.Resource.TotalDebt: </strong><span id="totalDbt">@Math.Round(@Model.TotalDebt, 2)€</span>
+     <strong>@Inventar.Resources.Resource.PreviousDebt: </strong><span id="">@Math.Round((decimal)@Model.PastTotalDebt, 2)€ | </span>
+     <strong>@Inventar.Resources.Resource.TotalDebt: </strong><span id="totalDbt">@Math.Round(@Model.TotalDebt, 2)€</span>
 </div>
 
 <div>
@@ -50,7 +49,7 @@
             var table = $('#ActivitiesTable').DataTable({
                 "paging": true,
                 "pageLength": 25,
-                "order": [[1, "desc"]],
+                // "order": [[1, "desc"]],
                 "orderCellsTop": true,
                 "fixedHeader": true,
             });

@@ -14,5 +14,7 @@ namespace Inventar.Data
         public DbSet<Prodaja> Prodaje { get; set; }
         public DbSet<Kupac> Kupci { get; set; }
         public DbSet<Placanje> Placanja { get; set; }
+        public DbSet<Dug> Dugovanja { get; set; }
+
     }
 }

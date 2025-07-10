@@ -1,0 +1,51 @@
+﻿@using Inventar.ViewModels.Buyer
+@model DeleteEditDebtViewModel
+@{
+    ViewData["Title"] = "EditDebt";
+}
+
+<h1>@Inventar.Resources.Resource.EditDebt</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="EditDebt">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="BuyerId" />
+            <div class="form-group">
+                <label asp-for="Id" class="control-label"></label>
+                <input asp-for="Id" class="form-control" readonly />
+                <span asp-validation-for="Id" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CustomerFullName" class="control-label">@Inventar.Resources.Resource.CustomerFullName</label>
+                <input asp-for="CustomerFullName" class="form-control" readonly />
+                <span asp-validation-for="CustomerFullName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DebtAmount" class="control-label">@Inventar.Resources.Resource.Amount</label>
+                <input asp-for="DebtAmount" class="form-control" />
+                <span asp-validation-for="DebtAmount" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DebtTime" class="control-label">@Inventar.Resources.Resource.Time</label>
+                <input asp-for="DebtTime" class="form-control" readonly />
+                <span asp-validation-for="DebtTime" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="@Inventar.Resources.Resource.Edit" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a class="btn btn-secondary btn-sm" asp-action="DebtHistory" asp-route-buyerId="@Model.BuyerId">@Inventar.Resources.Resource.BackToList</a>
+</div>
+<style>
+    label {
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+</style>

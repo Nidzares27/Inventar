@@ -36,33 +36,6 @@ namespace Inventar.Controllers
             this._tepihRepository = tepihRepository;
             this._logger = logger;
         }
-      //  public async Task<IActionResult> Index()
-      //  {
-      //      var prodaje = await _salesRepository.GetAll();
-      //      var proizvodi = await _tepihRepository.GetAll();
-      //      List<SummaryViewModel> query;
-
-      //      query = await (from prodaja in _context.Prodaje
-      //                     join proizvod in _context.Tepisi on prodaja.TepihId equals proizvod.Id
-      //                     where prodaja.Disabled != true
-      //                     group new { prodaja, proizvod } by new { prodaja.CustomerFullName, prodaja.VrijemeProdaje, prodaja.Prodavac, prodaja.PlannedPaymentType } into gr
-      //                     select new SummaryViewModel
-      //                     {
-      //                         CustomerFullName = gr.Key.CustomerFullName,
-      //                         VrijemeProdaje = gr.Key.VrijemeProdaje,
-      //                         Prodavac = gr.Key.Prodavac,
-      //                         PlannedPaymentType = gr.Key.PlannedPaymentType,
-      //                         TotalQuantity = gr.Sum(g => g.prodaja.Quantity),
-      //                         M2Total = gr.Sum(g => g.proizvod.PerM2 ? ((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity : 0),
-      //                         TotalPrice = gr.Sum(g => g.proizvod.PerM2
-      //? g.prodaja.Price * (((decimal)((int)g.proizvod.Length * (int)g.proizvod.Width) / 10000) * g.prodaja.Quantity)
-      //: g.prodaja.Price * g.prodaja.Quantity)
-      //                     }).ToListAsync();
-
-      //      var referer = Request.Scheme.ToString() + "://" + Request.Host.Value.ToString() + Request.Path.Value.ToString();
-      //      ViewBag.ReturnFromDetails = referer;
-      //      return View(query);
-      //  }
 
         public async Task<IActionResult> Index()
         {
@@ -109,7 +82,6 @@ namespace Inventar.Controllers
             }
         }
 
-
         public async Task<IActionResult> AllSales()
         {
             try
@@ -148,7 +120,6 @@ namespace Inventar.Controllers
                 ModelState.AddModelError("", "Došlo je do greške prilikom učitavanja podataka.");
                 return StatusCode(500, "An error occurred while loading data! Please try again.");
             }
-
         }
 
         public async Task<IActionResult> Details(string customer, DateTime saleTime, string? returnFromDetails)
@@ -177,7 +148,7 @@ namespace Inventar.Controllers
                                  M2PerUnit = proizvod.PerM2 ? (decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000 : null,
                                  M2Total = proizvod.PerM2 ? ((decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000) * prodaja.Quantity : null,
                                  Disabled = proizvod.Disabled,
-                                 Seller = prodaja.Prodavac //dodato
+                                 Seller = prodaja.Prodavac
                              }).ToList();
 
                 ViewBag.CustomerFullName = customer;
@@ -196,15 +167,6 @@ namespace Inventar.Controllers
             }
 
         }
-
-        //public async Task<IActionResult> Delete(int id, string returnUrl, string returnFromDetails)
-        //{
-        //    Prodaja prodaja = await _salesRepository.GetByIdAsyncNoTracking(id);
-        //    ViewBag.ReturnUrl = returnUrl;
-        //    ViewBag.ReturnFromDetails = returnFromDetails;
-
-        //    return View(prodaja);
-        //}
 
         public async Task<IActionResult> Delete(int id, string returnUrl, string returnFromDetails)
         {
@@ -231,33 +193,6 @@ namespace Inventar.Controllers
             }
         }
 
-
-        //[HttpPost, ActionName("Delete")]
-        //public async Task<IActionResult> DeleteProdaja(int id, string returnUrl, string CustomerFullName, DateTime VrijemeProdaje, string returnFromDetails)
-        //{
-        //    Prodaja prodaja = await _salesRepository.GetByIdAsync(id);
-        //    Tepih proizvod = await _tepihRepository.GetByIdAsync(prodaja.TepihId);
-        //    proizvod.Quantity += prodaja.Quantity;
-        //    _tepihRepository.Update(proizvod);
-        //    _salesRepository.Delete(prodaja);
-
-        //    var splitedReturnFromDetails = returnFromDetails.Split("/");
-        //    if (splitedReturnFromDetails.Last() == "AllSales")
-        //    {
-        //        return RedirectToAction("AllSales", "Sales");
-        //    }
-        //    if (splitedReturnFromDetails[splitedReturnFromDetails.Count() - 2] == "ShowBuys")
-        //    {
-        //        return RedirectToAction("Index", "Buyer", new { id = splitedReturnFromDetails.Last() });
-        //    }
-        //    return RedirectToAction("Details", new
-        //    {
-        //        customer = CustomerFullName,
-        //        saleTime = VrijemeProdaje,
-        //        returnFromDetails = returnFromDetails
-        //    });
-        //}
-
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteProdaja(int id, string returnUrl, string CustomerFullName, DateTime VrijemeProdaje, string returnFromDetails)
         {
@@ -277,11 +212,9 @@ namespace Inventar.Controllers
                     return NotFound("Product not found for this sale!!!");
                 }
 
-                // Revert product quantity
                 proizvod.Quantity += prodaja.Quantity;
                 _tepihRepository.Update(proizvod);
 
-                // Delete the sale
                 _salesRepository.Delete(prodaja);
 
                 // Safe string parsing
@@ -298,7 +231,6 @@ namespace Inventar.Controllers
                     return RedirectToAction("Index", "Buyer", new { id = buyerId });
                 }
 
-                // Default redirection to Details
                 return RedirectToAction("Details", new
                 {
                     customer = CustomerFullName,
@@ -313,7 +245,6 @@ namespace Inventar.Controllers
                 return StatusCode(500, "An error occurred while deleting a sale! Please try again.");
             }
         }
-
 
         public async Task<IActionResult> Edit(int id, string returnUrl, string returnFromDetails)
         {
@@ -360,66 +291,6 @@ namespace Inventar.Controllers
 
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> Edit(int id, EditProdajaViewModel prodajaVM, string returnUrl, string returnFromDetails)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        ModelState.AddModelError("", "Editovanje prodaje nije uspjelo");
-        //        return View("Edit", prodajaVM);
-        //    }
-
-        //    var prodaja = await _salesRepository.GetByIdAsyncNoTracking(id);
-
-        //    if (prodaja != null)
-        //    {
-        //        var proizvod = await _tepihRepository.GetByIdAsyncNoTracking(prodajaVM.TepihId);
-
-        //        var prodajaEdit = new Prodaja
-        //        {
-        //            Id = id,
-        //            TepihId = prodajaVM.TepihId,
-        //            CustomerFullName = prodajaVM.CustomerFullName,
-        //            VrijemeProdaje = prodajaVM.VrijemeProdaje,
-        //            Quantity = prodajaVM.Quantity,
-        //            Price = prodajaVM.Price,
-        //            Prodavac = prodajaVM.Prodavac,
-        //        };
-
-        //        _salesRepository.Update(prodajaEdit);
-
-        //        if (prodajaVM.Quantity > prodaja.Quantity)
-        //        {
-        //            proizvod.Quantity -= prodajaVM.Quantity - prodaja.Quantity;
-        //            _tepihRepository.Update(proizvod);
-        //        }
-        //        if (prodajaVM.Quantity < prodaja.Quantity)
-        //        {
-        //            proizvod.Quantity += prodaja.Quantity - prodajaVM.Quantity;
-        //            _tepihRepository.Update(proizvod);
-        //        }
-        //        var splitedReturnFromDetails = returnFromDetails.Split("/");
-        //        if (splitedReturnFromDetails.Last() == "AllSales")
-        //        {
-        //            return RedirectToAction("AllSales", "Sales");
-        //        }
-        //        if (splitedReturnFromDetails[splitedReturnFromDetails.Count() - 2] == "ShowBuys")
-        //        {
-        //            return RedirectToAction("ShowBuys", "Buyer", new { id = splitedReturnFromDetails.Last() });
-        //        }
-        //        return RedirectToAction("Details", new
-        //        {
-        //            customer = prodajaVM.CustomerFullName,
-        //            saleTime = prodajaVM.VrijemeProdaje,
-        //            returnFromDetails = returnFromDetails
-        //        });
-        //    }
-        //    else
-        //    {
-        //        return View(prodajaVM);
-        //    }
-        //}
-
         [HttpPost]
         public async Task<IActionResult> Edit(int id, EditProdajaViewModel prodajaVM, string returnUrl, string returnFromDetails)
         {
@@ -428,7 +299,6 @@ namespace Inventar.Controllers
                 ModelState.AddModelError("", "Editovanje prodaje nije uspjelo");
                 return View("Edit", prodajaVM);
             }
-
             try
             {
                 var prodaja = await _salesRepository.GetByIdAsyncNoTracking(id);
@@ -494,7 +364,6 @@ namespace Inventar.Controllers
                 return View("Edit", prodajaVM);
             }
         }
-
 
         [HttpGet]
         public IActionResult PerProducts(string? customerFullName)

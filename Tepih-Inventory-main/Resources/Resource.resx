@@ -123,6 +123,9 @@
   <data name="ActivityFor" xml:space="preserve">
     <value>Activity for</value>
   </data>
+  <data name="AddDebt" xml:space="preserve">
+    <value>Add Debt</value>
+  </data>
   <data name="AddNewProduct" xml:space="preserve">
     <value>Add New Product</value>
   </data>
@@ -143,6 +146,9 @@
   </data>
   <data name="BuyerInfo" xml:space="preserve">
     <value>Buyer Information</value>
+  </data>
+  <data name="BuyerName" xml:space="preserve">
+    <value>Buyer Name</value>
   </data>
   <data name="Buyers" xml:space="preserve">
     <value>Buyers</value>
@@ -198,6 +204,12 @@
   <data name="Debt" xml:space="preserve">
     <value>Debt</value>
   </data>
+  <data name="DebtAmount" xml:space="preserve">
+    <value>Debt Amount</value>
+  </data>
+  <data name="Debts" xml:space="preserve">
+    <value>Debts</value>
+  </data>
   <data name="Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
@@ -206,6 +218,9 @@
   </data>
   <data name="DeleteBuyer" xml:space="preserve">
     <value>Delete Buyer</value>
+  </data>
+  <data name="DeleteDebt" xml:space="preserve">
+    <value>Delete Debt</value>
   </data>
   <data name="DeletePayment" xml:space="preserve">
     <value>Delete Payment</value>
@@ -245,6 +260,9 @@
   </data>
   <data name="Edit" xml:space="preserve">
     <value>Edit</value>
+  </data>
+  <data name="EditDebt" xml:space="preserve">
+    <value>Edit Debt</value>
   </data>
   <data name="EditPayment" xml:space="preserve">
     <value>Edit Payment</value>
@@ -408,6 +426,9 @@
   <data name="Quantity" xml:space="preserve">
     <value>Quantity</value>
   </data>
+  <data name="Receipt" xml:space="preserve">
+    <value>Receipt</value>
+  </data>
   <data name="Register" xml:space="preserve">
     <value>Register</value>
   </data>
@@ -493,7 +514,7 @@
     <value>Ungrouped PDF</value>
   </data>
   <data name="ViewPaymentHistory" xml:space="preserve">
-    <value>View Payment History</value>
+    <value>Payment History</value>
   </data>
   <data name="ViewPayments" xml:space="preserve">
     <value>View Payments</value>
