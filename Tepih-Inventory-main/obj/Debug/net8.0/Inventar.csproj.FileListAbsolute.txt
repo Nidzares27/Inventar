@@ -74,11 +74,6 @@ C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\sr-Latn\Inventar.resources.dll
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets.development.json
-C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets\msbuild.Inventar.Microsoft.AspNetCore.StaticWebAssets.props
-C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets\msbuild.build.Inventar.props
-C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.Inventar.props
-C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.Inventar.props
-C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets.pack.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\scopedcss\bundle\Inventar.styles.css
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\scopedcss\projectbundle\Inventar.bundle.scp.css
@@ -114,3 +109,14 @@ C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\System.Text.Json.dll
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\Serilog.Enrichers.AspnetcoreHttpcontext.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\tr\Inventar.resources.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\Inventar.Resources.Resource.tr.resources
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\tr\Inventar.resources.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\Inventar.staticwebassets.endpoints.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\rjimswa.dswa.cache.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets.build.json.cache
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

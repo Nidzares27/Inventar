@@ -210,6 +210,9 @@
   <data name="Debts" xml:space="preserve">
     <value>Dugovanja</value>
   </data>
+  <data name="DebtSoFar" xml:space="preserve">
+    <value>Dug do sada</value>
+  </data>
   <data name="Delete" xml:space="preserve">
     <value>Obriši</value>
   </data>

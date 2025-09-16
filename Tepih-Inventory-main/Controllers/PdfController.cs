@@ -20,6 +20,7 @@ using static iText.Kernel.Font.PdfFontFactory;
 using Path = System.IO.Path;
 using Inventar.ViewModels.Inventory;
 using Inventar.ViewModels.Pdf;
+using System.Diagnostics;
 
 namespace Inventar.Controllers
 {
@@ -86,7 +87,7 @@ namespace Inventar.Controllers
 
             // Build description line
             var description = $"{tepih.Name.ToUpper().Trim() ?? ""}/{tepih.Model.ToUpper().Trim() ?? ""}/" +
-                              $"{tepih.Length?.ToString("0.##")}/{tepih.Width?.ToString("0.##")}/" +
+                              $"{tepih.Width?.ToString("0.##")}/{tepih.Length?.ToString("0.##")}/" +
                               $"{tepih.Color.ToUpper().Trim() ?? ""}";
 
             var paragraph = new Paragraph(description)
@@ -132,8 +133,12 @@ namespace Inventar.Controllers
                 .Include(p => p.Tepih)
                 .Where(p => p.CustomerFullName == buyer.CustomerFullName);
 
+            var debtsQuery = _context.Dugovanja
+                .Where(p => p.CustomerFullName == buyer.CustomerFullName);
+
             var pastPaymentsQuery = paymentsQuery;
             var pastSalesQuery = salesQuery;
+            var pastDebtsQuery = debtsQuery;
 
             var endDateModified = new DateTime();
             if (endDate != null)
@@ -145,27 +150,32 @@ namespace Inventar.Controllers
             {
                 paymentsQuery = paymentsQuery.Where(p => p.PaymentTime >= startDate.Value);
                 salesQuery = salesQuery.Where(p => p.VrijemeProdaje >= startDate.Value);
+                debtsQuery = debtsQuery.Where(p => p.DebtTime >= startDate.Value);
                 pastPaymentsQuery = pastPaymentsQuery.Where(p => p.PaymentTime < startDate.Value);
                 pastSalesQuery = pastSalesQuery.Where(p => p.VrijemeProdaje < startDate.Value);
+                pastDebtsQuery = pastDebtsQuery.Where(p => p.DebtTime < startDate.Value);
             }
 
             if (endDate.HasValue)
             {
                 paymentsQuery = paymentsQuery.Where(p => p.PaymentTime <= endDateModified);
                 salesQuery = salesQuery.Where(p => p.VrijemeProdaje <= endDateModified);
+                debtsQuery = debtsQuery.Where(p => p.DebtTime <= endDateModified);
             }
 
             var payments = await paymentsQuery.ToListAsync();
             var sales = await salesQuery.ToListAsync();
             var pastPayments = await pastPaymentsQuery.ToListAsync();
             var pastSales = await pastSalesQuery.ToListAsync();
+            var debts = await debtsQuery.ToListAsync();
+            var pastDebts = await pastDebtsQuery.ToListAsync();
 
             var groupedSales = sales
                 .GroupBy(p => new { p.VrijemeProdaje, p.Prodavac })
                 .Select(g => new BuyerActivityItem
                 {
                     ActivityTime = g.Key.VrijemeProdaje,
-                    Type = "Kupovina",
+                    Type = "Sale",
                     Amount = g.Sum(prodaja =>
                         prodaja.Tepih.PerM2
                             ? prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
@@ -177,13 +187,23 @@ namespace Inventar.Controllers
             var paymentItems = payments.Select(p => new BuyerActivityItem
             {
                 ActivityTime = p.PaymentTime,
-                Type = "Uplata",
+                Type = "Payment",
                 Amount = p.Amount,
                 Info = p.PaymentType ?? "N/A"
             });
 
+            var debtItems = debts.Select(p => new BuyerActivityItem
+            {
+                ActivityTime = p.DebtTime,
+                Type = "Debt",
+                Amount = p.DebtAmount,
+                Info = "N/A",
+                Disabled = false
+            });
+
             IEnumerable<BuyerActivityItem> pastGroupedSales;
             IEnumerable<BuyerActivityItem> pastPaymentItems;
+            IEnumerable<BuyerActivityItem> pastDebtItems;
 
             if (startDate.HasValue)
             {
@@ -192,7 +212,7 @@ namespace Inventar.Controllers
                     .Select(g => new BuyerActivityItem
                     {
                         ActivityTime = g.Key.VrijemeProdaje,
-                        Type = "Prodaja",
+                        Type = "Sale",
                         Amount = g.Sum(prodaja =>
                             prodaja.Tepih.PerM2
                                 ? prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
@@ -205,46 +225,48 @@ namespace Inventar.Controllers
                 pastPaymentItems = pastPayments.Select(p => new BuyerActivityItem
                 {
                     ActivityTime = p.PaymentTime,
-                    Type = "Uplata",
+                    Type = "Payment",
                     Amount = p.Amount,
                     Info = p.PaymentType ?? "N/A",
                     Disabled = p.Disabled
+                });
+
+                pastDebtItems = pastDebts.Select(p => new BuyerActivityItem
+                {
+                    ActivityTime = p.DebtTime,
+                    Type = "Debt",
+                    Amount = p.DebtAmount,
+                    Info = "N/A",
+                    Disabled = false
                 });
             }
             else
             {
                 pastGroupedSales = groupedSales.Where(s => s.Disabled == true);
                 pastPaymentItems = paymentItems.Where(s => s.Disabled == true);
+                pastDebtItems = debtItems.Where(s => s.Disabled == true);//nije neophodno posto je Ienumerable svakako prazan
             }
 
             var activities = groupedSales
                 .Concat(paymentItems)
+                .Concat(debtItems)
                 .OrderBy(a => a.ActivityTime)
                 .ToList();
-
-            //var salesDisabled = groupedSales.Where(s => s.Disabled == true);
-            //var paymentsDisabled = paymentItems.Where(s => s.Disabled == true);
 
             var salesUndisabled = groupedSales.Where(s => s.Disabled != true);
             var paymentsUndisabled = paymentItems.Where(s => s.Disabled != true);
 
-            //var totalSalesDisabled = salesDisabled.Sum(s => s.Amount);
-            //var totalPaymentsDisabled = paymentsDisabled.Sum(p => p.Amount);
-            //var totalDebtDisabled = totalSalesDisabled - totalPaymentsDisabled;
-
             //NOVO
             var pastTotalSales = pastGroupedSales.Sum(s => s.Amount);
             var pastTotalPayments = pastPaymentItems.Sum(p => p.Amount);
-            var pastTotalDebt = pastTotalSales - pastTotalPayments;
+            var pastTotalDugovanja = pastDebtItems.Sum(p => p.Amount);
+            var pastTotalDebt = pastTotalSales + pastTotalDugovanja - pastTotalPayments;
 
             var totalSalesUndisabled = salesUndisabled.Sum(s => s.Amount);
             var totalPaymentsUndisabled = paymentsUndisabled.Sum(p => p.Amount);
-            var totalDebtUndisabled = totalSalesUndisabled - totalPaymentsUndisabled;
+            var totalDugovanjaUndisabled = debtItems.Sum(p => p.Amount);
+            var totalDebtUndisabled = totalSalesUndisabled + totalDugovanjaUndisabled - totalPaymentsUndisabled;
 
-            //var totalSales = groupedSales.Sum(s => s.Amount);
-            //var totalPayments = paymentItems.Sum(p => p.Amount);
-
-            //var totalDebt = totalSales - totalPayments;
             var totalDebt = totalDebtUndisabled + pastTotalDebt;
 
             // Generate PDF with iText7
@@ -298,14 +320,14 @@ namespace Inventar.Controllers
 
                 var table = new Table(5).UseAllAvailableWidth();
                 table.AddHeaderCell("#").SetBackgroundColor(ColorConstants.CYAN);
-                table.AddHeaderCell("Vrijeme").SetBackgroundColor(ColorConstants.CYAN);
-                table.AddHeaderCell("Tip").SetBackgroundColor(ColorConstants.CYAN);
-                table.AddHeaderCell("Iznos").SetBackgroundColor(ColorConstants.CYAN);
-                table.AddHeaderCell("Prodavac/tip placanja").SetBackgroundColor(ColorConstants.CYAN);
+                table.AddHeaderCell(@Inventar.Resources.Resource.Time).SetBackgroundColor(ColorConstants.CYAN);
+                table.AddHeaderCell(@Inventar.Resources.Resource.Type).SetBackgroundColor(ColorConstants.CYAN);
+                table.AddHeaderCell(@Inventar.Resources.Resource.Amount).SetBackgroundColor(ColorConstants.CYAN);
+                table.AddHeaderCell(@Inventar.Resources.Resource.SellerPaymentType).SetBackgroundColor(ColorConstants.CYAN);
 
                 table.AddCell(new Cell().Add(new Paragraph("")).SetBackgroundColor(ColorConstants.PINK));
                 table.AddCell(new Cell().Add(new Paragraph("")).SetBackgroundColor(ColorConstants.PINK));
-                table.AddCell(new Cell().Add(new Paragraph("Prethodni dug:")).SetBackgroundColor(ColorConstants.PINK));
+                table.AddCell(new Cell().Add(new Paragraph(@Inventar.Resources.Resource.PreviousDebt)).SetBackgroundColor(ColorConstants.PINK));
                 table.AddCell(new Cell().Add(new Paragraph($"{Math.Round(pastTotalDebt, 2)}€")).SetBackgroundColor(ColorConstants.PINK));
                 table.AddCell(new Cell().Add(new Paragraph("")).SetBackgroundColor(ColorConstants.PINK));
 
@@ -313,7 +335,7 @@ namespace Inventar.Controllers
                 {
                     table.AddCell(new Cell().Add(new Paragraph("")).SetBackgroundColor(ColorConstants.YELLOW));
                     table.AddCell(new Cell().Add(new Paragraph("")).SetBackgroundColor(ColorConstants.YELLOW));
-                    table.AddCell(new Cell().Add(new Paragraph("Dug do sad")).SetBackgroundColor(ColorConstants.YELLOW));
+                    table.AddCell(new Cell().Add(new Paragraph(@Inventar.Resources.Resource.DebtSoFar)).SetBackgroundColor(ColorConstants.YELLOW));
                     table.AddCell(new Cell().Add(new Paragraph($"{Math.Round(runningDebt, 2)}€")).SetBackgroundColor(ColorConstants.YELLOW));
                     table.AddCell(new Cell().Add(new Paragraph("")).SetBackgroundColor(ColorConstants.YELLOW));
                 }
@@ -321,9 +343,11 @@ namespace Inventar.Controllers
                 int rowCounter = i + 1; // to match global row count
                 foreach (var item in pageActivities)
                 {
-                    runningDebt += item.Type == "Kupovina" ? item.Amount : -item.Amount;
+                    runningDebt += item.Type == "Sale" ? item.Amount : -item.Amount;
 
-                    var bgColor = item.Type == "Kupovina" ? ColorConstants.LIGHT_GRAY : ColorConstants.WHITE;
+                    //var bgColor = item.Type == "Kupovina" ? ColorConstants.LIGHT_GRAY : ColorConstants.WHITE;
+                    var bgColor = item.Type == "Sale" ? ColorConstants.LIGHT_GRAY : item.Type == "Payment" ? ColorConstants.GREEN : ColorConstants.WHITE;
+
 
                     table.AddCell(new Cell().Add(new Paragraph(rowCounter.ToString())).SetBackgroundColor(bgColor));
                     table.AddCell(new Cell().Add(new Paragraph(item.ActivityTime.ToString("dd-MM-yyyy HH:mm"))).SetBackgroundColor(bgColor));
@@ -338,7 +362,7 @@ namespace Inventar.Controllers
                 pageIndex++;
             }
 
-            var totalParagraph = new Paragraph($"Dug: {Math.Round(totalDebtUndisabled, 2)}€ | Prethodni dug: {Math.Round(pastTotalDebt/*totalDebtDisabled*/, 2)}€ | Ukupan dug: {Math.Round(totalDebt, 2)}€")
+            var totalParagraph = new Paragraph($"{@Inventar.Resources.Resource.Debt}: {Math.Round(totalDebtUndisabled, 2)}€ | {@Inventar.Resources.Resource.PreviousDebt}: {Math.Round(pastTotalDebt/*totalDebtDisabled*/, 2)}€ | {@Inventar.Resources.Resource.TotalDebt}: {Math.Round(totalDebt, 2)}€")
                 .SetBold()
                 //.SetFont(boldFont)
                 .SetFontSize(12)
@@ -447,7 +471,8 @@ namespace Inventar.Controllers
                 }
 
                 // Add totals row spanning all columns
-                string totalsText = $"Količina ukupno: {request.TotalQuantity} | Ukupno m²: {request.TotalM2} | Cijena ukupno: {request.TotalPrice}€";
+                string totalsText = $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€";
+
                 table.AddCell(new Cell(1, numColumns)
                     .Add(new Paragraph(totalsText))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
@@ -559,7 +584,7 @@ namespace Inventar.Controllers
                 }
 
                 // Totals Row
-                string totalsText = $"Količina ukupno: {request.TotalQuantity}   |   Ukupno m²: {request.TotalM2:F2}   |   Cijena ukupno: {request.TotalPrice:F2}€";
+                string totalsText = $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity}   |   {@Inventar.Resources.Resource.M2Total}: {request.TotalM2:F2}   |   {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice:F2}€";
 
                 table.AddCell(new Cell(1, numCols)
                     .Add(new Paragraph(totalsText).SetBold())
@@ -671,7 +696,8 @@ namespace Inventar.Controllers
                 }
 
                 // Totals row
-                string totalsText = $"Količina ukupno: {request.TotalQuantity} | Ukupno m²: {request.TotalM2:F2} | Cijena ukupno: {request.TotalPrice:F2}€";
+                string totalsText = $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2:F2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice:F2}€";
+
                 table.AddCell(new Cell(1, numColumns)
                     .Add(new Paragraph(totalsText))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
@@ -777,7 +803,7 @@ namespace Inventar.Controllers
 
                 // Totals row
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"Količina ukupno: {request.TotalQuantity} | Ukupno m²: {request.TotalM2} | Cijena ukupno: {request.TotalPrice}€"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetBold()
@@ -868,7 +894,7 @@ namespace Inventar.Controllers
 
                 // Totals row
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"Količina ukupno: {request.TotalQuantity} | Ukupno m²: {request.TotalM2} | Cijena ukupno: {request.TotalPrice}€"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetBold()
@@ -967,7 +993,7 @@ namespace Inventar.Controllers
 
                 // Totals
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"Količina ukupno: {request.TotalQuantity} | Ukupno m²: {request.TotalM2} | Cijena ukupno: {request.TotalPrice}€"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetBold()
@@ -1067,7 +1093,7 @@ namespace Inventar.Controllers
                 }
 
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"Količina ukupno: {request.TotalQuantity} | Ukupno m²: {request.TotalM2} | Cijena ukupno: {request.TotalPrice}€"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetBold()
@@ -1133,9 +1159,9 @@ namespace Inventar.Controllers
                     labeleTable.AddCell(new Cell().Add(new Paragraph(value ?? "")).SetTextAlignment(TextAlignment.LEFT));
                 }
 
-                AddRow("Šifra", request.ProductNumber);
-                AddRow("Ime", request.Name);
-                AddRow("Veličina", request.Size);
+                AddRow(@Inventar.Resources.Resource.ProductNumber, request.ProductNumber);
+                AddRow(@Inventar.Resources.Resource.Name, request.Name);
+                AddRow(@Inventar.Resources.Resource.Size, request.Size);
                 AddRow("M²", request.M2PerProduct);
 
                 document.Add(labeleTable);
@@ -1180,7 +1206,7 @@ namespace Inventar.Controllers
                 }
 
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"Količina ukupno: {request.TotalQuantity} | Ukupno m²: {request.TotalM2} | Cijena ukupno: {request.TotalPrice}€"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetBold()
@@ -1252,12 +1278,12 @@ namespace Inventar.Controllers
                     labeleTable.AddCell(new Cell().Add(new Paragraph(value ?? "")).SetTextAlignment(TextAlignment.LEFT));
                 }
 
-                AddRow("Proizvod ID", request.ProductId);
-                AddRow("Šifra", request.ProductNumber);
-                AddRow("Ime", request.Name);
+                AddRow(@Inventar.Resources.Resource.ProductID, request.ProductId);
+                AddRow(@Inventar.Resources.Resource.ProductNumber, request.ProductNumber);
+                AddRow(@Inventar.Resources.Resource.Name, request.Name);
                 AddRow("Model", request.Model);
-                AddRow("Boja", request.Color);
-                AddRow("Veličina", request.Size);
+                AddRow(@Inventar.Resources.Resource.Color, request.Color);
+                AddRow(@Inventar.Resources.Resource.Size, request.Size);
                 AddRow("M²", request.M2PerProduct);
 
                 document.Add(labeleTable);
@@ -1302,7 +1328,7 @@ namespace Inventar.Controllers
                 }
 
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"Količina ukupno: {request.TotalQuantity} | Ukupno m²: {request.TotalM2} | Cijena ukupno: {request.TotalPrice}€"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetBold()
@@ -1394,7 +1420,7 @@ namespace Inventar.Controllers
                 }
 
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"Količina ukupno: {request.TotalQuantity} | Ukupno m²: {request.TotalM2}"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2}"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetBold()
@@ -1486,7 +1512,7 @@ namespace Inventar.Controllers
                 }
 
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"Ukupno: {request.TotalPrice}€"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.Total}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetBold()
@@ -1578,7 +1604,7 @@ namespace Inventar.Controllers
                 }
 
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"Ukupno: {request.TotalDebt}€"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.Total}: {request.TotalDebt}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetBold()
@@ -1639,7 +1665,7 @@ namespace Inventar.Controllers
                                     .SetMarginBottom(5);
 
                 headerTable.AddCell(new Cell()
-                    .Add(new Paragraph($"Prodavac: {model[0].Seller}"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.Seller}: {model[0].Seller}"))
                     .SetBorder(Border.NO_BORDER)
                     .SetTextAlignment(TextAlignment.LEFT));
 
@@ -1649,7 +1675,7 @@ namespace Inventar.Controllers
                     .SetTextAlignment(TextAlignment.CENTER));
 
                 headerTable.AddCell(new Cell()
-                    .Add(new Paragraph($"Datum: {vrijemeProdaje}"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.Time}: {vrijemeProdaje}"))
                     .SetBorder(Border.NO_BORDER)
                     .SetTextAlignment(TextAlignment.RIGHT));
 
@@ -1661,7 +1687,7 @@ namespace Inventar.Controllers
 
                 if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
                 {
-                    string[] headers = { "Šifra", "Ime", "Cijena", "Veličina", "Kol.", "m²", "ukupno m²", "Iznos" };
+                    string[] headers = { @Inventar.Resources.Resource.ProductNumber, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Price, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, "m²", @Inventar.Resources.Resource.M2Total, @Inventar.Resources.Resource.Amount };
 
                     foreach (var header in headers)
                     {
@@ -1699,7 +1725,7 @@ namespace Inventar.Controllers
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell(""));
-                    table.AddCell(CreateCenteredBoldCell("UKUPNO:"));
+                    table.AddCell(CreateCenteredBoldCell(@Inventar.Resources.Resource.Total + ":"));
                     table.AddCell(CreateCenteredBoldCell(totalQuantity.ToString()));
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell($"{Math.Round(totalM2 ?? 0, 2)}"));

@@ -1,0 +1,71 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|c:\\users\\deskpc\\desktop\\tepih-inventory-main\\tepih-inventory-main\\controllers\\pdfcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:controllers\\pdfcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|c:\\users\\deskpc\\desktop\\tepih-inventory-main\\tepih-inventory-main\\controllers\\inventoryitemcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:controllers\\inventoryitemcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|c:\\users\\deskpc\\desktop\\tepih-inventory-main\\tepih-inventory-main\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 1281,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PdfController.cs",
+              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Controllers\\PdfController.cs",
+              "RelativeDocumentMoniker": "Controllers\\PdfController.cs",
+              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Controllers\\PdfController.cs",
+              "RelativeToolTip": "Controllers\\PdfController.cs",
+              "ViewState": "AgIAAEQAAAAAAAAAAAAAAA4AAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-16T10:21:29.208Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "InventoryItemController.cs",
+              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Controllers\\InventoryItemController.cs",
+              "RelativeDocumentMoniker": "Controllers\\InventoryItemController.cs",
+              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Controllers\\InventoryItemController.cs",
+              "RelativeToolTip": "Controllers\\InventoryItemController.cs",
+              "ViewState": "AgIAAHwAAAAAAAAAAAAAAA8AAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-16T10:21:09.233Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-09-05T10:40:45.874Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

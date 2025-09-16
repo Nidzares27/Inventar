@@ -94,6 +94,10 @@
                                     {
                                         <span>English</span>
                                     }
+                                    else if (Thread.CurrentThread.CurrentCulture.ToString().StartsWith("tr"))
+                                    {
+                                        <span>Türkçe</span>
+                                    }
                                     else
                                     {
                                         <span>Crnogorski</span>
@@ -103,6 +107,7 @@
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" asp-controller="Home" asp-action="ChangeLanguage" asp-route-lang="en">English</a></li>
                                     <li><a class="dropdown-item" asp-controller="Home" asp-action="ChangeLanguage" asp-route-lang="sr-Latn">Crnogorski</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Home" asp-action="ChangeLanguage" asp-route-lang="tr">Türkçe</a></li>
                                 </ul>
                             </div>
                         </li>

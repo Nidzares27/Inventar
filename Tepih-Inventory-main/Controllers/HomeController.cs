@@ -356,7 +356,14 @@ namespace Inventar.Controllers
                 Response.Cookies.Append("Language", lang ?? "en");
 
                 var referer = Request.GetTypedHeaders().Referer?.ToString();
-                return Redirect(!string.IsNullOrEmpty(referer) ? referer : "/");
+                if (!string.IsNullOrEmpty(referer))
+                {
+                    // URL-encode manually to be safe
+                    var encodedUrl = Uri.EscapeUriString(referer);
+                    return Redirect(encodedUrl);
+                }
+                return Redirect("/");
+                //return Redirect(!string.IsNullOrEmpty(referer) ? referer : "/");
             }
             catch (Exception ex)
             {

@@ -13,7 +13,7 @@
         <tr>
             <td></td>
             <td></td>
-            <td>Prethodni dug</td>
+            <td>@Inventar.Resources.Resource.PreviousDebt</td>
             <td>@Math.Round(Model.PastTotalDebt, 2)€ </td>
             <td></td>
         </tr>
@@ -23,7 +23,7 @@
         {
             if (activity.Disabled != true)
             {
-                var rowClass = activity.Type == "Prodaja" ? "table-danger" : activity.Type == "Uplata" ? "table-success" : "table-warning";
+                var rowClass = activity.Type == "Sale" ? "table-danger" : activity.Type == "Payment" ? "table-success" : "table-warning";
                 <tr class="@rowClass">
                     <td></td>
                     <td>@activity.ActivityTime.ToString("dd-MM-yyyy HH:mm")</td>

@@ -486,7 +486,7 @@ namespace Inventar.Controllers
                     .Select(g => new BuyerActivityItem
                     {
                         ActivityTime = g.Key.VrijemeProdaje,
-                        Type = "Prodaja",
+                        Type = "Sale",
                         Amount = g.Sum(prodaja =>
                             prodaja.Tepih.PerM2
                                 ? prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
@@ -499,7 +499,7 @@ namespace Inventar.Controllers
                 var paymentItems = payments.Select(p => new BuyerActivityItem
                 {
                     ActivityTime = p.PaymentTime,
-                    Type = "Uplata",
+                    Type = "Payment",
                     Amount = p.Amount,
                     Info = p.PaymentType ?? "N/A",
                     Disabled = p.Disabled
@@ -508,7 +508,7 @@ namespace Inventar.Controllers
                 var debtItems = debts.Select(p => new BuyerActivityItem
                 {
                     ActivityTime = p.DebtTime,
-                    Type = "Dugovanje",
+                    Type = "Debt",
                     Amount = p.DebtAmount,
                     Info = "N/A",
                     Disabled = false
@@ -526,7 +526,7 @@ namespace Inventar.Controllers
                         .Select(g => new BuyerActivityItem
                         {
                             ActivityTime = g.Key.VrijemeProdaje,
-                            Type = "Prodaja",
+                            Type = "Sale",
                             Amount = g.Sum(prodaja =>
                                 prodaja.Tepih.PerM2
                                     ? prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
@@ -539,7 +539,7 @@ namespace Inventar.Controllers
                     pastPaymentItems = pastPayments.Select(p => new BuyerActivityItem
                     {
                         ActivityTime = p.PaymentTime,
-                        Type = "Uplata",
+                        Type = "Payment",
                         Amount = p.Amount,
                         Info = p.PaymentType ?? "N/A",
                         Disabled = p.Disabled
@@ -548,7 +548,7 @@ namespace Inventar.Controllers
                     pastDebtItems = pastDebts.Select(p => new BuyerActivityItem
                     {
                         ActivityTime = p.DebtTime,
-                        Type = "Dugovanje",
+                        Type = "Debt",
                         Amount = p.DebtAmount,
                         Info = "N/A",
                         Disabled = false

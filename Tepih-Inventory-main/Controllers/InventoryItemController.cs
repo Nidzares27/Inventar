@@ -111,7 +111,7 @@ namespace Inventar.Controllers
 
                 try
                 {
-                    var qrCodeImageUrl = await GenerateQRCode($"{tepih.Name.ToUpper().Trim()}/{tepih.Model.ToUpper().Trim()}/{tepih.ProductNumber.ToUpper().Trim()}/{tepih.Length}/{tepih.Width}/{tepih.Color.ToUpper().Trim()}/{tepih.PerM2}");/*/{ tepih.Price}*/
+                    var qrCodeImageUrl = await GenerateQRCode($"{tepih.Name.ToUpper().Trim()}/{tepih.Model.ToUpper().Trim()}/{tepih.ProductNumber.ToUpper().Trim()}/{tepih.Width}/{tepih.Length}/{tepih.Color.ToUpper().Trim()}/{tepih.PerM2}");/*/{ tepih.Price}*/
                     //var qrCodeImageUrl = await GenerateQRCode($"{tepih.Name.ToUpper().Trim()}/{tepih.Model.ToUpper().Trim()}/{tepih.Width}/{tepih.Length}/{tepih.Color.ToUpper().Trim()}");
 
                     var url = "";
@@ -275,8 +275,8 @@ namespace Inventar.Controllers
                         var itemm = _context.Tepisi.FirstOrDefault(i => i.Name == extractData[0].Trim()
                         && i.Model == extractData[1].Trim()
                         && i.ProductNumber == extractData[2].Trim()
-                        && i.Length.ToString() == extractData[3].Trim()
-                        && i.Width.ToString() == extractData[4].Trim()
+                        && i.Width.ToString() == extractData[3].Trim()
+                        && i.Length.ToString() == extractData[4].Trim()
                         && i.Color == extractData[5].Trim()
                         && i.PerM2.ToString() == extractData[6].Trim()
                         && i.Disabled != true);
@@ -712,7 +712,7 @@ namespace Inventar.Controllers
                     .SetMarginBottom(5);
 
                 headerTable.AddCell(new Cell()
-                    .Add(new Paragraph($"Prodavac: {userFullName}"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.Seller}: {userFullName}"))
                     .SetBorder(Border.NO_BORDER)
                     .SetTextAlignment(TextAlignment.LEFT));
 
@@ -722,7 +722,7 @@ namespace Inventar.Controllers
                     .SetTextAlignment(TextAlignment.CENTER));
 
                 headerTable.AddCell(new Cell()
-                    .Add(new Paragraph($"Datum: {spovm.PurchaseTime:dd/MM/yyyy HH:mm:ss}"))
+                    .Add(new Paragraph($"{@Inventar.Resources.Resource.Time}: {spovm.PurchaseTime:dd/MM/yyyy HH:mm:ss}"))
                     .SetBorder(Border.NO_BORDER)
                     .SetTextAlignment(TextAlignment.RIGHT));
 
@@ -737,7 +737,7 @@ namespace Inventar.Controllers
 
                 if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
                 {
-                    string[] headers = { "Šifra", "Ime", "Cijena", "Veličina", "Kol.", "m²", "ukupno m²", "Iznos" };
+                    string[] headers = { @Inventar.Resources.Resource.ProductNumber, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Price, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, "m²", @Inventar.Resources.Resource.M2Total, @Inventar.Resources.Resource.Amount };
 
                     foreach (var header in headers)
                     {
@@ -785,7 +785,7 @@ namespace Inventar.Controllers
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell(""));
-                    table.AddCell(CreateCenteredBoldCell("UKUPNO:").SetFontSize(9));
+                    table.AddCell(CreateCenteredBoldCell(@Inventar.Resources.Resource.Total + ":").SetFontSize(9));
                     table.AddCell(CreateCenteredBoldCell(totalQuantity.ToString()).SetFontSize(9));
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell($"{Math.Round(totalM2 ?? 0, 2)}").SetFontSize(9));
@@ -794,7 +794,7 @@ namespace Inventar.Controllers
                 else
                 {
                     table = new Table(5).UseAllAvailableWidth();
-                    string[] headers = {"Ime", "Veličina", "Količina", "m²", "ukupno m²"};
+                    string[] headers = { @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, "m²", @Inventar.Resources.Resource.M2Total};
 
                     foreach (var header in headers)
                     {
@@ -837,7 +837,7 @@ namespace Inventar.Controllers
 
                     // Totals row
                     table.AddCell(CreateCenteredBoldCell(""));
-                    table.AddCell(CreateCenteredBoldCell("UKUPNO:"));
+                    table.AddCell(CreateCenteredBoldCell(@Inventar.Resources.Resource.Total + ":"));
                     table.AddCell(CreateCenteredBoldCell(totalQuantity.ToString()));
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell($"{Math.Round(totalM2 ?? 0, 2)}"));

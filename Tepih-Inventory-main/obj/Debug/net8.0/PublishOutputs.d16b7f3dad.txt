@@ -5,6 +5,7 @@ C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\PubTmp\Out\Inventar.runtimeconfig.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\PubTmp\Out\Inventar.pdb
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\PubTmp\Out\sr-Latn\Inventar.resources.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\PubTmp\Out\tr\Inventar.resources.dll
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\PubTmp\Out\BouncyCastle.Cryptography.dll
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\PubTmp\Out\CloudinaryDotNet.dll
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\PubTmp\Out\itext.barcodes.dll

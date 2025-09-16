@@ -210,6 +210,9 @@
   <data name="Debts" xml:space="preserve">
     <value>Debts</value>
   </data>
+  <data name="DebtSoFar" xml:space="preserve">
+    <value>Debt so far</value>
+  </data>
   <data name="Delete" xml:space="preserve">
     <value>Delete</value>
   </data>

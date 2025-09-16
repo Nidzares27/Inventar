@@ -340,6 +340,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debt so far.
+        /// </summary>
+        public static string DebtSoFar {
+            get {
+                return ResourceManager.GetString("DebtSoFar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Delete {

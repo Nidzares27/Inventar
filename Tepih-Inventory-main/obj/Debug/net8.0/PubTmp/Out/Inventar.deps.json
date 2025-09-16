@@ -30,6 +30,9 @@
         "resources": {
           "sr-Latn/Inventar.resources.dll": {
             "locale": "sr-Latn"
+          },
+          "tr/Inventar.resources.dll": {
+            "locale": "tr"
           }
         }
       },

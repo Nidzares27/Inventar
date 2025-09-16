@@ -6,7 +6,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
   <PropertyGroup>
     <TimeStampOfAssociatedLegacyPublishXmlFile />
     <EncryptedPassword>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAApN4XWzeMXkqPywFkTm72/wAAAAACAAAAAAAQZgAAAAEAACAAAACR/aT9u8eGHz1S3FwUTDXKyxhpOcxfoHiUBd+G9DhhAwAAAAAOgAAAAAIAACAAAABtMpaxDGaGDImIyZ+TEX59Z9mjYtM6wbLi72VTTZzTIiAAAAD+UOLfh49OXUp/HCcS/nTZHJUPXMkFKGmz67XJhcdorkAAAAAAwY6qm4wEUZ+fk88SYvF6qLlkhS82qx0enhVLw1QIP9RpVeWJ+h/hggeWvmd9+nuLwxUnhAOUHtj5Y7/XF/7M</EncryptedPassword>
-    <History>True|2025-07-10T18:25:03.3534172Z;False|2025-07-10T20:13:57.4797326+02:00;True|2025-07-05T19:09:14.5368827+02:00;False|2025-07-05T19:02:21.9740429+02:00;False|2025-07-05T19:01:23.8851833+02:00;False|2025-07-05T18:56:56.4991806+02:00;False|2025-07-05T18:54:16.9806112+02:00;False|2025-07-05T18:48:11.3786807+02:00;False|2025-07-05T18:45:35.4152884+02:00;True|2025-06-30T15:05:53.1266727+02:00;False|2025-06-30T15:00:12.6875635+02:00;False|2025-06-30T14:59:13.2082479+02:00;False|2025-06-30T14:59:06.8425928+02:00;False|2025-06-30T14:58:59.6705324+02:00;False|2025-06-30T14:58:41.3124171+02:00;</History>
+    <History>True|2025-08-28T10:29:23.3022234Z||;False|2025-08-28T12:24:12.1929637+02:00||;False|2025-08-28T12:15:51.4874521+02:00||;False|2025-08-28T12:13:00.7701073+02:00||;False|2025-08-28T12:09:30.8521876+02:00||;False|2025-08-28T12:07:32.2117040+02:00||;True|2025-07-19T13:52:24.8803596+02:00||;False|2025-07-19T13:43:44.5779245+02:00||;False|2025-07-19T13:32:41.6374358+02:00||;False|2025-07-19T13:24:59.4974256+02:00||;False|2025-07-19T13:21:31.7379516+02:00||;True|2025-07-19T12:38:34.8796258+02:00||;True|2025-07-10T20:25:03.3534172+02:00||;False|2025-07-10T20:13:57.4797326+02:00||;True|2025-07-05T19:09:14.5368827+02:00||;False|2025-07-05T19:02:21.9740429+02:00||;False|2025-07-05T19:01:23.8851833+02:00||;False|2025-07-05T18:56:56.4991806+02:00||;False|2025-07-05T18:54:16.9806112+02:00||;False|2025-07-05T18:48:11.3786807+02:00||;False|2025-07-05T18:45:35.4152884+02:00||;True|2025-06-30T15:05:53.1266727+02:00||;False|2025-06-30T15:00:12.6875635+02:00||;False|2025-06-30T14:59:13.2082479+02:00||;False|2025-06-30T14:59:06.8425928+02:00||;False|2025-06-30T14:58:59.6705324+02:00||;False|2025-06-30T14:58:41.3124171+02:00||;</History>
     <LastFailureDetails />
     <_PublishTargetUrl>ftp://win6254.site4now.net/site1</_PublishTargetUrl>
   </PropertyGroup>
@@ -15,7 +15,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>10/29/2024 13:47:09</publishTime>
     </File>
     <File Include="appsettings.json">
-      <publishTime>07/10/2025 20:07:40</publishTime>
+      <publishTime>08/28/2025 12:02:03</publishTime>
     </File>
     <File Include="BouncyCastle.Cryptography.dll">
       <publishTime>04/21/2023 14:06:40</publishTime>
@@ -24,19 +24,22 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>03/16/2024 18:43:28</publishTime>
     </File>
     <File Include="Inventar.deps.json">
-      <publishTime>07/10/2025 20:20:47</publishTime>
+      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="Inventar.dll">
-      <publishTime>07/10/2025 20:20:46</publishTime>
+      <publishTime>08/28/2025 12:24:59</publishTime>
     </File>
     <File Include="Inventar.exe">
-      <publishTime>07/10/2025 20:20:46</publishTime>
+      <publishTime>08/28/2025 12:24:59</publishTime>
     </File>
     <File Include="Inventar.pdb">
-      <publishTime>07/10/2025 20:20:46</publishTime>
+      <publishTime>08/28/2025 12:24:59</publishTime>
     </File>
     <File Include="Inventar.runtimeconfig.json">
-      <publishTime>06/15/2025 12:44:50</publishTime>
+      <publishTime>08/28/2025 12:08:44</publishTime>
+    </File>
+    <File Include="Inventar.staticwebassets.endpoints.json">
+      <publishTime>08/28/2025 12:09:17</publishTime>
     </File>
     <File Include="itext.barcodes.dll">
       <publishTime>07/17/2024 12:14:40</publishTime>
@@ -225,7 +228,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>04/28/2025 02:38:42</publishTime>
     </File>
     <File Include="sr-Latn/Inventar.resources.dll">
-      <publishTime>07/10/2025 20:20:46</publishTime>
+      <publishTime>01/01/0001 00:00:00</publishTime>
     </File>
     <File Include="StarkbankEcdsa.dll">
       <publishTime>09/11/2021 22:27:58</publishTime>
@@ -263,8 +266,11 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
     <File Include="System.Windows.Extensions.dll">
       <publishTime>11/15/2019 09:56:52</publishTime>
     </File>
+    <File Include="tr/Inventar.resources.dll">
+      <publishTime>01/01/0001 00:00:00</publishTime>
+    </File>
     <File Include="web.config">
-      <publishTime>07/10/2025 20:20:48</publishTime>
+      <publishTime>08/28/2025 12:25:01</publishTime>
     </File>
     <File Include="wwwroot/css/allAccounts.css">
       <publishTime>06/09/2025 12:13:50</publishTime>
@@ -486,7 +492,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
       <publishTime>03/14/2025 17:45:54</publishTime>
     </File>
     <File Include="wwwroot/Inventar.styles.css">
-      <publishTime>06/13/2025 20:38:53</publishTime>
+      <publishTime>08/28/2025 12:08:44</publishTime>
     </File>
     <File Include="wwwroot/js/site.js">
       <publishTime>02/19/2025 18:57:49</publishTime>
