@@ -32,7 +32,7 @@
             <input asp-for="CustomerFullName" class="form-control" readonly />
             <span asp-validation-for="CustomerFullName" class="text-danger"></span>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-3">
             <label asp-for="VrijemeProdaje" class="control-label">@Inventar.Resources.Resource.SaleTime</label>
             <input asp-for="VrijemeProdaje" class="form-control" readonly />
             <span asp-validation-for="VrijemeProdaje" class="text-danger"></span>
@@ -52,13 +52,18 @@
             <span asp-validation-for="M2Total" class="text-danger"></span>
         </div>
         <div class="col-sm-3">
+            <label asp-for="Rabat" class="control-label">Rabat</label>
+            <input asp-for="Rabat" type="number" id="Rabat" class="form-control" />
+            <span asp-validation-for="Rabat" class="text-danger"></span>
+        </div>
+        <div class="col-sm-3">
             <label asp-for="Price" class="control-label">@Inventar.Resources.Resource.Price</label>
             <input asp-for="Price" type="number" id="Price" class="form-control" />
             <span asp-validation-for="Price" class="text-danger"></span>
         </div>
         <div class="col-sm-3">
             <label class="control-label">@Inventar.Resources.Resource.TotalPrice</label>
-            <input type="number" step="any" min="0.1" class="form-control" id="TotalPrice" value="@Math.Round((Model.PerM2 ? Model.Price * (decimal)Model.M2Total : Model.Price * Model.Quantity),2)" /> @* DODAT DECIMAL CAST *@
+            <input type="number" step="any" min="0.1" class="form-control" id="TotalPrice" value="@Math.Round((Model.PerM2 ? Model.Rabat != null || Model.Rabat > 0 ? ((Model.Price * (decimal)Model.M2Total) - (((decimal)Model.Rabat / 100) * (Model.Price * (decimal)Model.M2Total))) : Model.Price * (decimal)Model.M2Total : Model.Rabat != null || Model.Rabat > 0 ? (Model.Price * Model.Quantity) - (((decimal)Model.Rabat / 100) * (Model.Price * Model.Quantity)) : Model.Price * Model.Quantity), 2)" /> @* DODAT DECIMAL CAST *@
         </div>
         <div class="col-sm-3">
             <input type="submit" value="@Inventar.Resources.Resource.Edit" class="btn btn-primary" />
@@ -88,15 +93,38 @@
             let price = parseFloat($("#Price").val()) || 0;
             let length = parseInt($("#Length").val()) || 0;
             let width = parseInt($("#Width").val()) || 0;
-            let perM2 = $("#PerM2").val()
+            let perM2 = $("#PerM2").val();
+            let rabat = parseInt($("#Rabat").val()) || 0;
+            console.log("rabat");
+            console.log(rabat);
 
-            if (perM2 == "True") {
-                m2Total = (length * width / 10000) * quantity
-                $("#M2Total").val(((length * width / 10000) * quantity).toFixed(2));
-                $("#TotalPrice").val(((price * m2Total)).toFixed(2));
-            } else if (perM2 ="False") {
-                $("#TotalPrice").val((price * quantity).toFixed(2));
+            if(rabat != null || rabat > 0){
+                if (perM2 == "True") {
+                    m2Total = (length * width / 10000) * quantity
+                    $("#M2Total").val(((length * width / 10000) * quantity).toFixed(2));
+                    $("#TotalPrice").val(((price * m2Total) - ((rabat / 100) * (price * m2Total))).toFixed(2));
+                } 
+                else if (perM2 ="False") {
+                    $("#TotalPrice").val(((price * quantity) - ((rabat / 100) * (price * quantity))).toFixed(2));
+                }
             }
+            else{
+                if (perM2 == "True") {
+                    m2Total = (length * width / 10000) * quantity
+                    $("#M2Total").val(((length * width / 10000) * quantity).toFixed(2));
+                    $("#TotalPrice").val(((price * m2Total)).toFixed(2));
+                } 
+                else if (perM2 ="False") {
+                    $("#TotalPrice").val((price * quantity).toFixed(2));
+                }
+            }
+            // if (perM2 == "True") {
+            //     m2Total = (length * width / 10000) * quantity
+            //     $("#M2Total").val(((length * width / 10000) * quantity).toFixed(2));
+            //     $("#TotalPrice").val(((price * m2Total)).toFixed(2));
+            // } else if (perM2 ="False") {
+            //     $("#TotalPrice").val((price * quantity).toFixed(2));
+            // }
         }
 
         function updatePriceFromTotal() {
@@ -104,16 +132,35 @@
             let quantity = parseInt($("#Quantity").val()) || 1;
             let m2Total = parseFloat($("#M2Total").val()) || 1;
             let price = parseFloat($("#Price").val()) || 0;
-            let perM2 = $("#PerM2").val()
+            let perM2 = $("#PerM2").val();
+            let rabat = parseInt($("#Rabat").val()) || 0;
 
-            if (perM2 =="True") {
-                $("#Price").val((totalPrice / m2Total).toFixed(2));
-            } else if (perM2 ="False") {
-                $("#Price").val((totalPrice / quantity).toFixed(2));
+            if(rabat != null || rabat > 0){
+                if (perM2 =="True") {
+                    // $("#Price").val(((totalPrice / m2Total) + ((rabat / 100) * (price * m2Total))).toFixed(2));
+                    $("#Price").val(((totalPrice / m2Total) / (rabat / 100)).toFixed(2));
+                } 
+                else if (perM2 ="False") {
+                    $("#Price").val(((totalPrice / quantity) / (rabat / 100)).toFixed(2));
+                    // $("#Price").val(((totalPrice / quantity) + ((rabat / 100) * (price * quantity))).toFixed(2));
+                }
             }
+            else{
+                if (perM2 =="True") {
+                    $("#Price").val((totalPrice / m2Total).toFixed(2));
+                } 
+                else if (perM2 ="False") {
+                    $("#Price").val((totalPrice / quantity).toFixed(2));
+                }
+            }
+            // if (perM2 =="True") {
+            //     $("#Price").val((totalPrice / m2Total).toFixed(2));
+            // } else if (perM2 ="False") {
+            //     $("#Price").val((totalPrice / quantity).toFixed(2));
+            // }
         }
 
-        $("#Quantity, #M2Total, #Price").on("input", function () {
+        $("#Quantity, #M2Total, #Price, #Rabat").on("input", function () {
             calculateTotalPrice();
         });
 

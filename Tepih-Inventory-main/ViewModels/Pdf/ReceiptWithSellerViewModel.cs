@@ -13,6 +13,8 @@ namespace Inventar.ViewModels.Pdf
         [Range(1, int.MaxValue)]
         public int? Width { get; set; }
         public string? Size { get; set; }
+        [Range(0, 100)]
+        public int? Rabat { get; set; }
         public decimal? M2PerUnit { get; set; }
         public decimal? M2Total { get; set; }
         [Range(0, int.MaxValue)]

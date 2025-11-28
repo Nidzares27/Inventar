@@ -65,8 +65,11 @@ namespace Inventar.Controllers
                                            ? ((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity
                                            : 0),
                                        TotalPrice = gr.Sum(g => g.proizvod.PerM2
-                                           ? g.prodaja.Price * (((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity)
-                                           : g.prodaja.Price * g.prodaja.Quantity)
+                                           ? g.prodaja.Rabat != null || g.prodaja.Rabat >0 ? (g.prodaja.Price * (((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity)) - (((decimal)g.prodaja.Rabat / 100)*(g.prodaja.Price * (((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity))) : g.prodaja.Price * (((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity)
+                                           : g.prodaja.Rabat != null || g.prodaja.Rabat > 0 ? (g.prodaja.Price * g.prodaja.Quantity) - (((decimal)g.prodaja.Rabat / 100)*(g.prodaja.Price * g.prodaja.Quantity)) : g.prodaja.Price * g.prodaja.Quantity)
+                                       //TotalPrice = gr.Sum(g => g.proizvod.PerM2
+                                       //    ? g.prodaja.Price * (((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity)
+                                       //    : g.prodaja.Price * g.prodaja.Quantity)
                                    }).ToListAsync();
 
                 var referer = $"{Request.Scheme}://{Request.Host}{Request.Path}";
@@ -109,6 +112,7 @@ namespace Inventar.Controllers
                                  VrijemeProdaje = prodaja.VrijemeProdaje,
                                  M2PerUnit = proizvod.PerM2 ? (decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000 : null,
                                  M2Total = proizvod.PerM2 ? ((decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000) * prodaja.Quantity : null,
+                                 Rabat = prodaja.Rabat
                              });
                 var referer = Request.Scheme.ToString() + "://" + Request.Host.Value.ToString() + Request.Path.Value.ToString() + Request.QueryString.Value.ToString();
                 ViewBag.ReturnUrl = referer;
@@ -148,7 +152,8 @@ namespace Inventar.Controllers
                                  M2PerUnit = proizvod.PerM2 ? (decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000 : null,
                                  M2Total = proizvod.PerM2 ? ((decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000) * prodaja.Quantity : null,
                                  Disabled = proizvod.Disabled,
-                                 Seller = prodaja.Prodavac
+                                 Seller = prodaja.Prodavac,
+                                 Rabat = prodaja.Rabat
                              }).ToList();
 
                 ViewBag.CustomerFullName = customer;
@@ -276,6 +281,7 @@ namespace Inventar.Controllers
                     Width = proizvod.Width,
                     Prodavac = prodaja.Prodavac,
                     PlannedPaymentType = prodaja.PlannedPaymentType,
+                    Rabat = prodaja.Rabat
                 };
                 ViewBag.ReturnUrl = returnUrl;
                 ViewBag.ReturnFromDetails = returnFromDetails;
@@ -324,7 +330,8 @@ namespace Inventar.Controllers
                     Quantity = prodajaVM.Quantity,
                     Price = prodajaVM.Price,
                     Prodavac = prodajaVM.Prodavac,
-                    PlannedPaymentType = prodajaVM.PlannedPaymentType
+                    PlannedPaymentType = prodajaVM.PlannedPaymentType,
+                    Rabat = prodajaVM.Rabat
                 };
 
                 _salesRepository.Update(prodajaEdit);
@@ -413,8 +420,8 @@ namespace Inventar.Controllers
                                              Price = groupedSales.First().sale.Price,
                                              TotalQuantity = groupedSales.Sum(g => g.sale.Quantity),
                                              TotalPrice = groupedSales.Sum(g => g.product.PerM2
-                                                 ? g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)
-                                                 : g.sale.Price * g.sale.Quantity),
+                                             ? g.sale.Rabat != null || g.sale.Rabat > 0 ? (g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)) - (((decimal)g.sale.Rabat / 100) * ((g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)))) : g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)
+                                             : g.sale.Rabat != null || g.sale.Rabat > 0 ? (g.sale.Price * g.sale.Quantity) - (((decimal)g.sale.Rabat / 100) * (g.sale.Price * g.sale.Quantity)) : g.sale.Price * g.sale.Quantity),
                                              PerM2 = groupedSales.First().product.PerM2
                                          }).ToListAsync();
                 }
@@ -450,8 +457,10 @@ namespace Inventar.Controllers
                                              Color = groupedd.Key.Color,
                                              TotalQuantity = groupedd.Sum(g => g.sale.Quantity),
                                              TotalPrice = groupedd.Sum(g => g.product.PerM2
-                                                 ? g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)
-                                                 : g.sale.Price * g.sale.Quantity),
+                                                 ? g.sale.Rabat != null || g.sale.Rabat > 0 ? (g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)) - (((decimal)g.sale.Rabat / 100)*((g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)))) : g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)
+                                                 : g.sale.Rabat != null || g.sale.Rabat > 0 ? (g.sale.Price * g.sale.Quantity) - (((decimal)g.sale.Rabat / 100) * (g.sale.Price * g.sale.Quantity)) : g.sale.Price * g.sale.Quantity),
+                                             //? g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)
+                                             //: g.sale.Price * g.sale.Quantity),
                                              PerM2 = groupedd.Key.PerM2
                                          }).ToListAsync();
                 }
@@ -520,7 +529,8 @@ namespace Inventar.Controllers
                     Width = p.Tepih.Width,
                     Price = p.Price,
                     Quantity = p.Quantity,
-                    PerM2 = p.Tepih.PerM2
+                    PerM2 = p.Tepih.PerM2,
+                    Rabat = p.Rabat
                 }).ToList();
 
                 var viewModel = new SalesEntryGroupViewModel
@@ -595,7 +605,8 @@ namespace Inventar.Controllers
                     Name = p.Tepih.Name,
                     Price = p.Price,
                     Quantity = p.Quantity,
-                    PerM2 = p.Tepih.PerM2
+                    PerM2 = p.Tepih.PerM2,
+                    Rabat = p.Rabat
                 }).ToListAsync();
 
                 var vm = new SalesEntryGroupViewModel

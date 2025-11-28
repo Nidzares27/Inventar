@@ -73,7 +73,7 @@ namespace Inventar.Controllers
                             ? ((carpet.Length.Value * carpet.Width.Value) / 10000m)
                             : 1;
 
-                        totalDebt += unitPrice * area * quantity;
+                        totalDebt += sale.Rabat != null || sale.Rabat > 0 ? (unitPrice * area * quantity) - (((decimal)sale.Rabat / 100)*((unitPrice * area * quantity))) : unitPrice * area * quantity;
                     }
                     totalDebt += buyerDebts;
 
@@ -125,6 +125,7 @@ namespace Inventar.Controllers
                                 Length = proizvod.Length,
                                 Width = proizvod.Width,
                                 Color = proizvod.Color,
+                                Rabat = kupovina.Rabat,
                                 Price = kupovina.Price,
                                 PerM2 = proizvod.PerM2,
                                 Quantity = kupovina.Quantity,
@@ -489,8 +490,8 @@ namespace Inventar.Controllers
                         Type = "Sale",
                         Amount = g.Sum(prodaja =>
                             prodaja.Tepih.PerM2
-                                ? prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
-                                : prodaja.Price * prodaja.Quantity
+                                ? prodaja.Rabat != null || prodaja.Rabat > 0 ? (prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)) - (((decimal)prodaja.Rabat / 100)*((prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)))) : prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
+                                : prodaja.Rabat != null || prodaja.Rabat > 0 ? (prodaja.Price * prodaja.Quantity) - (((decimal)prodaja.Rabat / 100) * (prodaja.Price * prodaja.Quantity)) : prodaja.Price * prodaja.Quantity
                         ),
                         Info = g.Key.Prodavac,
                         Disabled = g.Key.Disabled
@@ -529,8 +530,10 @@ namespace Inventar.Controllers
                             Type = "Sale",
                             Amount = g.Sum(prodaja =>
                                 prodaja.Tepih.PerM2
-                                    ? prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
-                                    : prodaja.Price * prodaja.Quantity
+                                    ? prodaja.Rabat != null || prodaja.Rabat > 0 ? (prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)) - (((decimal)prodaja.Rabat / 100) * ((prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)))) : prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
+                                    : prodaja.Rabat != null || prodaja.Rabat > 0 ? (prodaja.Price * prodaja.Quantity) - (((decimal)prodaja.Rabat / 100) * (prodaja.Price * prodaja.Quantity)) : prodaja.Price * prodaja.Quantity
+                                    //? prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
+                                    //: prodaja.Price * prodaja.Quantity
                             ),
                             Info = g.Key.Prodavac,
                             Disabled = g.Key.Disabled

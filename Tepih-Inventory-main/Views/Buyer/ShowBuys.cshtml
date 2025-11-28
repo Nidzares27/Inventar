@@ -16,6 +16,7 @@
             <th>m²</th>
             <th>@Inventar.Resources.Resource.M2Total</th>
             <th>@Inventar.Resources.Resource.Quantity</th>
+            <th>Rabat %</th>
             <th>@Inventar.Resources.Resource.Price</th>
             <th>@Inventar.Resources.Resource.TotalPrice</th>
             <th></th>
@@ -34,6 +35,7 @@
             <th><input style="width:5rem" type="text" placeholder="m²"></th>
             <th><input style="width:5rem" type="text" placeholder="m2Total"></th>
             <th><input style="width:5rem" type="text" placeholder="Quantity"></th>
+            <th><input style="width:5rem" type="text" placeholder="Rabat"></th>
             <th><input style="width:5rem" type="text" placeholder="Price"></th>
             <th><input style="width:5rem" type="text" placeholder="TotalPrice"></th>
             <th><input style="width:5rem" type="text" placeholder="" disabled></th>
@@ -62,8 +64,12 @@
                 <td>@(item.PerM2 ? Math.Round((decimal)item.M2PerUnit, 2) : "")</td>
                 <td>@(item.PerM2 ? Math.Round((decimal)item.M2Total, 2) : "")</td>
                 <td>@item.Quantity</td>
+                <td>@item.Rabat</td>
                 <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price€</td>
-                <td>@Math.Round((item.PerM2 ? item.Price * (decimal)item.M2Total : item.Price * item.Quantity), 2)€</td>
+                <td>@Math.Round((item.PerM2 ?
+                    item.Rabat != null || item.Rabat > 0 ? (item.Price * (decimal)item.M2Total) - (((decimal)item.Rabat /100) * (item.Price * (decimal)item.M2Total)) : item.Price * (decimal)item.M2Total
+                    : item.Rabat != null || item.Rabat > 0 ? (item.Price * item.Quantity) - (((decimal)item.Rabat / 100) * (item.Price * item.Quantity)) : item.Price * item.Quantity)
+                    , 2)€</td>
                 <td>
                     <a href="@Url.Action("Edit", "Sales", new {id=item.Id, returnUrl = Context.Request.Path, returnFromDetails = ViewBag.ReturnUrl })">@Inventar.Resources.Resource.Edit</a>
                     <a href="@Url.Action("Delete", "Sales", new {id=item.Id, returnUrl = Context.Request.Path, returnFromDetails = ViewBag.ReturnUrl })">@Inventar.Resources.Resource.Delete</a>
@@ -95,7 +101,7 @@
             });
 
             var quantityColumnIndex = 9;
-            var priceColumnIndex = 11;
+            var priceColumnIndex = 12;//11
             var m2ColumnIndex = 8;
 
 

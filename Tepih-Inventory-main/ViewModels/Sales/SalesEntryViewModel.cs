@@ -1,4 +1,6 @@
-﻿namespace Inventar.ViewModels.Sales
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Inventar.ViewModels.Sales
 {
     public class SalesEntryViewModel
     {
@@ -16,5 +18,7 @@
         public bool PerM2 { get; set; }
         public decimal? M2Total => PerM2 ? Math.Round((decimal)Length * (decimal)Width / 10000m * Quantity, 2) : null;
         public decimal TotalPrice { get; set; }
+        [Range(0, 100)]
+        public int? Rabat { get; set; }
     }
 }

@@ -171,6 +171,9 @@
   <data name="ClearCart" xml:space="preserve">
     <value>Clear Cart</value>
   </data>
+  <data name="ClearInputs" xml:space="preserve">
+    <value>Clear inputs</value>
+  </data>
   <data name="Color" xml:space="preserve">
     <value>Color</value>
   </data>
@@ -461,6 +464,9 @@
   </data>
   <data name="Search" xml:space="preserve">
     <value>Search</value>
+  </data>
+  <data name="SearchByParams" xml:space="preserve">
+    <value>Search by parameters</value>
   </data>
   <data name="Searching" xml:space="preserve">
     <value>Searching...</value>

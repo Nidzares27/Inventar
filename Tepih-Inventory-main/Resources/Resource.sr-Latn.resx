@@ -171,6 +171,9 @@
   <data name="ClearCart" xml:space="preserve">
     <value>Isprazni korpu</value>
   </data>
+  <data name="ClearInputs" xml:space="preserve">
+    <value>Izbriši unos</value>
+  </data>
   <data name="Color" xml:space="preserve">
     <value>Boja</value>
   </data>
@@ -290,6 +293,9 @@
   </data>
   <data name="ForgotPassword" xml:space="preserve">
     <value>Zaboravili ste lozinku?</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>Do</value>
   </data>
   <data name="FullName" xml:space="preserve">
     <value>Puno ime</value>
@@ -459,6 +465,9 @@
   <data name="Search" xml:space="preserve">
     <value>Pretraži</value>
   </data>
+  <data name="SearchByParams" xml:space="preserve">
+    <value>Pretraživanje po parametrima</value>
+  </data>
   <data name="Searching" xml:space="preserve">
     <value>Pretraga...</value>
   </data>
@@ -485,6 +494,9 @@
   </data>
   <data name="Time" xml:space="preserve">
     <value>Vrijeme</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>Do</value>
   </data>
   <data name="toLogin" xml:space="preserve">
     <value>prijaviti</value>

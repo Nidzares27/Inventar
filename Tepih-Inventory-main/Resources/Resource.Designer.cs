@@ -223,6 +223,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Clear inputs.
+        /// </summary>
+        public static string ClearInputs {
+            get {
+                return ResourceManager.GetString("ClearInputs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Color.
         /// </summary>
         public static string Color {
@@ -1092,6 +1101,15 @@ namespace Inventar.Resources {
         public static string Search {
             get {
                 return ResourceManager.GetString("Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search by parameters.
+        /// </summary>
+        public static string SearchByParams {
+            get {
+                return ResourceManager.GetString("SearchByParams", resourceCulture);
             }
         }
         

@@ -178,9 +178,9 @@ namespace Inventar.Controllers
                     Type = "Sale",
                     Amount = g.Sum(prodaja =>
                         prodaja.Tepih.PerM2
-                            ? prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
-                            : prodaja.Price * prodaja.Quantity
-                    ),
+                            ? prodaja.Rabat != null || prodaja.Rabat > 0 ? (prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)) - (((decimal)prodaja.Rabat / 100) * ((prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)))) : prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
+                            : prodaja.Rabat != null || prodaja.Rabat > 0 ? (prodaja.Price * prodaja.Quantity) - (((decimal)prodaja.Rabat / 100) * (prodaja.Price * prodaja.Quantity)) : prodaja.Price * prodaja.Quantity
+                        ),
                     Info = g.Key.Prodavac
                 });
 
@@ -215,8 +215,8 @@ namespace Inventar.Controllers
                         Type = "Sale",
                         Amount = g.Sum(prodaja =>
                             prodaja.Tepih.PerM2
-                                ? prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
-                                : prodaja.Price * prodaja.Quantity
+                                ? prodaja.Rabat != null || prodaja.Rabat > 0 ? (prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)) - (((decimal)prodaja.Rabat / 100) * ((prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)))) : prodaja.Price * ((((decimal)prodaja.Tepih.Length * (decimal)prodaja.Tepih.Width) / 10000m) * prodaja.Quantity)
+                                : prodaja.Rabat != null || prodaja.Rabat > 0 ? (prodaja.Price * prodaja.Quantity) - (((decimal)prodaja.Rabat / 100) * (prodaja.Price * prodaja.Quantity)) : prodaja.Price * prodaja.Quantity
                         ),
                         Info = g.Key.Prodavac,
                         Disabled = g.Key.Disabled
@@ -1128,7 +1128,7 @@ namespace Inventar.Controllers
                 using var ms = new MemoryStream();
                 var writer = new PdfWriter(ms);
                 var pdf = new PdfDocument(writer);
-                var document = new Document(pdf, PageSize.A4);
+                var document = new Document(pdf, PageSize.A4.Rotate());
                 document.SetMargins(20, 20, 20, 20);
 
                 string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
@@ -1646,7 +1646,7 @@ namespace Inventar.Controllers
                 document.SetFont(font);
 
                 var groupedProducts = from p in model
-                                      group p by new { p.Name, p.Length, p.Width, p.M2PerUnit, p.ProductNumber, p.Price, p.Seller } into g
+                                      group p by new { p.Name, p.Length, p.Width, p.M2PerUnit, p.ProductNumber, p.Price, p.Rabat ,p.Seller } into g
                                       select new ReceiptWithSellerViewModel
                                       {
                                           ProductNumber = g.Key.ProductNumber,
@@ -1657,7 +1657,8 @@ namespace Inventar.Controllers
                                           M2Total = g.Sum(p => p.M2Total),
                                           Quantity = g.Sum(p => p.Quantity),
                                           PriceTotal = g.Sum(p => p.PriceTotal),
-                                          Seller = g.Key.Seller
+                                          Seller = g.Key.Seller,
+                                          Rabat = (int?)g.Average(p => p.Rabat)
                                       };
 
                 var headerTable = new Table(3)
@@ -1683,11 +1684,11 @@ namespace Inventar.Controllers
                 document.Add(new Paragraph("\n"));
 
 
-                var table = new Table(8).UseAllAvailableWidth();
+                var table = new Table(9).UseAllAvailableWidth();
 
                 if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
                 {
-                    string[] headers = { @Inventar.Resources.Resource.ProductNumber, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Price, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, "m²", @Inventar.Resources.Resource.M2Total, @Inventar.Resources.Resource.Amount };
+                    string[] headers = { @Inventar.Resources.Resource.ProductNumber, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Price, "Rabat %" ,@Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, "m²", @Inventar.Resources.Resource.M2Total, @Inventar.Resources.Resource.Amount };
 
                     foreach (var header in headers)
                     {
@@ -1710,6 +1711,7 @@ namespace Inventar.Controllers
                         table.AddCell(CreateCenteredCell(item.ProductNumber));
                         table.AddCell(CreateCenteredCell(item.Name));
                         table.AddCell(CreateCenteredCell($"{Math.Round(item.Price, 2)}€"));
+                        table.AddCell(CreateCenteredCell(item.Rabat?.ToString() ?? ""));
                         table.AddCell(CreateCenteredCell(item.Size));
                         table.AddCell(CreateCenteredCell(item.Quantity.ToString()));
                         table.AddCell(CreateCenteredCell(item.M2PerUnit?.ToString() ?? ""));
@@ -1722,6 +1724,7 @@ namespace Inventar.Controllers
                     }
 
                     // Totals row
+                    table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell(""));
                     table.AddCell(CreateCenteredBoldCell(""));

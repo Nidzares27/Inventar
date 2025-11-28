@@ -17,6 +17,8 @@ namespace Inventar.ViewModels.Shared
         public decimal? M2PerUnit { get; set; }
         public decimal? M2Total { get; set; }
         public string Color { get; set; }
+        [Range(0, 100)]
+        public int? Rabat { get; set; }
         public decimal Price { get; set; }
         public bool PerM2 { get; set; }
         public decimal PriceTotal { get; set; }

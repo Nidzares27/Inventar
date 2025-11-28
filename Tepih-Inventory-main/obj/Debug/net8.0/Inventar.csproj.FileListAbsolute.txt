@@ -120,3 +120,11 @@ C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets.build.endpoints.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\ClosedXML.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\ClosedXML.Parser.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\ExcelNumberFormat.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\RBush.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\SixLabors.Fonts.dll
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net8.0\System.IO.Packaging.dll

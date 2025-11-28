@@ -1,33 +1,36 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Drawing;
-using ZXing.QrCode;
-using ZXing;
-using Inventar.Models;
-using Inventar.Interfaces;
+﻿using ClosedXML.Excel;
 using Inventar.Data;
-using Microsoft.AspNetCore.Authorization;
-using System.Data;
-using Inventar.Utils;
-using Newtonsoft.Json;
-using Microsoft.EntityFrameworkCore;
-using System.Text;
-using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
-using iText.Layout.Properties;
-using System.Security.Claims;
-using Inventar.ViewModels.Inventory;
-using iText.Kernel.Geom;
-using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Inventar.Interfaces;
+using Inventar.Models;
 using Inventar.Services;
-using SendGrid;
-using static System.Net.Mime.MediaTypeNames;
+using Inventar.Utils;
+using Inventar.ViewModels.Inventory;
+using Inventar.ViewModels.Pdf;
 using iText.IO.Font;
 using iText.Kernel.Font;
-using static iText.Kernel.Font.PdfFontFactory;
-using static System.Formats.Asn1.AsnWriter;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
 using iText.Layout.Borders;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using SendGrid;
+using System.Data;
+using System.Drawing;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
+using ZXing;
+using ZXing.QrCode;
+using static iText.Kernel.Font.PdfFontFactory;
+using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
+using static System.Formats.Asn1.AsnWriter;
+using static System.Net.Mime.MediaTypeNames;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Inventar.Controllers
 {
@@ -420,7 +423,7 @@ namespace Inventar.Controllers
                     {
                         var rbt = (decimal)matchingvalue.Rabat / (decimal)100;
                         matchingvalue.PriceTotal -= rbt * matchingvalue.PriceTotal;
-                        matchingvalue.Price -= rbt * matchingvalue.Price;
+                        /*matchingvalue.Price -= rbt * matchingvalue.Price;*/ //OVO VJEROVATNO MORAMO KOMENTARISATI I PROMJENITI PRODAJE
                     }
                     HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProds));
                 }
@@ -575,7 +578,7 @@ namespace Inventar.Controllers
                 return JsonConvert.DeserializeObject<List<ScannedProductViewModel>>(serialized)
                        ?? new List<ScannedProductViewModel>();
             }
-            catch (JsonException ex)
+            catch (System.Text.Json.JsonException ex) // provjeriti da li je odgovarajuci prefix
             {
                 _logger.LogWarning(ex, "Failed to deserialize scanned products from session.");
                 return new List<ScannedProductViewModel>();
@@ -619,6 +622,7 @@ namespace Inventar.Controllers
                         CustomerFullName = spovm.FullName.ToUpper().Trim(),
                         VrijemeProdaje = spovm.PurchaseTime,
                         Price = prod.Price,
+                        Rabat = prod.Rabat,
                         PlannedPaymentType = spovm.PlannedPaymentType,
                         Prodavac = fullName
                     };
@@ -1055,6 +1059,287 @@ namespace Inventar.Controllers
                 return StatusCode(500, "An error occurred while clearing session data.");
             }
         }
+
+        public IActionResult SearchTepisi(
+            string productNumber,
+            string name,
+            string model,
+            string color,
+            string size)
+        {
+            bool allEmpty =
+                string.IsNullOrWhiteSpace(productNumber) &&
+                string.IsNullOrWhiteSpace(name) &&
+                string.IsNullOrWhiteSpace(model) &&
+                string.IsNullOrWhiteSpace(color) &&
+                string.IsNullOrWhiteSpace(size);
+
+            if (allEmpty)
+                return Json(new List<object>()); // return empty
+
+            var query = _context.Tepisi.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(productNumber))
+                query = query.Where(t => t.ProductNumber.StartsWith(productNumber));
+
+            if (!string.IsNullOrWhiteSpace(name))
+                query = query.Where(t => t.Name.StartsWith(name));
+
+            if (!string.IsNullOrWhiteSpace(model))
+                query = query.Where(t => t.Model.StartsWith(model));
+
+            if (!string.IsNullOrWhiteSpace(color))
+                query = query.Where(t => t.Color.StartsWith(color));
+
+            // 🔥 SIZE FILTER: "50X100", "50X", "50", etc.
+            if (!string.IsNullOrWhiteSpace(size))
+            {
+                var parts = size.Split('X', 'x');
+
+                int? w = null;
+                int? l = null;
+
+                if (parts.Length > 0 && int.TryParse(parts[0], out int widthPart))
+                    w = widthPart;
+
+                if (parts.Length > 1 && int.TryParse(parts[1], out int lengthPart))
+                    l = lengthPart;
+
+                // match width
+                if (w.HasValue)
+                    query = query.Where(t => t.Width.HasValue && t.Width.Value.ToString().StartsWith(w.Value.ToString()));
+
+                // match length if user typed second half
+                if (l.HasValue)
+                    query = query.Where(t => t.Length.HasValue && t.Length.Value.ToString().StartsWith(l.Value.ToString()));
+            }
+
+            var results = query
+                .Where(t => !t.Disabled)
+                .Take(30)
+                .Select(t => new
+                {
+                    id = t.Id,
+                    productNumber = t.ProductNumber,
+                    name = t.Name,
+                    model = t.Model,
+                    color = t.Color,
+                    width = t.Width,
+                    length = t.Length
+                })
+                .ToList();
+
+            return Json(results);
+        }
+
+
+        [HttpPost]
+        public IActionResult AddProductById(int id)
+        {
+            return ManuallyAddProduct(id);
+        }
+
+        [HttpPost]
+        public IActionResult ExportScannedProductsToExcel([FromBody] ScannedProductsOverviewViewModel spovm)
+        {
+            if (spovm == null || spovm.Products == null || !spovm.Products.Any())
+                return BadRequest("No products to export.");
+
+            // Determine sale time
+            DateTime saleTime = spovm.PurchaseTime == default ? DateTime.Now : spovm.PurchaseTime;
+
+            // Filename formatting
+            var formattedTimeForFile = saleTime.ToString("dd-MM-yyyy HH.mm");
+            var custForFile = (spovm.FullName.ToUpper() ?? "").Trim();
+            foreach (var c in System.IO.Path.GetInvalidFileNameChars())
+                custForFile = custForFile.Replace(c, '-');
+
+            var fileName = $"{formattedTimeForFile} {custForFile}.xlsx";
+
+            // Display time (inside sheet)
+            var displaySaleTime = saleTime.ToString("dd-MM-yyyy HH:mm");
+
+            using (var workbook = new XLWorkbook())
+            {
+                var ws = workbook.Worksheets.Add("Products");
+
+                // === HEADER ROW 1 (customer left, date right) ===
+                ws.Range("A1:D1").Merge().Value = custForFile;
+                ws.Range("A1:D1").Style.Font.Bold = true;
+                ws.Range("A1:D1").Style.Font.FontSize = 14;
+                ws.Range("A1:D1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                ws.Range("E1:H1").Merge().Value = displaySaleTime;
+                ws.Range("E1:H1").Style.Font.Bold = true;
+                ws.Range("E1:H1").Style.Font.FontSize = 14;
+                ws.Range("E1:H1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                // Row 2 empty
+
+                int headerRow = 3;
+
+                // === HEADERS ===
+                ws.Cell(headerRow, 1).Value = "";
+                ws.Cell(headerRow, 2).Value = "IME ROBA";
+                ws.Cell(headerRow, 3).Value = "CIJENA";
+                // D & E are "DIMENZIJA"
+                ws.Range("D3:E3").Merge().Value = "DIMENZIJA";
+                ws.Range("D3:E3").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Range("D3:E3").Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                ws.Cell(headerRow, 6).Value = "KOL.";
+                ws.Cell(headerRow, 7).Value = "m²";
+                ws.Cell(headerRow, 8).Value = "UKUPNO m²";
+                ws.Cell(headerRow, 9).Value = "IZNOS";
+
+                // Style header row
+                for (int c = 1; c <= 9; c++)
+                {
+                    ws.Cell(headerRow, c).Style.Font.Bold = true;
+                    ws.Cell(headerRow, c).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(headerRow, c).Style.Fill.BackgroundColor = XLColor.LightGray;
+                }
+
+                ws.SheetView.FreezeRows(headerRow);
+
+                var groupedProducts = from p in spovm.Products
+                                      group p by new { p.Name, p.Length, p.Width, p.M2PerUnit, p.ProductNumber, p.Price, p.Rabat, p.PerM2} into g
+                                      select new ReceiptWithSellerViewModel
+                                      {
+                                          ProductNumber = g.Key.ProductNumber,
+                                          Name = g.Key.Name,
+                                          Price = g.Average(p => p.Price),
+                                          Size = $"{g.Key.Width}X{g.Key.Length}",
+                                          Length = g.Key.Length,
+                                          Width = g.Key.Width,
+                                          M2PerUnit = g.Key.M2PerUnit,
+                                          M2Total = g.Sum(p => p.M2Total),
+                                          Quantity = g.Sum(p => p.Quantity),
+                                          PriceTotal = g.Sum(p => p.PriceTotal),
+                                          Rabat = (int?)g.Average(p => p.Rabat)
+                                      };
+
+                // === DATA ROWS ===
+                int row = headerRow + 1;
+                foreach (var p in groupedProducts) //spovm.Products
+                {
+                    string sizeText = (p.Width.HasValue && p.Length.HasValue) ? $"{p.Width}X{p.Length}" : "";
+
+                    double? widthM = p.Width.HasValue ? p.Width.Value / 100.0 : (double?)null;
+                    double? lengthM = p.Length.HasValue ? p.Length.Value / 100.0 : (double?)null;
+
+                    double? m2PerUnit = null;
+                    if (/*p.PerM2 &&*/ widthM.HasValue && lengthM.HasValue)
+                        m2PerUnit = Math.Round(widthM.Value * lengthM.Value, 2);
+
+                    ws.Cell(row, 1).Value = p.ProductNumber ?? "";
+                    ws.Cell(row, 2).Value = p.Name ?? "";
+                    ws.Cell(row, 2).Style.Alignment.WrapText = true;
+
+                    double cijena = p.Rabat != null || p.Rabat > 0 ?(double)p.Price - ((double)p.Price * ((double)p.Rabat / 100)) : (double)p.Price;
+
+                    ws.Cell(row, 3).Value = Convert.ToDouble(cijena);
+                    ws.Cell(row, 3).Style.NumberFormat.Format = "0.00 €";
+
+                    ws.Cell(row, 4).Value = widthM.HasValue ? widthM.Value : "";
+                    ws.Cell(row, 4).Style.NumberFormat.Format = "0.00";
+
+                    ws.Cell(row, 5).Value = lengthM.HasValue ? lengthM.Value : "";
+                    ws.Cell(row, 5).Style.NumberFormat.Format = "0.00";
+
+                    ws.Cell(row, 6).Value = p.Quantity;
+
+                    // m2 per unit
+                    if (m2PerUnit.HasValue)
+                    {
+                        ws.Cell(row, 7).Value = m2PerUnit.Value;
+                        ws.Cell(row, 7).Style.NumberFormat.Format = "0.00";
+                    }
+                    else ws.Cell(row, 7).Value = "";
+
+                    // Total m2
+                    ws.Cell(row, 8).FormulaA1 = $"=IF(G{row}=\"\",\"\",G{row}*F{row})";
+                    ws.Cell(row, 8).Style.NumberFormat.Format = "0.00";
+
+                    // Total amount
+                    ws.Cell(row, 9).FormulaA1 = $"=IF(H{row}=\"\",C{row}*F{row},C{row}*H{row})";
+                    ws.Cell(row, 9).Style.NumberFormat.Format = "0.00 €";
+
+                    for (int c = 1; c <= 9; c++)
+                    {
+                        ws.Cell(row, c).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        ws.Cell(row, c).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                    }
+
+                    row++;
+                }
+
+                int dataStart = headerRow + 1;
+                int dataEnd = row - 1;
+
+                // === TOTALS ROW ===
+                int totalsRow = dataEnd + 1;
+
+                ws.Cell(totalsRow, 2).Value = "UKUPNO:";
+                ws.Cell(totalsRow, 2).Style.Font.Bold = true;
+
+                // TOTAL KOL. (column 6)
+                ws.Cell(totalsRow, 6).FormulaA1 = $"=SUM(F{dataStart}:F{dataEnd})";
+                ws.Cell(totalsRow, 6).Style.Font.Bold = true;
+
+                // TOTAL m² (column 8)
+                ws.Cell(totalsRow, 8).FormulaA1 = $"=SUM(H{dataStart}:H{dataEnd})";
+                ws.Cell(totalsRow, 8).Style.Font.Bold = true;
+                ws.Cell(totalsRow, 8).Style.NumberFormat.Format = "0.00";
+
+                // TOTAL amount (column 9)
+                ws.Cell(totalsRow, 9).FormulaA1 = $"=SUM(I{dataStart}:I{dataEnd})";
+                ws.Cell(totalsRow, 9).Style.Font.Bold = true;
+                ws.Cell(totalsRow, 9).Style.NumberFormat.Format = "0.00 €";
+
+                // Gray background
+                for (int c = 1; c <= 9; c++)
+                {
+                    ws.Cell(totalsRow, c).Style.Fill.BackgroundColor = XLColor.LightGray;
+                    ws.Cell(totalsRow, c).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                }
+
+                // === APPLY BORDERS TO HEADER + DATA + TOTALS ===
+                var tableRange = ws.Range(headerRow, 1, totalsRow, 9);
+                tableRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                tableRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+                // === PAGE SETUP ===
+                ws.PageSetup.PageOrientation = XLPageOrientation.Portrait;
+                ws.PageSetup.PaperSize = XLPaperSize.A5Paper;
+                ws.PageSetup.Margins.Top = 0.25;
+                ws.PageSetup.Margins.Bottom = 0.25;
+                ws.PageSetup.Margins.Left = 0.2;
+                ws.PageSetup.Margins.Right = 0.2;
+                ws.PageSetup.FitToPages(1, 0);
+
+                ws.PageSetup.SetRowsToRepeatAtTop(1, headerRow);
+
+                // Widths
+                ws.Column(1).Width = 12;
+                ws.Column(2).Width = 40;  // NAME priority
+                ws.Column(3).Width = 12;
+                ws.Column(4).Width = 10;
+                ws.Column(5).Width = 10;
+                ws.Column(6).Width = 8;
+                ws.Column(7).Width = 8;
+                ws.Column(8).Width = 10;
+                ws.Column(9).Width = 12;
+
+                using var ms = new MemoryStream();
+                workbook.SaveAs(ms);
+                return File(ms.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName);
+            }
+        }
+
+
+
 
     }
 }

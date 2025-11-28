@@ -13,6 +13,8 @@ namespace Inventar.ViewModels.Sales
         public string CustomerFullName { get; set; }
         [Display(Name = "Sale Time")]
         public DateTime VrijemeProdaje { get; set; }
+        [Range(0, 100)]
+        public int? Rabat { get; set; }
         public decimal Price { get; set; }
         public bool PerM2 { get; set; }
         public decimal? M2Total { get; set; }

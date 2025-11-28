@@ -50,6 +50,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.105.0, )"
+            },
             "CloudinaryDotNet": {
               "target": "Package",
               "version": "[1.26.2, )"
@@ -132,7 +136,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

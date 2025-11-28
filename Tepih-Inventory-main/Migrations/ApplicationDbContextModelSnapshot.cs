@@ -205,6 +205,9 @@ namespace Inventar.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Rabat")
+                        .HasColumnType("int");
+
                     b.Property<int>("TepihId")
                         .HasColumnType("int");
 

@@ -25,7 +25,7 @@
                 <input type="text" id="FullName" class="form-control" asp-for="FullName" required autocomplete="off" />
             </div>
             <div class="col-sm-6" style="padding-left:2rem">
-                <div class="row" style="height:100%">
+                <div class="row" style="height:100%; display:none">
                     <div class="form-check col" style="display: flex; align-items: center;">
                         <input class="form-check-input" type="radio" name="PlannedPaymentType" asp-for="PlannedPaymentType" value="Cash" id="cash">
                         <label class="form-check-label" for="cash" style="padding-left:1rem">
@@ -125,9 +125,25 @@
         }
     </tbody>
 </table>
-<div style="text-align: right; margin-top: 10px; display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "block" : "none")">
-    <strong>@Inventar.Resources.Resource.Total: <span id="totalPrice">0</span>€</strong>
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <button id="createExcel" class="btn btn-success">CreateExcel</button>
+    </div>
+    <div style="text-align: right;">
+        <strong>@Inventar.Resources.Resource.Total: <span id="totalPrice">0</span>€</strong>
+    </div>
 </div>
+
+@* <div style="text-align: right; margin-top: 10px; display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "block" : "none")">
+    <strong>@Inventar.Resources.Resource.Total: <span id="totalPrice">0</span>€</strong>
+</div> *@
+
+@using System.Text.Json
+@{
+    // serialize Model.Products to a JS-safe payload
+    var productsJson = JsonSerializer.Serialize(Model.Products);
+    var purchaseTimeJson = JsonSerializer.Serialize(Model.PurchaseTime);
+}
 
 <style>
     td, th {
@@ -257,6 +273,14 @@
             }
 
             calculateTotal();
+                // --- Sync updated values into productsForExport array --- //
+            let productId = Number(row.dataset.id);
+            let p = productsForExport.find(x => x.Id === productId);
+
+            if (p) {
+                p.Rabat = rabat;       // update Rabat
+                p.Price = price;       // update Price
+            }
 
             saveToServer(row.dataset.id, price, rabat);
         }
@@ -342,4 +366,64 @@
 
         return valid;
     }
+</script>
+<script>
+    // Prefilled client-side copies from server model (so you don't need to gather table DOM)
+    const productsForExport = @Html.Raw(productsJson);
+    const purchaseTimeForExport = @Html.Raw(purchaseTimeJson); // will be JSON Date if DateTime
+
+    function downloadBlobAsFile(blob, filename) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('createExcel').addEventListener('click', async function () {
+        try {
+            // Build payload
+            const payload = {
+                FullName: document.getElementById("FullName").value.trim(),
+                PurchaseTime: purchaseTimeForExport,
+                Products: productsForExport
+            };
+
+            const resp = await fetch('/InventoryItem/ExportScannedProductsToExcel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!resp.ok) {
+                const txt = await resp.text();
+                alert('Export failed: ' + txt);
+                return;
+            }
+
+            // Get filename from content-disposition header if present
+            const contentDisposition = resp.headers.get('content-disposition');
+            let fileName = 'export.xlsx';
+            if (contentDisposition && contentDisposition.indexOf('filename=') !== -1) {
+                const match = /filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/.exec(contentDisposition);
+                if (match && match[1]) {
+                    fileName = decodeURIComponent(match[1]);
+                }
+            } else {
+                // fallback: server should have constructed filename from purchaseTime + fullname
+                fileName = `${new Date().toLocaleString().replace(/:/g, '.')}.xlsx`;
+            }
+
+            const blob = await resp.blob();
+            downloadBlobAsFile(blob, fileName);
+        } catch (ex) {
+            console.error(ex);
+            alert('An error occurred while exporting Excel.');
+        }
+    });
 </script>

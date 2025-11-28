@@ -55,6 +55,7 @@
                 <th>@Inventar.Resources.Resource.CustomerFullName</th>
             }
             <th>@Inventar.Resources.Resource.M2Total</th>
+            <th>Rabat %</th>
             <th>@Inventar.Resources.Resource.Price</th>
             <th>@Inventar.Resources.Resource.Quantity</th>
             <th>@Inventar.Resources.Resource.TotalPrice</th>
@@ -69,6 +70,7 @@
                 <th><input type="text" placeholder="Customer" /></th>
             }
             <th><input type="text" placeholder="M² Total" /></th>
+            <th><input type="text" placeholder="Rabat" /></th>
             <th><input type="text" placeholder="Price" /></th>
             <th><input type="text" placeholder="Quantity" /></th>
             <th><input type="text" placeholder="Total Price" /></th>
@@ -85,9 +87,17 @@
                     <td>@entry.CustomerFullName</td>
                 }
                 <td>@(entry.PerM2 ? entry.M2Total : "")</td>
+                <td>@entry.Rabat</td>
                 <td style="color:@(entry.PerM2 ? "green" : "black")">@entry.Price€</td>
                 <td>@entry.Quantity</td>
-                <td style="color:@(entry.PerM2 ? "green" : "black")">@Math.Round((entry.PerM2 ? entry.Price * (decimal)entry.M2Total : entry.Price * entry.Quantity), 2)€</td>
+                <td style="color:@(entry.PerM2 ? "green" : "black")">
+                    @Math.Round(
+                                (entry.PerM2 ? entry.Rabat != null || entry.Rabat > 0 ? (entry.Price * (decimal)entry.M2Total) - (((decimal)entry.Rabat / 100) * (entry.Price * (decimal)entry.M2Total))
+                                : entry.Price * (decimal)entry.M2Total
+                                : entry.Rabat != null || entry.Rabat > 0 ? (entry.Price * entry.Quantity) - (((decimal)entry.Rabat/100) * (entry.Price * entry.Quantity))
+                                : entry.Price * entry.Quantity)
+                        , 2)€
+                </td>
             </tr>
         }
     </tbody>
@@ -161,15 +171,15 @@
 
                 // Index mapping based on table mode
                 let indexes = {
-                    quantity: 5,
-                    price: 6,
+                    quantity: 6,//5
+                    price: 7,//6
                     m2: 3
                 };
 
-                if (columnCount === 6) { // ungrouped table
+                if (columnCount === 7) { // ungrouped table 7
                     indexes = {
-                        quantity: 4,
-                        price: 5,
+                        quantity: 5,//4
+                        price: 6,//5
                         m2: 2
                     };
                 }

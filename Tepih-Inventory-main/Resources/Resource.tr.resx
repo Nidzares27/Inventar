@@ -171,6 +171,9 @@
   <data name="ClearCart" xml:space="preserve">
     <value>Boş sepet</value>
   </data>
+  <data name="ClearInputs" xml:space="preserve">
+    <value>Girişleri temizle</value>
+  </data>
   <data name="Color" xml:space="preserve">
     <value>Renk</value>
   </data>
@@ -209,6 +212,9 @@
   </data>
   <data name="Debts" xml:space="preserve">
     <value>Borçlar</value>
+  </data>
+  <data name="DebtSoFar" xml:space="preserve">
+    <value>Şimdiye kadarki borç</value>
   </data>
   <data name="Delete" xml:space="preserve">
     <value>Silmek</value>
@@ -287,6 +293,9 @@
   </data>
   <data name="ForgotPassword" xml:space="preserve">
     <value>Şifrenizi mi unuttunuz?</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>İtibaren</value>
   </data>
   <data name="FullName" xml:space="preserve">
     <value>Ad Soyad</value>
@@ -456,6 +465,9 @@
   <data name="Search" xml:space="preserve">
     <value>Aramak</value>
   </data>
+  <data name="SearchByParams" xml:space="preserve">
+    <value>Parametrelere göre ara</value>
+  </data>
   <data name="Searching" xml:space="preserve">
     <value>Aramak...</value>
   </data>
@@ -482,6 +494,9 @@
   </data>
   <data name="Time" xml:space="preserve">
     <value>Zaman</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>İle</value>
   </data>
   <data name="toLogin" xml:space="preserve">
     <value>rapor</value>

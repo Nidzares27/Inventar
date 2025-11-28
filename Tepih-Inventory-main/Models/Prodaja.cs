@@ -18,6 +18,8 @@ namespace Inventar.Models
         [Display(Name = "Sale Time")]
         public DateTime VrijemeProdaje { get; set; }
         public decimal Price { get; set; } /*double*/
+        [Range(0, 100)]
+        public int? Rabat { get; set; }
         [StringLength(20)]
         public string PlannedPaymentType { get; set; } 
         [StringLength(50)]
