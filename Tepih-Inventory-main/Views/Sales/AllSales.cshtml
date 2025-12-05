@@ -248,29 +248,6 @@
                         totalM2: totalM2,
                         totalPrice: totalPrice
                     }),
-                    // processData: false,
-                    // xhr: function () {
-                    //     var xhr = new XMLHttpRequest();
-                    //     xhr.responseType = "blob";   // <-- critical fix
-                    //     return xhr;
-                    // },
-                    // success: function (blob) {
-
-                    //     // Important sanity check
-                    //     if (!(blob instanceof Blob)) {
-                    //         console.error("Server did NOT return a blob:", blob);
-                    //         alert("Server returned an error instead of a PDF.");
-                    //         return;
-                    //     }
-
-                    //     var link = document.createElement('a');
-                    //     link.href = window.URL.createObjectURL(blob);
-                    //     link.download = 'Prodaje.pdf';
-                    //     link.click();
-                    // },
-                    // error: function (xhr) {
-                    //     console.error("PDF generation failed. Server replied:", xhr);
-                    // }
                     xhrFields: {
                         responseType: 'blob'
                     },

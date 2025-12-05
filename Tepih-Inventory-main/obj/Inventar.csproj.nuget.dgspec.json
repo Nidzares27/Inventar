@@ -22,15 +22,15 @@
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "net9.0"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0": {
-            "targetAlias": "net8.0",
+          "net9.0": {
+            "targetAlias": "net9.0",
             "projectReferences": {}
           }
         },
@@ -47,8 +47,8 @@
         "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
+        "net9.0": {
+          "targetAlias": "net9.0",
           "dependencies": {
             "ClosedXML": {
               "target": "Package",
@@ -56,29 +56,29 @@
             },
             "CloudinaryDotNet": {
               "target": "Package",
-              "version": "[1.26.2, )"
+              "version": "[1.27.9, )"
             },
             "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[8.0.22, )"
+              "version": "[9.0.11, )"
             },
             "Microsoft.AspNetCore.Identity.UI": {
               "target": "Package",
-              "version": "[8.0.22, )"
+              "version": "[9.0.11, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[8.0.22, )"
+              "version": "[9.0.11, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
-              "version": "[8.0.22, )"
+              "version": "[9.0.11, )"
             },
             "Microsoft.EntityFrameworkCore.Tools": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.22, )"
+              "version": "[9.0.11, )"
             },
             "SendGrid": {
               "target": "Package",
@@ -86,7 +86,7 @@
             },
             "Serilog.AspNetCore": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[10.0.0, )"
             },
             "Serilog.Enrichers.AspnetcoreHttpcontext": {
               "target": "Package",
@@ -94,7 +94,7 @@
             },
             "Serilog.Settings.Configuration": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[10.0.0, )"
             },
             "Serilog.Sinks.File": {
               "target": "Package",
@@ -102,19 +102,19 @@
             },
             "System.Drawing.Common": {
               "target": "Package",
-              "version": "[8.0.8, )"
+              "version": "[10.0.0, )"
             },
             "ZXing.Net": {
               "target": "Package",
-              "version": "[0.16.10, )"
+              "version": "[0.16.11, )"
             },
-            "itext": {
+            "itext7": {
               "target": "Package",
-              "version": "[8.0.5, )"
+              "version": "[8.0.0, )"
             },
-            "itext.bouncy-castle-adapter": {
+            "itext7.bouncy-castle-adapter": {
               "target": "Package",
-              "version": "[8.0.5, )"
+              "version": "[8.0.0, )"
             }
           },
           "imports": [

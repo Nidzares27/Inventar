@@ -53,9 +53,6 @@ namespace Inventar.Middleware
                 }
                 else
                 {
-                    _logger.Error(ex, "Middleware caught exception: {msg}", ex.Message);
-                    context.Response.Clear();   // <--- IMPORTANT
-
                     // Non-API request – redirect to error page
                     context.Response.Redirect("/Home/Error");
                 }
