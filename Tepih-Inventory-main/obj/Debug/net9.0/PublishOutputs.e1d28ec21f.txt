@@ -1,6 +1,12 @@
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\Inventar.exe
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\publish\web.config
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\appsettings.Development.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\appsettings.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\publish\appsettings.Development.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\publish\appsettings.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\publish\Inventar.deps.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\publish\Inventar.runtimeconfig.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\publish\Inventar.staticwebassets.endpoints.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\Inventar.dll
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\Inventar.runtimeconfig.json
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\PubTmp\Out\Inventar.pdb

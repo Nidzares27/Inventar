@@ -358,3 +358,9 @@ C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\ref\Inventar.dll
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net9.0\BouncyCastle.Crypto.dll
 C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\obj\Debug\net9.0\compressed\cu37f9fm21-2px0d6wgcx.gz
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net9.0\publish\web.config
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net9.0\publish\appsettings.Development.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net9.0\publish\appsettings.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net9.0\publish\Inventar.deps.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net9.0\publish\Inventar.runtimeconfig.json
+C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\bin\Debug\net9.0\publish\Inventar.staticwebassets.endpoints.json
