@@ -21,6 +21,7 @@ using Path = System.IO.Path;
 using Inventar.ViewModels.Inventory;
 using Inventar.ViewModels.Pdf;
 using System.Diagnostics;
+using iText.IO.Util;
 
 namespace Inventar.Controllers
 {
@@ -71,18 +72,32 @@ namespace Inventar.Controllers
             }
 
             using var memoryStream = new MemoryStream();
+
+            float MmToPt(float mm) => mm * 2.8346457f; //ADDED
+
+            var pageSize = new PageSize(
+                MmToPt(80),   // 100 mm = 283.46 pt
+                MmToPt(40)     // 50 mm = 141.73 pt
+            );
+
             using var writer = new PdfWriter(memoryStream);
             using var pdf = new PdfDocument(writer);
+
+            pdf.SetDefaultPageSize(pageSize);//ADDED
+
             var document = new Document(pdf);
+            document.SetMargins(2, 5, 2, 5); // small label margins ADDED
 
-            string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-            if (!System.IO.File.Exists(fontPath))
-            {
-                _logger.LogError("Font file missing at {Path}", fontPath);
-                return StatusCode(500, "Font file not found.");
-            }
 
-            PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+            //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+            //if (!System.IO.File.Exists(fontPath))
+            //{
+            //    _logger.LogError("Font file missing at {Path}", fontPath);
+            //    return StatusCode(500, "Font file not found.");
+            //}
+
+            //PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+            PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
             document.SetFont(font);
 
             // Build description line
@@ -91,9 +106,9 @@ namespace Inventar.Controllers
                               $"{tepih.Color.ToUpper().Trim() ?? ""}";
 
             var paragraph = new Paragraph(description)
-                .SetFontSize(12)
+                .SetFontSize(8)//12 MODIFED
                 .SetBold()
-                .SetMarginBottom(10)
+                .SetMarginBottom(5) //10 MODIFIED
                 .SetTextAlignment(TextAlignment.CENTER);
 
             document.Add(paragraph);
@@ -102,7 +117,11 @@ namespace Inventar.Controllers
             {
                 var imgData = ImageDataFactory.Create(imageBytes);
                 var image = new Image(imgData)
-                    .ScaleToFit(200, 200)
+                    .ScaleToFit(
+                        MmToPt(25),
+                        MmToPt(25)
+                    )
+                    //.ScaleToFit(200, 200)
                     .SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
 
                 document.Add(image);
@@ -275,14 +294,15 @@ namespace Inventar.Controllers
             using var pdf = new PdfDocument(writer);
             var document = new Document(pdf);
 
-            string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-            if (!System.IO.File.Exists(fontPath))
-            {
-                _logger.LogError("Font file missing at {Path}", fontPath);
-                return StatusCode(500, "Font file not found.");
-            }
+            //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+            //if (!System.IO.File.Exists(fontPath))
+            //{
+            //    _logger.LogError("Font file missing at {Path}", fontPath);
+            //    return StatusCode(500, "Font file not found.");
+            //}
 
-            PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+            //PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+            PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
             document.SetFont(font);
 
             //var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
@@ -392,14 +412,15 @@ namespace Inventar.Controllers
                 document.SetMargins(20, 20, 20, 20);
 
                 // Load font with error check
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogError("Font file missing at {Path}", fontPath);
-                    return StatusCode(500, "Font file not found.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogError("Font file missing at {Path}", fontPath);
+                //    return StatusCode(500, "Font file not found.");
+                //}
 
-                PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font).SetFontSize(10);
 
                 // Add heading centered at the top
@@ -518,14 +539,15 @@ namespace Inventar.Controllers
                 document.SetMargins(20, 20, 20, 20);
 
                 // Font setup
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogError("Font file missing at {Path}", fontPath);
-                    return StatusCode(500, "Missing font file.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogError("Font file missing at {Path}", fontPath);
+                //    return StatusCode(500, "Missing font file.");
+                //}
 
-                var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font).SetFontSize(10);
 
                 // Header: Left and Right aligned titles
@@ -634,14 +656,15 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A4.Rotate());
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogError("Font not found at path: {FontPath}", fontPath);
-                    return StatusCode(500, "Font file is missing.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogError("Font not found at path: {FontPath}", fontPath);
+                //    return StatusCode(500, "Font file is missing.");
+                //}
 
-                var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font).SetFontSize(8);
 
                 // Heading
@@ -741,14 +764,15 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A4.Rotate());
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogError("Font not found at path: {FontPath}", fontPath);
-                    return StatusCode(500, "Font file is missing.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogError("Font not found at path: {FontPath}", fontPath);
+                //    return StatusCode(500, "Font file is missing.");
+                //}
 
-                PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
                 document.SetFontSize(10);
 
@@ -838,14 +862,15 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A5);
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogError("Font not found at path: {FontPath}", fontPath);
-                    return StatusCode(500, "Font file is missing.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogError("Font not found at path: {FontPath}", fontPath);
+                //    return StatusCode(500, "Font file is missing.");
+                //}
 
-                PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
                 document.SetFontSize(10);
 
@@ -929,14 +954,15 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A4.Rotate());
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogError("Font file not found at {FontPath}", fontPath);
-                    return StatusCode(500, "Font file not found.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogError("Font file not found at {FontPath}", fontPath);
+                //    return StatusCode(500, "Font file not found.");
+                //}
 
-                var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
                 document.SetFontSize(10);
 
@@ -1031,14 +1057,15 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A4);
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogError("Font file missing: {FontPath}", fontPath);
-                    return StatusCode(500, "Required font file is missing.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogError("Font file missing: {FontPath}", fontPath);
+                //    return StatusCode(500, "Required font file is missing.");
+                //}
 
-                var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
                 document.SetFontSize(10);
 
@@ -1131,14 +1158,15 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A4.Rotate());
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogWarning("Font file not found at path: {Path}", fontPath);
-                    return StatusCode(500, "Required font file is missing.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogWarning("Font file not found at path: {Path}", fontPath);
+                //    return StatusCode(500, "Required font file is missing.");
+                //}
 
-                var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
                 document.SetFontSize(10);
 
@@ -1244,14 +1272,15 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A4);
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogWarning("Font not found at path: {Path}", fontPath);
-                    return StatusCode(500, "Font file is missing.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogWarning("Font not found at path: {Path}", fontPath);
+                //    return StatusCode(500, "Font file is missing.");
+                //}
 
-                var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
                 document.SetFontSize(10);
 
@@ -1367,15 +1396,16 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A4.Rotate());
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
 
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogWarning("Font file not found at {Path}", fontPath);
-                    return StatusCode(500, "Font file is missing.");
-                }
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogWarning("Font file not found at {Path}", fontPath);
+                //    return StatusCode(500, "Font file is missing.");
+                //}
 
-                var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
                 document.SetFontSize(10);
 
@@ -1455,14 +1485,15 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A5);
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogWarning("Font file not found: {FontPath}", fontPath);
-                    return StatusCode(500, "Font file missing.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogWarning("Font file not found: {FontPath}", fontPath);
+                //    return StatusCode(500, "Font file missing.");
+                //}
 
-                var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
                 document.SetFontSize(10);
 
@@ -1547,14 +1578,15 @@ namespace Inventar.Controllers
                 var document = new Document(pdf, PageSize.A5);
                 document.SetMargins(20, 20, 20, 20);
 
-                string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogWarning("Font file not found: {FontPath}", fontPath);
-                    return StatusCode(500, "Font file missing.");
-                }
+                //string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogWarning("Font file not found: {FontPath}", fontPath);
+                //    return StatusCode(500, "Font file missing.");
+                //}
 
-                var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
                 document.SetFontSize(10);
 
@@ -1634,15 +1666,16 @@ namespace Inventar.Controllers
                 document.SetFontSize(7);
 
                 // Load font with error check
-                string fontPath = System.IO.Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogError("Font file missing at {Path}", fontPath);
-                    throw new Exception("Font path doesn't exist!");
-                    //return StatusCode(500, "Font file not found.");
-                }
+                //string fontPath = System.IO.Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogError("Font file missing at {Path}", fontPath);
+                //    throw new Exception("Font path doesn't exist!");
+                //    //return StatusCode(500, "Font file not found.");
+                //}
 
-                PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
 
                 var groupedProducts = from p in model

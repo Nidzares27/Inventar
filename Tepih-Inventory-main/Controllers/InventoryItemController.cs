@@ -7,6 +7,7 @@ using Inventar.Utils;
 using Inventar.ViewModels.Inventory;
 using Inventar.ViewModels.Pdf;
 using iText.IO.Font;
+using iText.IO.Font.Constants;
 using iText.Kernel.Font;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
@@ -700,15 +701,16 @@ namespace Inventar.Controllers
                 document.SetFontSize(7);
 
                 // Load font with error check
-                string fontPath = System.IO.Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
-                if (!System.IO.File.Exists(fontPath))
-                {
-                    _logger.LogError("Font file missing at {Path}", fontPath);
-                    throw new Exception("Font path doesn't exist!");
-                    //return StatusCode(500, "Font file not found.");
-                }
+                //string fontPath = System.IO.Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                //if (!System.IO.File.Exists(fontPath))
+                //{
+                //    _logger.LogError("Font file missing at {Path}", fontPath);
+                //    throw new Exception("Font path doesn't exist!");
+                //    //return StatusCode(500, "Font file not found.");
+                //}
 
-                PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                //PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 document.SetFont(font);
 
                 var headerTable = new Table(3)
