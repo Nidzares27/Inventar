@@ -71,9 +71,21 @@ namespace Inventar.Controllers
             }
 
             using var memoryStream = new MemoryStream();
+
+            float MmToPt(float mm) => mm * 2.8346457f; //ADDED
+
+            var pageSize = new PageSize(
+                MmToPt(80),   // 100 mm = 283.46 pt
+                MmToPt(40)     // 50 mm = 141.73 pt
+            );
             using var writer = new PdfWriter(memoryStream);
             using var pdf = new PdfDocument(writer);
+
+            pdf.SetDefaultPageSize(pageSize);//ADDED
+
             var document = new Document(pdf);
+
+            document.SetMargins(2, 5, 2, 5); // small label margins ADDED
 
             string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
             if (!System.IO.File.Exists(fontPath))
@@ -91,9 +103,9 @@ namespace Inventar.Controllers
                               $"{tepih.Color.ToUpper().Trim() ?? ""}";
 
             var paragraph = new Paragraph(description)
-                .SetFontSize(12)
+                .SetFontSize(8)//12 MODIFED
                 .SetBold()
-                .SetMarginBottom(10)
+                .SetMarginBottom(5) //10 MODIFIED
                 .SetTextAlignment(TextAlignment.CENTER);
 
             document.Add(paragraph);
@@ -102,7 +114,11 @@ namespace Inventar.Controllers
             {
                 var imgData = ImageDataFactory.Create(imageBytes);
                 var image = new Image(imgData)
-                    .ScaleToFit(200, 200)
+                    .ScaleToFit(
+                        MmToPt(25),
+                        MmToPt(25)
+                    )
+                    //.ScaleToFit(200, 200)
                     .SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
 
                 document.Add(image);

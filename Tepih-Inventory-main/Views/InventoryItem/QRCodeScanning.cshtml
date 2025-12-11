@@ -6,7 +6,6 @@
 <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="~/css/QRCodeScanning.css" asp-append-version="true" />
-
 </head>
 
 <h2>@Inventar.Resources.Resource.ScanQRCode</h2>
@@ -89,10 +88,85 @@
     </div>
 </div>
 
+@* <div id="outterDiv" style="display:flex; gap: 20px;">
+    <div id="leftDiv">
+        <div id="qr-reader" style="width:500px;"></div>
+        <div id="result"></div>
+    </div>
+    <div style="width: 100%; gap: 10px; flex-wrap: nowrap;" class="row">
+        <div id="midDiv" class="col-5">
+            <div style="text-align:center;">
+                <h5>@Inventar.Resources.Resource.SearchByParams</h5>
+            </div>
+            <form id="formByParameters"  asp-action="AddProductByParameters" method="post" style="/* margin-top:1rem; */ margin-bottom:1rem">
+                <div >
+                    <label for="ProductNumber" style="font-weight:600; color:red">@Inventar.Resources.Resource.ProductNumber</label>
+                    <input id="searchProductNumber" type="text" style="border:solid, 0.3px, red" class="form-control" />
+                </div>
+                <div >
+                    <label for="Name" style="font-weight:600; color:red">@Inventar.Resources.Resource.Name</label>
+                    <input id="searchName" type="text" style="border:solid, 0.3px, red" class="form-control" />
+                </div>
+                <div >
+                    <label for="Model" style="font-weight:600; color:red">Model</label>
+                    <input id="searchModel" type="text" style="border:solid, 0.3px, red" class="form-control" />
+                </div>
+                <div >
+                    <label for="Color" style="font-weight:600; color:red">@Inventar.Resources.Resource.Color</label>
+                    <input id="searchColor" type="text" style="border:solid, 0.3px, red" class="form-control" />
+                </div>
+                <div >
+                    <label for="Size" style="font-weight:600; color:red">@Inventar.Resources.Resource.Size</label>
+                    <input id="searchSize" style="border:solid, 0.3px, red" type="text" class="form-control" />
+                </div>
+                <div >
+                    <button id="clearInputs"
+                            type="button"
+                            class="btn btn-warning btn-sm"
+                            style="width:120px; margin-top:28px;">
+                        @Inventar.Resources.Resource.ClearInputs
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div id="rightDiv" class="col-7" style="max-height:430px"></div>
+    </div>   
+</div> *@
+
 <form id="myForm" asp-action="ManuallyAddProduct" method="post" style="margin-top:1rem; margin-bottom:1rem">
     <input type="number" id="manualId" name="id" style="vertical-align:middle" />
     <button type="submit" style="vertical-align:middle">@Inventar.Resources.Resource.ManuallyEnterId</button>
 </form>
+@* <form id="formByParameters" class="row g-3" asp-action="AddProductByParameters" method="post" style="/* margin-top:1rem; */ margin-bottom:1rem">
+    <div class="col-sm-2">
+        <label for="ProductNumber" style="font-weight:600; color:red">@Inventar.Resources.Resource.ProductNumber</label>
+        <input id="searchProductNumber" type="text" style="border:solid, 0.3px, red" class="form-control" />
+    </div>
+    <div class="col-sm-3">
+        <label for="Name" style="font-weight:600; color:red">@Inventar.Resources.Resource.Name</label>
+        <input id="searchName" type="text" style="border:solid, 0.3px, red" class="form-control" />
+    </div>
+    <div class="col-sm-2">
+        <label for="Model" style="font-weight:600; color:red">Model</label>
+        <input id="searchModel" type="text" style="border:solid, 0.3px, red" class="form-control" />
+    </div>
+    <div class="col-sm-2">
+        <label for="Color" style="font-weight:600; color:red">@Inventar.Resources.Resource.Color</label>
+        <input id="searchColor" type="text" style="border:solid, 0.3px, red" class="form-control" />
+    </div>
+    <div class="col-sm-2">
+        <label for="Size" style="font-weight:600; color:red">@Inventar.Resources.Resource.Size</label>
+        <input id="searchSize" style="border:solid, 0.3px, red" type="text" class="form-control" />
+    </div>
+    <div class="col-sm-1">
+        <button id="clearInputs"
+                type="button"
+                class="btn btn-warning btn-sm"
+                style="width:120px; margin-top:28px;">
+            @Inventar.Resources.Resource.ClearInputs
+        </button>
+    </div>
+</form> *@
 
 <button id="clearSessionBtn" class="btn btn-sm btn-danger">@Inventar.Resources.Resource.ClearCart</button>
 @if(Model != null)
@@ -434,7 +508,7 @@
     }
 
     #rightDiv {
-        max-height: 520px;
+        max-height: 520px; /* same height as QR reader area */
         overflow-y: auto;
         border: 1px solid #ccc;
         padding: 5px;
