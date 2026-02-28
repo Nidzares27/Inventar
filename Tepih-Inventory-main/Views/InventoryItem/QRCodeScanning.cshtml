@@ -88,85 +88,10 @@
     </div>
 </div>
 
-@* <div id="outterDiv" style="display:flex; gap: 20px;">
-    <div id="leftDiv">
-        <div id="qr-reader" style="width:500px;"></div>
-        <div id="result"></div>
-    </div>
-    <div style="width: 100%; gap: 10px; flex-wrap: nowrap;" class="row">
-        <div id="midDiv" class="col-5">
-            <div style="text-align:center;">
-                <h5>@Inventar.Resources.Resource.SearchByParams</h5>
-            </div>
-            <form id="formByParameters"  asp-action="AddProductByParameters" method="post" style="/* margin-top:1rem; */ margin-bottom:1rem">
-                <div >
-                    <label for="ProductNumber" style="font-weight:600; color:red">@Inventar.Resources.Resource.ProductNumber</label>
-                    <input id="searchProductNumber" type="text" style="border:solid, 0.3px, red" class="form-control" />
-                </div>
-                <div >
-                    <label for="Name" style="font-weight:600; color:red">@Inventar.Resources.Resource.Name</label>
-                    <input id="searchName" type="text" style="border:solid, 0.3px, red" class="form-control" />
-                </div>
-                <div >
-                    <label for="Model" style="font-weight:600; color:red">Model</label>
-                    <input id="searchModel" type="text" style="border:solid, 0.3px, red" class="form-control" />
-                </div>
-                <div >
-                    <label for="Color" style="font-weight:600; color:red">@Inventar.Resources.Resource.Color</label>
-                    <input id="searchColor" type="text" style="border:solid, 0.3px, red" class="form-control" />
-                </div>
-                <div >
-                    <label for="Size" style="font-weight:600; color:red">@Inventar.Resources.Resource.Size</label>
-                    <input id="searchSize" style="border:solid, 0.3px, red" type="text" class="form-control" />
-                </div>
-                <div >
-                    <button id="clearInputs"
-                            type="button"
-                            class="btn btn-warning btn-sm"
-                            style="width:120px; margin-top:28px;">
-                        @Inventar.Resources.Resource.ClearInputs
-                    </button>
-                </div>
-            </form>
-        </div>
-        <div id="rightDiv" class="col-7" style="max-height:430px"></div>
-    </div>   
-</div> *@
-
 <form id="myForm" asp-action="ManuallyAddProduct" method="post" style="margin-top:1rem; margin-bottom:1rem">
     <input type="number" id="manualId" name="id" style="vertical-align:middle" />
     <button type="submit" style="vertical-align:middle">@Inventar.Resources.Resource.ManuallyEnterId</button>
 </form>
-@* <form id="formByParameters" class="row g-3" asp-action="AddProductByParameters" method="post" style="/* margin-top:1rem; */ margin-bottom:1rem">
-    <div class="col-sm-2">
-        <label for="ProductNumber" style="font-weight:600; color:red">@Inventar.Resources.Resource.ProductNumber</label>
-        <input id="searchProductNumber" type="text" style="border:solid, 0.3px, red" class="form-control" />
-    </div>
-    <div class="col-sm-3">
-        <label for="Name" style="font-weight:600; color:red">@Inventar.Resources.Resource.Name</label>
-        <input id="searchName" type="text" style="border:solid, 0.3px, red" class="form-control" />
-    </div>
-    <div class="col-sm-2">
-        <label for="Model" style="font-weight:600; color:red">Model</label>
-        <input id="searchModel" type="text" style="border:solid, 0.3px, red" class="form-control" />
-    </div>
-    <div class="col-sm-2">
-        <label for="Color" style="font-weight:600; color:red">@Inventar.Resources.Resource.Color</label>
-        <input id="searchColor" type="text" style="border:solid, 0.3px, red" class="form-control" />
-    </div>
-    <div class="col-sm-2">
-        <label for="Size" style="font-weight:600; color:red">@Inventar.Resources.Resource.Size</label>
-        <input id="searchSize" style="border:solid, 0.3px, red" type="text" class="form-control" />
-    </div>
-    <div class="col-sm-1">
-        <button id="clearInputs"
-                type="button"
-                class="btn btn-warning btn-sm"
-                style="width:120px; margin-top:28px;">
-            @Inventar.Resources.Resource.ClearInputs
-        </button>
-    </div>
-</form> *@
 
 <button id="clearSessionBtn" class="btn btn-sm btn-danger">@Inventar.Resources.Resource.ClearCart</button>
 @if(Model != null)
@@ -268,12 +193,67 @@
 @* <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
  *@<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
+    let audioUnlocked = false;
+
+    function unlockAudio() {
+        if (audioUnlocked) return;
+
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+
+        audioUnlocked = true;
+        console.log("Audio unlocked");
+    }
+
+    document.addEventListener("touchstart", unlockAudio, { once: true });
+    document.addEventListener("click", unlockAudio, { once: true });
+
+
+    let lastScan = "";
+    let lastScanTime = 0;
+
+    function playSuccessBeep() {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        oscillator.type = "sine";      // smooth beep
+        oscillator.frequency.value = 880; // pitch (higher = sharper)
+        gain.gain.value = 0.15;        // volume (0.0 – 1.0)
+
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.07); // VERY short (70ms)
+    }
+
     function onScanSuccess(qrCodeMessage) {
+        const now = Date.now();
+
+        // Prevent double/triple scan before page reload
+        if (qrCodeMessage === lastScan && (now - lastScanTime) < 800) {
+            console.log("Duplicate scan ignored");
+            return;
+        }
+
+        lastScan = qrCodeMessage;
+        lastScanTime = now;
+
         fetch(`/InventoryItem/ProcessQRCode?data=${qrCodeMessage}`)
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    window.location.href = `/InventoryItem/QRCodeScanning`;
+                    playSuccessBeep();   // SOUND HERE
+                    setTimeout(() => {
+                        window.location.href = `/InventoryItem/QRCodeScanning`;
+                    }, 80); // tiny delay so sound can play
+                    // window.location.href = `/InventoryItem/QRCodeScanning`;
                 } else {
                     document.getElementById('result').innerHTML = `
                         <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -298,7 +278,7 @@
         setTimeout(() => {
             const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
             html5QrcodeScanner.render(onScanSuccess, onScanError);
-        }, 1500); // Delay by 3 seconds (adjust as needed)
+        }, 100); // Delay by 3 seconds (adjust as needed)
     });
 
     // var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
@@ -508,7 +488,7 @@
     }
 
     #rightDiv {
-        max-height: 520px; /* same height as QR reader area */
+        max-height: 520px;
         overflow-y: auto;
         border: 1px solid #ccc;
         padding: 5px;

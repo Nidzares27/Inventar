@@ -253,6 +253,27 @@ namespace Inventar.Controllers
         {
             try
             {
+                // ------------------------------
+                // DUPLICATE FAST-SCAN PROTECTION
+                // ------------------------------
+                var lastScan = HttpContext.Session.GetString("lastScanValue");
+                var lastScanTimeString = HttpContext.Session.GetString("lastScanTime");
+
+                if (lastScan == data && lastScanTimeString != null)
+                {
+                    var lastScanTime = DateTime.Parse(lastScanTimeString);
+
+                    // If scanned again within 800 milliseconds → IGNORE
+                    if ((DateTime.Now - lastScanTime).TotalMilliseconds < 800)
+                    {
+                        return Json(new { success = false, message = "Duplicate fast scan ignored" });
+                    }
+                }
+
+                // Save current scan as last scan
+                HttpContext.Session.SetString("lastScanValue", data);
+                HttpContext.Session.SetString("lastScanTime", DateTime.Now.ToString());
+
                 var extractData = data.Split("/");
 
                 var item = new Tepih();

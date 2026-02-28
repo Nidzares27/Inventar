@@ -1,12 +1,69 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|c:\\users\\deskpc\\desktop\\tepih-inventory-main\\tepih-inventory-main\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|c:\\users\\deskpc\\desktop\\tepih-inventory-main\\tepih-inventory-main\\views\\inventoryitem\\qrcodescanning.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:views\\inventoryitem\\qrcodescanning.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|c:\\users\\deskpc\\desktop\\tepih-inventory-main\\tepih-inventory-main\\controllers\\inventoryitemcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CA6B2A38-85D1-4840-BF7E-0C0C463FF6AD}|Inventar.csproj|solutionrelative:controllers\\inventoryitemcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 1281,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "Views\\Shared\\_Layout.cshtml",
+              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "Views\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAA8AAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-02-28T09:32:38.492Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "QRCodeScanning.cshtml",
+              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\InventoryItem\\QRCodeScanning.cshtml",
+              "RelativeDocumentMoniker": "Views\\InventoryItem\\QRCodeScanning.cshtml",
+              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Views\\InventoryItem\\QRCodeScanning.cshtml",
+              "RelativeToolTip": "Views\\InventoryItem\\QRCodeScanning.cshtml",
+              "ViewState": "AgIAALgAAAAAAAAAAAAqwMUAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-02-01T14:34:57.445Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "InventoryItemController.cs",
+              "DocumentMoniker": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Controllers\\InventoryItemController.cs",
+              "RelativeDocumentMoniker": "Controllers\\InventoryItemController.cs",
+              "ToolTip": "C:\\Users\\DeskPC\\Desktop\\Tepih-Inventory-main\\Tepih-Inventory-main\\Controllers\\InventoryItemController.cs",
+              "RelativeToolTip": "Controllers\\InventoryItemController.cs",
+              "ViewState": "AgIAAJYBAAAAAAAAAAAmwJwBAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-01T14:31:14.532Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

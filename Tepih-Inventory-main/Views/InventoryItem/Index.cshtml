@@ -6,159 +6,96 @@
     <thead>
         <tr>
             <th>#</th>
-            @if (User.Identity.IsAuthenticated && User.IsInRole("user"))
-            {
-                <th style="display:none">Id</th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin")))
-            {
-                <th>Id</th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-            {
-                <th>@Inventar.Resources.Resource.ProductNumber</th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
-            {
-                <th style="display:none">@Inventar.Resources.Resource.ProductNumber</th>
-            }
+            <th>Id</th>
+            <th>@Inventar.Resources.Resource.ProductNumber</th>
             <th>@Inventar.Resources.Resource.Name</th>
             <th>Model</th>
             <th>@Inventar.Resources.Resource.Color</th>
             <th>@Inventar.Resources.Resource.Size</th>
             <th>m²</th>
             <th>@Inventar.Resources.Resource.M2Total</th>
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
-            {
-                <th style="display:none">@* @Inventar.Resources.Resource.Price *@</th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-            {
-                <th>@Inventar.Resources.Resource.Price</th>
-            }
-@*             <th>@Inventar.Resources.Resource.Price</th>
- *@            <th>@Inventar.Resources.Resource.Quantity</th>
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-            {
-                <th></th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
-            {
-                <th style="display:none"></th>
-            }
+            <th>@Inventar.Resources.Resource.Price</th>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <th></th>
         </tr>
+
         <tr class="filters">
-            <th><input style="width:2rem" type="text" placeholder="" disabled></th>
-            @if (User.Identity.IsAuthenticated && User.IsInRole("user"))
-            {
-                <th style="display:none"></th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin")))
-            {
-                <th><input style="width:5rem" type="text" placeholder="Id"></th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-            {
-                <th><input style="width:5rem" type="text" placeholder="ProductNumber"></th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
-            {
-                <th style="display:none"></th>
-            }
-            <th><input style="width:7.5rem" type="text" placeholder="Name"></th>
-            <th><input style="width:5rem" type="text" placeholder="Model"></th>
-            <th><input style="width:7.5rem" type="text" placeholder="Color"></th>
-            <th><input style="width:5rem" type="text" placeholder="Size"></th>
-            <th><input style="width:5rem" type="text" placeholder="m²"></th>
-            <th><input style="width:5rem" type="text" placeholder="M2Total"></th>
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
-            {
-                <th style="display:none"></th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-            {
-                <th><input style="width:5rem" type="text" placeholder="Price"></th>
-            }
-            <th><input style="width:5rem" type="text" placeholder="Quantity"></th>
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-            {
-                <th><input style="width:5rem" type="text" placeholder="" disabled></th>
-            }
-            @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
-            {
-                <th style="display:none"></th>
-            }
+            <th><input style="width:2rem" disabled></th>
+            <th><input style="width:5rem" placeholder="Id"></th>
+            <th><input style="width:5rem" placeholder="ProductNumber"></th>
+            <th><input style="width:7.5rem" placeholder="Name"></th>
+            <th><input style="width:5rem" placeholder="Model"></th>
+            <th><input style="width:7.5rem" placeholder="Color"></th>
+            <th><input style="width:5rem" placeholder="Size"></th>
+            <th><input style="width:5rem" placeholder="m²"></th>
+            <th><input style="width:5rem" placeholder="M2Total"></th>
+            <th><input style="width:5rem" placeholder="Price"></th>
+            <th><input style="width:5rem" placeholder="Quantity"></th>
+            <th><input style="width:5rem" disabled></th>
         </tr>
     </thead>
+
     <tbody>
         @foreach (var item in Model)
         {
             <tr>
                 <td></td>
-                @if (User.Identity.IsAuthenticated && User.IsInRole("user"))
-                {
-                    <td style="display:none"></td>
-                }
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin")))
-                {
-                    <td><a asp-area="" asp-controller="InventoryItem" asp-action="Details" asp-route-id="@item.Id">@item.Id</a></td>
-                }
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-                {
-                    <td>@item.ProductNumber</td>
-                }
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
-                {
-                    <td style="display:none"></td>
-                }
-                <td>@item.Name</td>
-                <td>@item.Model</td>
-                <td>@item.Color</td>
-                @if (item.PerM2)
-                {
-                    <td>
-                        @($"{item.Width}X{item.Length}")
-                    </td>
-                }
-                else
-                {
-                    @if (item.Width != null && item.Length != null)
+
+                <td>
+                    @if (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"))
                     {
-                        <td>
-                            @($"{item.Width}X{item.Length}")
-                        </td>
+                        <a asp-controller="InventoryItem" asp-action="Details" asp-route-id="@item.Id">@item.Id</a>
                     }
                     else
                     {
-                        <td></td>
+                        @item.Id
                     }
-                }
-                <td>@(item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : "")</td>
-                <td>@(item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.Quantity), 2) : "")</td>
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
+                </td>
+
+                <td>
+                    @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
+                    {
+                        @item.ProductNumber
+                    }
+                </td>
+
+                <td>@item.Name</td>
+                <td>@item.Model</td>
+                <td>@item.Color</td>
+
+                @if (item.PerM2)
                 {
-                    <td style="display:none"></td>
+                    <td>@($"{item.Width}X{item.Length}")</td>
                 }
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+                else
                 {
-                    <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price €</td>
+                    <td>@((item.Width != null && item.Length != null) ? $"{item.Width}X{item.Length}" : "")</td>
                 }
+
+                <td>@(item.PerM2? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : "")</td>
+                <td>@(item.PerM2? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.Quantity), 2) : "")</td>
+
+                <td style="color:@(item.PerM2 ? "green" : "black")">
+                    @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
+                    {
+                        @($"{item.Price} €")
+                    }
+                </td>
+
                 <td>@item.Quantity</td>
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-                {
-                    <td>
-                        <a asp-area="" asp-controller="InventoryItem" asp-action="Edit" asp-route-id="@item.Id">@Inventar.Resources.Resource.Edit</a>
-                        <a asp-area="" asp-controller="InventoryItem" asp-action="Delete" asp-route-id="@item.Id">@Inventar.Resources.Resource.Delete</a>
-                    </td>
-                }
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("user") || User.IsInRole("employee")))
-                {
-                    <td style="display:none"></td>
-                }
+
+                <td>
+                    @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
+                    {
+                        <a asp-controller="InventoryItem" asp-action="Edit" asp-route-id="@item.Id">@Inventar.Resources.Resource.Edit</a>
+                        <a asp-controller="InventoryItem" asp-action="Delete" asp-route-id="@item.Id">@Inventar.Resources.Resource.Delete</a>
+                    }
+                </td>
             </tr>
         }
     </tbody>
 </table>
+
 @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
 {
     <a class="btn btn-primary btn-success" href="/InventoryItem/Create">@Inventar.Resources.Resource.AddNewProduct</a>
@@ -168,18 +105,13 @@
 @{
     var columnVisibility = new List<bool>
     {
+        true,                                                    // #
+        User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"), // Id
+        User.IsInRole("admin") || User.IsInRole("superadmin"), // ProductNumber
+        true, true, true, true, true, true,
+        User.IsInRole("admin") || User.IsInRole("superadmin"), // Price
         true,
-        User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"),
-        User.IsInRole("admin") || User.IsInRole("superadmin"),
-        true,                                          
-        true,
-        true,
-        true,
-        true,
-        true,
-        User.IsInRole("admin") /* || User.IsInRole("employee") */ || User.IsInRole("superadmin"),
-        true,
-        User.IsInRole("admin") || User.IsInRole("superadmin")
+        User.IsInRole("admin") || User.IsInRole("superadmin")  // Edit/Delete
     };
 
     var visibilityJson = System.Text.Json.JsonSerializer.Serialize(
@@ -187,38 +119,40 @@
     );
 }
 
-
 @section Scripts {
     <script>
         $(document).ready(function () {
+
             var table = $('#TepisiTable').DataTable({
-                "paging": true,
-                "pageLength": 10,
-                "order": [[1, "desc"]],
-                "orderCellsTop": true,
-                "fixedHeader": true,
-                "columnDefs": @Html.Raw(visibilityJson)
+                paging: true,
+                pageLength: 10,
+                order: [[1, "desc"]],
+                orderCellsTop: true,
+                fixedHeader: true,
+                columnDefs: @Html.Raw(visibilityJson)
             });
 
-            $('#TepisiTable thead tr:eq(1) th').each(function (i) {
-                $('input', this).on('keyup change', function () {
-                    if (table.column(i).search() !== this.value) {
-                        table.column(i).search(this.value).draw();
+            // FIXED FILTERING FOR HIDDEN COLUMNS
+            $('#TepisiTable thead tr:eq(1) th').each(function (index) {
+                var input = $('input', this);
+                if (input.length === 0) return;
+
+                input.on('keyup change', function () {
+                    var visibleIndex = table.column(index + ':visible').index();
+                    if (visibleIndex !== undefined) {
+                        table.column(visibleIndex).search(this.value).draw();
                     }
                 });
             });
 
-            var m2ColumnIndex = 8;
-            var quantityColumnIndex = 10;
-
+            // TOTALS
             function updateTotals() {
-                var table = $('#TepisiTable').DataTable();
                 var totalQuantity = 0;
                 var totalM2 = 0;
 
-                table.rows({ filter: 'applied' }).data().each(function (value, index) {
-                    totalQuantity += parseFloat(value[quantityColumnIndex]) || 0;
-                    totalM2 += parseFloat(value[m2ColumnIndex]) || 0;
+                table.rows({ filter: 'applied' }).data().each(function (value) {
+                    totalQuantity += parseFloat(value[10]) || 0;
+                    totalM2 += parseFloat(value[8]) || 0;
                 });
 
                 $('#totalQuantity').text(totalQuantity);
@@ -226,25 +160,23 @@
             }
 
             $('#TepisiTable').after(`
-                                <div style="margin-top: 10px; font-weight: bold;">
-        @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span>   |
-        @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span>
-                                </div>
-                            `);
+                <div style="margin-top: 10px; font-weight: bold;">
+                    @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span> |
+                    @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span>
+                </div>
+            `);
 
             table.on('draw', function () {
                 updateTotals();
 
                 let counter = 1;
                 table.rows({ search: 'applied', order: 'applied' }).every(function () {
-                    var node = this.node();
-                    $('td:eq(0)', node).html(counter++);
+                    $('td:eq(0)', this.node()).html(counter++);
                 });
             });
 
             updateTotals();
             table.draw();
-
         });
     </script>
 

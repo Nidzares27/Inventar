@@ -11,14 +11,16 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
+        <nav class="navbar  navbar-light bg-white border-bottom box-shadow mb-3">
+            @* navbar-expand-sm navbar-toggleable-sm *@
+            <div class="container-fluid" style="flex-wrap: nowrap;">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Inventar</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" 
+@*                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" 
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
-                </button>
-                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" id="navbarToggleExternalContent">
+                </button> *@
+                    @* <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" id="navbarToggleExternalContent"> *@
+                <div class="d-inline-flex justify-content-between w-100">
                     <ul class="nav nav-tabs" style="border-bottom:none !important">
                         @if (User.Identity.IsAuthenticated)
                         {
