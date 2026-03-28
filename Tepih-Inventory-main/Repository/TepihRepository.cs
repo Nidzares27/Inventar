@@ -53,7 +53,20 @@ namespace Inventar.Repository
 
         public bool Update(Tepih tepih)
         {
+            if (tepih.RowVersion == null)
+            {
+                tepih.RowVersion = _context.Tepisi
+                    .AsNoTracking()
+                    .Where(x => x.Id == tepih.Id)
+                    .Select(x => x.RowVersion)
+                    .FirstOrDefault();
+            }
+
             _context.Update(tepih);
+            if (tepih.RowVersion != null)
+            {
+                _context.Entry(tepih).Property(x => x.RowVersion).OriginalValue = tepih.RowVersion;
+            }
             return Save();
         }
     }

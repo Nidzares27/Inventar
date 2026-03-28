@@ -1,0 +1,192 @@
+@using System.Text.Json
+@using Inventar.Storefront.ViewModels.Cart
+@inject Inventar.Storefront.Services.ICartService CartService
+@{
+    var cartCount = CartService.GetTotalItemCount();
+    CartAddedNotificationViewModel? cartAddedNotification = null;
+
+    if (TempData["CartAddedNotification"] is string cartAddedJson && !string.IsNullOrWhiteSpace(cartAddedJson))
+    {
+        try
+        {
+            cartAddedNotification = JsonSerializer.Deserialize<CartAddedNotificationViewModel>(cartAddedJson);
+        }
+        catch (JsonException)
+        {
+            cartAddedNotification = null;
+        }
+    }
+
+    var bodyClasses = new List<string>();
+    if (cartAddedNotification is not null)
+    {
+        bodyClasses.Add("cart-notification-open");
+    }
+}
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Ka&scaron;mir Home</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@string.Join(" ", bodyClasses)">
+    <div class="site-nav-backdrop" data-nav-backdrop></div>
+
+    @if (cartAddedNotification is not null)
+    {
+        <div class="cart-notification-backdrop" data-cart-notification-close></div>
+    }
+
+    <div class="site-chrome" data-site-chrome>
+        <div class="top-strip">
+            Dostava na va&scaron;u adresu za 1-2 dana!
+        </div>
+
+        <header class="site-header">
+            <div class="shell site-header__inner">
+@*                 <a class="site-brand" asp-controller="Home" asp-action="Index">
+                    <span class="site-brand__eyebrow">Topla selekcija za dom</span>
+                    <span class="site-brand__name">Ka&scaron;mir Home</span>
+                </a> *@
+                <a class="site-brand" asp-controller="Home" asp-action="Index">
+                    <img src="slike/KasmirHomeLogo.png" alt="Kašmir Home" style="width: 75px; height: 75px">
+                </a>
+
+                <div class="site-header__actions">
+                    <nav class="site-nav" aria-label="Glavna navigacija">
+                        <a asp-controller="Home" asp-action="Index">Po&#269;etna</a>
+                        <a asp-controller="Catalog" asp-action="Index">Proizvodi</a>
+                        <a asp-controller="Info" asp-action="Contact">Kontakt</a>
+                    </nav>
+
+                    <a class="cart-pill" asp-controller="Cart" asp-action="Index">
+                        Korpa
+                        <span class="cart-pill__count">@cartCount</span>
+                    </a>
+
+                    <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav-drawer" aria-label="Otvori meni">
+                        <span class="nav-toggle__line"></span>
+                        <span class="nav-toggle__line"></span>
+                        <span class="nav-toggle__line"></span>
+                    </button>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <aside class="site-nav-drawer" id="site-nav-drawer" data-nav-drawer aria-hidden="true">
+        <div class="site-nav-drawer__header">
+            <div>
+                <p class="site-nav-drawer__eyebrow">Navigacija</p>
+                <strong class="site-nav-drawer__title">Ka&scaron;mir Home</strong>
+            </div>
+            <button class="site-nav-drawer__close" type="button" data-nav-close aria-label="Zatvori meni">x</button>
+        </div>
+
+        <nav class="site-nav-drawer__links" aria-label="Mobilna navigacija">
+            <a asp-controller="Home" asp-action="Index">Po&#269;etna</a>
+            <a asp-controller="Catalog" asp-action="Index">Proizvodi</a>
+            <a asp-controller="Info" asp-action="Contact">Kontakt</a>
+            <a asp-controller="Cart" asp-action="Index">Korpa (@cartCount)</a>
+        </nav>
+    </aside>
+
+    @if (cartAddedNotification is not null)
+    {
+        <aside class="cart-notification" data-cart-notification aria-label="Dodato u korpu">
+            <button class="cart-notification__close" type="button" data-cart-notification-close aria-label="Zatvori obavjestenje">x</button>
+
+            <p class="cart-notification__eyebrow">Dodato u korpu</p>
+            <h2 class="cart-notification__title">Artikal je uspješno dodat.</h2>
+
+            <div class="cart-notification__summary">
+                @if (!string.IsNullOrWhiteSpace(cartAddedNotification.ImageUrl))
+                {
+                    <img class="cart-notification__image" src="@cartAddedNotification.ImageUrl" alt="@cartAddedNotification.Name" />
+                }
+                else
+                {
+                    <div class="product-card__placeholder cart-notification__image">Bez fotografije</div>
+                }
+
+                <div class="cart-notification__details">
+                    @if (!string.IsNullOrWhiteSpace(cartAddedNotification.CollectionName))
+                    {
+                        <p class="cart-notification__collection">@cartAddedNotification.CollectionName</p>
+                    }
+
+                    <h3>@cartAddedNotification.Name</h3>
+
+@*                     @if (!string.IsNullOrWhiteSpace(cartAddedNotification.CollectionName))
+                    {
+                        <p class="cart-notification__collection">@cartAddedNotification.CollectionName</p>
+                    }
+
+                    <h3>@cartAddedNotification.Name</h3>
+ *@
+                    <p class="cart-notification__meta">
+                        @if (!string.IsNullOrWhiteSpace(cartAddedNotification.SizeLabel))
+                        {
+                            <span>@cartAddedNotification.SizeLabel</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(cartAddedNotification.Color))
+                        {
+                            <span>@cartAddedNotification.Color</span>
+                        }
+                        <span>@cartAddedNotification.QuantityAdded kom.</span>
+                    </p>
+
+                    <strong class="cart-notification__price">@cartAddedNotification.UnitPrice.ToString("0.00") EUR</strong>
+                </div>
+            </div>
+
+            <div class="cart-notification__actions">
+                <a class="button button--secondary button--full" asp-controller="Cart" asp-action="Index">Pogledaj korpu</a>
+                <button class="button button--ghost button--full" type="button" data-cart-notification-close>Nastavi kupovinu</button>
+            </div>
+        </aside>
+    }
+
+    <main role="main">
+        <div class="shell">
+            @if (cartAddedNotification is null && TempData["CartSuccessMessage"] is string successMessage)
+            {
+                <div class="flash flash--success">@successMessage</div>
+            }
+
+            @if (TempData["CartErrorMessage"] is string errorMessage)
+            {
+                <div class="flash flash--error">@errorMessage</div>
+            }
+
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell site-footer__grid">
+            <div>
+                <p class="eyebrow">Online prodavnica</p>
+                <p class="site-footer__title">Ka&scaron;mir Home</p>
+                <p class="site-footer__copy">Jednostavna kupovina, plaćanje pouzećem i dostava na adresu širom zemlje.</p>
+            </div>
+            <div>
+                <p class="site-footer__title">Informacije</p>
+                <a asp-controller="Info" asp-action="PrivacyPolicy">Politika privatnosti</a>
+                <a asp-controller="Info" asp-action="Contact">Kontakt</a>
+                <a asp-controller="Info" asp-action="Shipping">Dostava</a>
+            </div>
+            <div>
+                <p class="site-footer__title">Podrška kupcima</p>
+                <p class="site-footer__copy">Za pitanja o proizvodima, narudžbama, dostavi, kao i bilo koja druga pitanja o našem poslovanju, stojimo na raspolaganju 24-7.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

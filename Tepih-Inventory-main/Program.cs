@@ -38,13 +38,15 @@ builder.Services.AddScoped<IDugRepository, DugRepository>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsPrincipalFactory>();
 builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddScoped<IWebOrderProcessingService, WebOrderProcessingService>();
+builder.Services.AddHostedService<ExpiredReservationCleanupService>();
 builder.Services.AddHttpContextAccessor();
 
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("TepihDb")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Inventar")));//TepihDb TREBA DA BUDE PRILIKOM DEPLOYMENTA
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {

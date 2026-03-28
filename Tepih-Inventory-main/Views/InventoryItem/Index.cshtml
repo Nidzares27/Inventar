@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Inventar.Models.Tepih>
+@model IEnumerable<Inventar.Models.Tepih>
 
 <h2>@Inventar.Resources.Resource.InventoryItems</h2>
 
@@ -12,7 +12,7 @@
             <th>Model</th>
             <th>@Inventar.Resources.Resource.Color</th>
             <th>@Inventar.Resources.Resource.Size</th>
-            <th>m²</th>
+            <th>m2</th>
             <th>@Inventar.Resources.Resource.M2Total</th>
             <th>@Inventar.Resources.Resource.Price</th>
             <th>@Inventar.Resources.Resource.Quantity</th>
@@ -27,10 +27,10 @@
             <th><input style="width:5rem" placeholder="Model"></th>
             <th><input style="width:7.5rem" placeholder="Color"></th>
             <th><input style="width:5rem" placeholder="Size"></th>
-            <th><input style="width:5rem" placeholder="m²"></th>
+            <th><input style="width:5rem" placeholder="m2"></th>
             <th><input style="width:5rem" placeholder="M2Total"></th>
             <th><input style="width:5rem" placeholder="Price"></th>
-            <th><input style="width:5rem" placeholder="Quantity"></th>
+            <th><input style="width:5rem" placeholder="Qty"></th>
             <th><input style="width:5rem" disabled></th>
         </tr>
     </thead>
@@ -38,6 +38,9 @@
     <tbody>
         @foreach (var item in Model)
         {
+            var itemM2 = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : (decimal?)null;
+            var itemM2Total = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.Quantity), 2) : (decimal?)null;
+
             <tr>
                 <td></td>
 
@@ -62,23 +65,14 @@
                 <td>@item.Name</td>
                 <td>@item.Model</td>
                 <td>@item.Color</td>
-
-                @if (item.PerM2)
-                {
-                    <td>@($"{item.Width}X{item.Length}")</td>
-                }
-                else
-                {
-                    <td>@((item.Width != null && item.Length != null) ? $"{item.Width}X{item.Length}" : "")</td>
-                }
-
-                <td>@(item.PerM2? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : "")</td>
-                <td>@(item.PerM2? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.Quantity), 2) : "")</td>
+                <td>@((item.Width != null && item.Length != null) ? $"{item.Width}X{item.Length}" : "")</td>
+                <td>@(itemM2?.ToString("0.##") ?? "")</td>
+                <td>@(itemM2Total?.ToString("0.##") ?? "")</td>
 
                 <td style="color:@(item.PerM2 ? "green" : "black")">
                     @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
                     {
-                        @($"{item.Price} €")
+                        @($"{item.Price:0.00} €")
                     }
                 </td>
 
@@ -103,15 +97,21 @@
 }
 
 @{
+    var priceVisible = User.IsInRole("admin") || User.IsInRole("superadmin");
     var columnVisibility = new List<bool>
     {
-        true,                                                    // #
-        User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"), // Id
-        User.IsInRole("admin") || User.IsInRole("superadmin"), // ProductNumber
-        true, true, true, true, true, true,
-        User.IsInRole("admin") || User.IsInRole("superadmin"), // Price
         true,
-        User.IsInRole("admin") || User.IsInRole("superadmin")  // Edit/Delete
+        User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"),
+        User.IsInRole("admin") || User.IsInRole("superadmin"),
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        priceVisible,
+        true,
+        priceVisible
     };
 
     var visibilityJson = System.Text.Json.JsonSerializer.Serialize(
@@ -122,7 +122,6 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-
             var table = $('#TepisiTable').DataTable({
                 paging: true,
                 pageLength: 10,
@@ -132,7 +131,6 @@
                 columnDefs: @Html.Raw(visibilityJson)
             });
 
-            // FIXED FILTERING FOR HIDDEN COLUMNS
             $('#TepisiTable thead tr:eq(1) th').each(function (index) {
                 var input = $('input', this);
                 if (input.length === 0) return;
@@ -145,7 +143,6 @@
                 });
             });
 
-            // TOTALS
             function updateTotals() {
                 var totalQuantity = 0;
                 var totalM2 = 0;
@@ -184,7 +181,6 @@
         $(document).ready(function () {
             $('#downloadPDF').on('click', function () {
                 var table = $('#TepisiTable').DataTable();
-
                 var data = [];
 
                 table.rows({ search: 'applied' }).every(function () {
@@ -196,7 +192,6 @@
                     data.push(rowData);
                 });
 
-                // Get filter values
                 var filters = {};
                 $('#TepisiTable thead tr:eq(1) th').each(function (i) {
                     var input = $(this).find('input');
@@ -205,13 +200,10 @@
                     }
                 });
 
-                // Get heading text
                 var heading = $('h2').text();
-
-                // Get column headers (excluding last one)
                 var columnHeaders = [];
                 $('#TepisiTable thead tr:eq(0) th').each(function (i, th) {
-                    if (i < $(this).closest('tr').children().length - 1) { // exclude last column
+                    if (i < $(this).closest('tr').children().length - 1) {
                         columnHeaders.push($(th).text().trim());
                     }
                 });
@@ -229,7 +221,7 @@
                         filters: filters,
                         columnHeaders: columnHeaders,
                         totalQuantity: totalQuantity,
-                        totalM2: totalM2,
+                        totalM2: totalM2
                     }),
                     xhrFields: {
                         responseType: 'blob'

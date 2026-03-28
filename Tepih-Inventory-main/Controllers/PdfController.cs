@@ -104,7 +104,7 @@ namespace Inventar.Controllers
 
             var paragraph = new Paragraph(description)
                 .SetFontSize(8)//12 MODIFED
-                .SetBold()
+                .SimulateBold()
                 .SetMarginBottom(5) //10 MODIFIED
                 .SetTextAlignment(TextAlignment.CENTER);
 
@@ -305,7 +305,7 @@ namespace Inventar.Controllers
             //var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
 
             var header = new Paragraph(buyer.CustomerFullName)
-                .SetBold()
+                .SimulateBold()
                 //.SetFont(boldFont)
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetFontSize(16);
@@ -379,7 +379,7 @@ namespace Inventar.Controllers
             }
 
             var totalParagraph = new Paragraph($"{@Inventar.Resources.Resource.Debt}: {Math.Round(totalDebtUndisabled, 2)}€ | {@Inventar.Resources.Resource.PreviousDebt}: {Math.Round(pastTotalDebt/*totalDebtDisabled*/, 2)}€ | {@Inventar.Resources.Resource.TotalDebt}: {Math.Round(totalDebt, 2)}€")
-                .SetBold()
+                .SimulateBold()
                 //.SetFont(boldFont)
                 .SetFontSize(12)
                 .SetTextAlignment(TextAlignment.RIGHT)
@@ -421,7 +421,7 @@ namespace Inventar.Controllers
                 // Add heading centered at the top
                 var heading = new Paragraph(request.Heading ?? "")
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(10);
                 document.Add(heading);
@@ -442,7 +442,7 @@ namespace Inventar.Controllers
                             .Add(new Paragraph(header ?? ""))
                             .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                             .SetTextAlignment(TextAlignment.CENTER)
-                            .SetBold());
+                            .SimulateBold());
                     }
                 }
 
@@ -467,7 +467,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 // Add data rows
@@ -493,7 +493,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph(totalsText))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -548,7 +548,7 @@ namespace Inventar.Controllers
                 var headerTable = new Table(new float[] { 1, 1 }).UseAllAvailableWidth().SetBorder(Border.NO_BORDER);
 
                 headerTable.AddCell(new Cell()
-                    .Add(new Paragraph(request.HeadingLeft ?? "").SetBold())
+                    .Add(new Paragraph(request.HeadingLeft ?? "").SimulateBold())
                     .SetBorder(Border.NO_BORDER)
                     .SetTextAlignment(TextAlignment.LEFT));
 
@@ -571,7 +571,7 @@ namespace Inventar.Controllers
                 foreach (var header in request.ColumnHeaders)
                 {
                     table.AddHeaderCell(new Cell()
-                        .Add(new Paragraph(header ?? "").SetBold())
+                        .Add(new Paragraph(header ?? "").SimulateBold())
                         .SetBackgroundColor(headerBg)
                         .SetTextAlignment(TextAlignment.CENTER));
                 }
@@ -603,7 +603,7 @@ namespace Inventar.Controllers
                 string totalsText = $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity}   |   {@Inventar.Resources.Resource.M2Total}: {request.TotalM2:F2}   |   {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice:F2}€";
 
                 table.AddCell(new Cell(1, numCols)
-                    .Add(new Paragraph(totalsText).SetBold())
+                    .Add(new Paragraph(totalsText).SimulateBold())
                     .SetBackgroundColor(totalsBg)
                     .SetTextAlignment(TextAlignment.CENTER));
 
@@ -663,7 +663,7 @@ namespace Inventar.Controllers
                 // Heading
                 document.Add(new Paragraph(request.Heading ?? "")
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(14)
                     .SetMarginBottom(15));
 
@@ -675,7 +675,7 @@ namespace Inventar.Controllers
                 {
                     table.AddHeaderCell(new Cell()
                         .Add(new Paragraph(header))
-                        .SetBold()
+                        .SimulateBold()
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
                         .SetPadding(5));
@@ -718,7 +718,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph(totalsText))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -771,7 +771,7 @@ namespace Inventar.Controllers
                 // Heading
                 document.Add(new Paragraph(request.Heading ?? "")
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(10));
 
@@ -784,7 +784,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(header))
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 // Filters row
@@ -801,7 +801,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 // Data rows
@@ -822,7 +822,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -868,7 +868,7 @@ namespace Inventar.Controllers
                 // Heading
                 document.Add(new Paragraph((request.Heading1 ?? "") + (request.Heading2 ?? ""))
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(10));
 
@@ -882,7 +882,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(header))
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 // Filters
@@ -893,7 +893,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 // Data rows
@@ -913,7 +913,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -959,12 +959,12 @@ namespace Inventar.Controllers
                 // Heading
                 document.Add(new Paragraph(request.Heading1 ?? "")
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(5));
 
                 var headerTable = new Table(new float[] { 1, 1 }).UseAllAvailableWidth().SetBorder(Border.NO_BORDER);
-                headerTable.AddCell(new Cell().Add(new Paragraph(request.Heading2 ?? "").SetBold())
+                headerTable.AddCell(new Cell().Add(new Paragraph(request.Heading2 ?? "").SimulateBold())
                     .SetBorder(Border.NO_BORDER).SetTextAlignment(TextAlignment.LEFT));
                 headerTable.AddCell(new Cell().Add(new Paragraph(request.Heading3 ?? ""))
                     .SetBorder(Border.NO_BORDER).SetTextAlignment(TextAlignment.RIGHT));
@@ -981,7 +981,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(header))
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 // Filters
@@ -992,7 +992,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 // Data rows
@@ -1012,7 +1012,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -1061,13 +1061,13 @@ namespace Inventar.Controllers
                 // Heading
                 document.Add(new Paragraph(request.Heading1 ?? "")
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(5));
 
                 var headerTable = new Table(new float[] { 1, 1 }).UseAllAvailableWidth();
                 headerTable.SetBorder(Border.NO_BORDER);
-                headerTable.AddCell(new Cell().Add(new Paragraph(request.Heading2 ?? "").SetBold())
+                headerTable.AddCell(new Cell().Add(new Paragraph(request.Heading2 ?? "").SimulateBold())
                     .SetBorder(Border.NO_BORDER).SetTextAlignment(TextAlignment.LEFT));
                 headerTable.AddCell(new Cell().Add(new Paragraph(request.Heading3 ?? ""))
                     .SetBorder(Border.NO_BORDER).SetTextAlignment(TextAlignment.RIGHT));
@@ -1084,7 +1084,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(header))
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 for (int i = 0; i < numColumns; i++)
@@ -1094,7 +1094,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 foreach (var row in request.Data)
@@ -1112,7 +1112,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -1160,10 +1160,10 @@ namespace Inventar.Controllers
 
                 // Headings
                 document.Add(new Paragraph(request.Heading1 ?? "")
-                    .SetTextAlignment(TextAlignment.CENTER).SetBold().SetFontSize(12).SetMarginBottom(5));
+                    .SetTextAlignment(TextAlignment.CENTER).SimulateBold().SetFontSize(12).SetMarginBottom(5));
 
                 document.Add(new Paragraph($"{request.Heading2}{request.Heading3}")
-                    .SetTextAlignment(TextAlignment.CENTER).SetBold().SetFontSize(12).SetMarginBottom(5));
+                    .SetTextAlignment(TextAlignment.CENTER).SimulateBold().SetFontSize(12).SetMarginBottom(5));
 
                 // Labels table
                 var labeleTable = new Table(new float[] { 1f, 2f }).UseAllAvailableWidth()
@@ -1171,7 +1171,7 @@ namespace Inventar.Controllers
 
                 void AddRow(string label, string value)
                 {
-                    labeleTable.AddCell(new Cell().Add(new Paragraph(label).SetBold()).SetBackgroundColor(ColorConstants.CYAN));
+                    labeleTable.AddCell(new Cell().Add(new Paragraph(label).SimulateBold()).SetBackgroundColor(ColorConstants.CYAN));
                     labeleTable.AddCell(new Cell().Add(new Paragraph(value ?? "")).SetTextAlignment(TextAlignment.LEFT));
                 }
 
@@ -1191,7 +1191,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(header))
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 for (int i = 0; i < numColumns; i++)
@@ -1207,7 +1207,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 foreach (var row in request.Data)
@@ -1225,7 +1225,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -1273,14 +1273,14 @@ namespace Inventar.Controllers
 
                 var heading1 = new Paragraph(request.Heading1 ?? "")
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(5);
                 document.Add(heading1);
 
                 var heading2 = new Paragraph($"{request.Heading2}{request.Heading3}")
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(5);
                 document.Add(heading2);
@@ -1290,7 +1290,7 @@ namespace Inventar.Controllers
 
                 void AddRow(string label, string value)
                 {
-                    labeleTable.AddCell(new Cell().Add(new Paragraph(label).SetBold()).SetBackgroundColor(ColorConstants.CYAN));
+                    labeleTable.AddCell(new Cell().Add(new Paragraph(label).SimulateBold()).SetBackgroundColor(ColorConstants.CYAN));
                     labeleTable.AddCell(new Cell().Add(new Paragraph(value ?? "")).SetTextAlignment(TextAlignment.LEFT));
                 }
 
@@ -1313,7 +1313,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(header))
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 for (int i = 0; i < numColumns; i++)
@@ -1329,7 +1329,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 foreach (var row in request.Data)
@@ -1347,7 +1347,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -1397,7 +1397,7 @@ namespace Inventar.Controllers
 
                 var heading = new Paragraph(request.Heading)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(10);
                 document.Add(heading);
@@ -1411,7 +1411,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(header))
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 for (int i = 0; i < numColumns; i++)
@@ -1421,7 +1421,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 foreach (var row in request.Data)
@@ -1439,7 +1439,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2}"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -1484,7 +1484,7 @@ namespace Inventar.Controllers
 
                 var heading = new Paragraph(request.Heading)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(10);
                 document.Add(heading);
@@ -1498,7 +1498,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(header))
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 for (int i = 0; i < numColumns; i++)
@@ -1513,7 +1513,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 foreach (var row in request.Data)
@@ -1531,7 +1531,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph($"{@Inventar.Resources.Resource.Total}: {request.TotalPrice}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -1576,7 +1576,7 @@ namespace Inventar.Controllers
 
                 var heading = new Paragraph(request.Heading)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetFontSize(12)
                     .SetMarginBottom(10);
                 document.Add(heading);
@@ -1590,7 +1590,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(header))
                         .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 for (int i = 0; i < numColumns; i++)
@@ -1605,7 +1605,7 @@ namespace Inventar.Controllers
                         .Add(new Paragraph(filterValue))
                         .SetBackgroundColor(ColorConstants.YELLOW)
                         .SetTextAlignment(TextAlignment.CENTER)
-                        .SetBold());
+                        .SimulateBold());
                 }
 
                 foreach (var row in request.Data)
@@ -1623,7 +1623,7 @@ namespace Inventar.Controllers
                     .Add(new Paragraph($"{@Inventar.Resources.Resource.Total}: {request.TotalDebt}€"))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
-                    .SetBold()
+                    .SimulateBold()
                     .SetPadding(5));
 
                 document.Add(table);
@@ -1687,7 +1687,7 @@ namespace Inventar.Controllers
                     .SetTextAlignment(TextAlignment.LEFT));
 
                 headerTable.AddCell(new Cell()
-                    .Add(new Paragraph($"{custName.ToUpper().Trim()}").SetFontSize(10).SetBold())
+                    .Add(new Paragraph($"{custName.ToUpper().Trim()}").SetFontSize(10).SimulateBold())
                     .SetBorder(Border.NO_BORDER)
                     .SetTextAlignment(TextAlignment.CENTER));
 
@@ -1712,7 +1712,7 @@ namespace Inventar.Controllers
                             .Add(new iText.Layout.Element.Paragraph(header))
                             .SetTextAlignment(TextAlignment.CENTER)
                             .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                            .SetBold()
+                            .SimulateBold()
                             .SetBackgroundColor(iText.Kernel.Colors.ColorConstants.LIGHT_GRAY)
                             .SetPadding(1)
                             .SetHeight(10));
@@ -1780,7 +1780,7 @@ namespace Inventar.Controllers
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                 .SetFontSize(9)
-                .SetBold();
+                .SimulateBold();
             return new Cell()
                 .Add(paragraph)
                     .SetTextAlignment(TextAlignment.CENTER)

@@ -1,0 +1,93 @@
+@model Inventar.Storefront.ViewModels.Checkout.CheckoutPageViewModel
+@{
+    ViewData["Title"] = "Narudžba";
+}
+
+<section class="page-head">
+    <span class="eyebrow">Plaćanje pouzećem</span>
+</section>
+
+<section class="checkout-layout">
+    <form asp-controller="Checkout" asp-action="Index" method="post" class="checkout-form">
+        <div asp-validation-summary="ModelOnly" class="flash flash--error"></div>
+
+        <div class="checkout-form__grid">
+            <div class="field">
+                <label asp-for="Form.FirstName"></label>
+                <input asp-for="Form.FirstName" />
+                <span asp-validation-for="Form.FirstName" class="field__error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Form.LastName"></label>
+                <input asp-for="Form.LastName" />
+                <span asp-validation-for="Form.LastName" class="field__error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Form.Email"></label>
+                <input asp-for="Form.Email" />
+                <span asp-validation-for="Form.Email" class="field__error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Form.Phone"></label>
+                <input asp-for="Form.Phone" />
+                <span asp-validation-for="Form.Phone" class="field__error"></span>
+            </div>
+
+            <div class="field field--full">
+                <label asp-for="Form.AddressLine1"></label>
+                <input asp-for="Form.AddressLine1" />
+                <span asp-validation-for="Form.AddressLine1" class="field__error"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Form.City"></label>
+                <input asp-for="Form.City" />
+                <span asp-validation-for="Form.City" class="field__error"></span>
+            </div>
+
+            <div class="field field--full">
+                <label asp-for="Form.CustomerNote"></label>
+                <textarea asp-for="Form.CustomerNote" rows="4"></textarea>
+                <span asp-validation-for="Form.CustomerNote" class="field__error"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="button button--full">Pošalji narudžbu</button>
+    </form>
+
+    <aside class="summary-card">
+        <span class="eyebrow">Sažetak korpe</span>
+        <h2>@Model.TotalItems artikala</h2>
+
+        <div class="summary-list">
+            @foreach (var line in Model.Lines)
+            {
+                <div class="summary-list__row">
+                    <span>@line.Name x @line.Quantity</span>
+                    <strong>@line.LineTotal.ToString("0.00") €</strong>
+                </div>
+            }
+        </div>
+
+        <div class="summary-card__row">
+            <span>Artikli</span>
+            <strong>@Model.Subtotal.ToString("0.00") €</strong>
+        </div>
+        <div class="summary-card__row">
+            <span>Dostava</span>
+            <strong>@Model.ShippingTotal.ToString("0.00") €</strong>
+        </div>
+        <div class="summary-card__row summary-card__row--total">
+            <span>Ukupno za placanje</span>
+            <strong>@Model.GrandTotal.ToString("0.00") €</strong>
+        </div>
+        <p class="summary-card__note">Plaćanje se vrši prilikom preuzimanja pošiljke.</p>
+    </aside>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("InventarServices")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8584416a3322b2a8d75adcae29344e6767ae9b2c")]
 [assembly: System.Reflection.AssemblyProductAttribute("InventarServices")]
 [assembly: System.Reflection.AssemblyTitleAttribute("InventarServices")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

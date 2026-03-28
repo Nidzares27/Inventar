@@ -11,10 +11,10 @@ namespace Inventar.Data
                 //Roles
                 var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-                //if (!await roleManager.RoleExistsAsync(UserRoles.Admin))
-                //    await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
-                //if (!await roleManager.RoleExistsAsync(UserRoles.User))
-                //    await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+                if (!await roleManager.RoleExistsAsync(UserRoles.Admin))
+                    await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+                if (!await roleManager.RoleExistsAsync(UserRoles.User))
+                    await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
                 if (!await roleManager.RoleExistsAsync(UserRoles.SuperAdmin))
                     await roleManager.CreateAsync(new IdentityRole(UserRoles.SuperAdmin));
                 if (!await roleManager.RoleExistsAsync(UserRoles.Employee))

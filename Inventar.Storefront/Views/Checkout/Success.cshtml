@@ -1,0 +1,30 @@
+@model Inventar.Storefront.ViewModels.Checkout.OrderConfirmationViewModel
+@{
+    ViewData["Title"] = "Narudžba kreirana";
+}
+
+<section class="confirmation">
+    <span class="eyebrow">Narudžba uspješna</span>
+    <h1>Hvala, @Model.CustomerFirstName.</h1>
+    <p>Vaša narudžba je evidentirana pod brojem <strong>@Model.OrderNumber</strong>. Tim sada ima rezervisano stanje i može nastaviti internu obradu iz admin aplikacije.</p>
+
+    <div class="confirmation__panel">
+        <div>
+            <span>Ukupno artikala</span>
+            <strong>@Model.TotalItems</strong>
+        </div>
+        <div>
+            <span>Iznos</span>
+            <strong>@Model.GrandTotal.ToString("0.00") €</strong>
+        </div>
+        <div>
+            <span>Način plaćanja</span>
+            <strong>Pouzeće</strong>
+        </div>
+    </div>
+
+    <div class="hero__actions">
+        <a class="button" asp-controller="Catalog" asp-action="Index">Nastavi kupovinu</a>
+        <a class="button button--ghost" asp-controller="Home" asp-action="Index">Nazad na početnu</a>
+    </div>
+</section>

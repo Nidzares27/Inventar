@@ -11,12 +11,12 @@
 using System;
 using System.Reflection;
 
-//[assembly: Microsoft.AspNetCore.Identity.UI.UIFrameworkAttribute("Bootstrap5")]
+[assembly: Microsoft.AspNetCore.Identity.UI.UIFrameworkAttribute("Bootstrap5")]
 [assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("c645d6a7-75b9-4210-bfdf-20f74865d80d")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("Inventar")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8584416a3322b2a8d75adcae29344e6767ae9b2c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Inventar")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Inventar")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

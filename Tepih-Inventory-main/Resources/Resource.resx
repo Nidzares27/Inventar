@@ -135,11 +135,17 @@
   <data name="AllAccounts" xml:space="preserve">
     <value>All Accounts</value>
   </data>
+  <data name="AltText" xml:space="preserve">
+    <value>Alt Text</value>
+  </data>
   <data name="Amount" xml:space="preserve">
     <value>Amount</value>
   </data>
   <data name="AmountPaid" xml:space="preserve">
     <value>Amount Paid</value>
+  </data>
+  <data name="Available" xml:space="preserve">
+    <value>Available</value>
   </data>
   <data name="BackToList" xml:space="preserve">
     <value>Back to List</value>
@@ -162,11 +168,20 @@
   <data name="BuysPerProduct" xml:space="preserve">
     <value>Buys per Product</value>
   </data>
+  <data name="By" xml:space="preserve">
+    <value>By</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
   <data name="Cash" xml:space="preserve">
     <value>Cash</value>
+  </data>
+  <data name="CatalogInventory" xml:space="preserve">
+    <value>Catalog Inventory</value>
+  </data>
+  <data name="Changed" xml:space="preserve">
+    <value>Changed</value>
   </data>
   <data name="ClearCart" xml:space="preserve">
     <value>Clear Cart</value>
@@ -189,11 +204,17 @@
   <data name="CreateAccount" xml:space="preserve">
     <value>Create Account</value>
   </data>
+  <data name="Created" xml:space="preserve">
+    <value>Created</value>
+  </data>
   <data name="CreateProduct" xml:space="preserve">
     <value>Create Product</value>
   </data>
   <data name="CreatingProduct" xml:space="preserve">
     <value>Creating Product</value>
+  </data>
+  <data name="Customer" xml:space="preserve">
+    <value>Customer</value>
   </data>
   <data name="CustomerFullName" xml:space="preserve">
     <value>Customer Full Name</value>
@@ -227,6 +248,9 @@
   </data>
   <data name="DeleteDebt" xml:space="preserve">
     <value>Delete Debt</value>
+  </data>
+  <data name="DeleteImage" xml:space="preserve">
+    <value>Delete Image</value>
   </data>
   <data name="DeletePayment" xml:space="preserve">
     <value>Delete Payment</value>
@@ -264,6 +288,9 @@
   <data name="Download" xml:space="preserve">
     <value>Download</value>
   </data>
+  <data name="eCommerceReady" xml:space="preserve">
+    <value>e-Commerce Ready</value>
+  </data>
   <data name="Edit" xml:space="preserve">
     <value>Edit</value>
   </data>
@@ -285,6 +312,9 @@
   <data name="EndDate" xml:space="preserve">
     <value>End Date</value>
   </data>
+  <data name="Expires" xml:space="preserve">
+    <value>Expires</value>
+  </data>
   <data name="Filter" xml:space="preserve">
     <value>Filter</value>
   </data>
@@ -297,6 +327,9 @@
   <data name="From" xml:space="preserve">
     <value>From</value>
   </data>
+  <data name="Fulfillment" xml:space="preserve">
+    <value>Fulfillment</value>
+  </data>
   <data name="FullName" xml:space="preserve">
     <value>Full Name</value>
   </data>
@@ -308,6 +341,9 @@
   </data>
   <data name="Home" xml:space="preserve">
     <value>Home</value>
+  </data>
+  <data name="InternalNote" xml:space="preserve">
+    <value>Internal Note</value>
   </data>
   <data name="Inventory" xml:space="preserve">
     <value>Inventory</value>
@@ -357,8 +393,38 @@
   <data name="NoAccount" xml:space="preserve">
     <value>Don't have an account?</value>
   </data>
+  <data name="NoImagesUploadedYet" xml:space="preserve">
+    <value>No images uploaded yet.</value>
+  </data>
   <data name="NoResultsFound" xml:space="preserve">
     <value>No results found!</value>
+  </data>
+  <data name="Note" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="OnlinePrice" xml:space="preserve">
+    <value>Online Price</value>
+  </data>
+  <data name="OptionalNoteForTheStatusHistory" xml:space="preserve">
+    <value>Optional note for the status history</value>
+  </data>
+  <data name="OptionalSharedAltText" xml:space="preserve">
+    <value>Optional shared alt text for uploaded images</value>
+  </data>
+  <data name="Order" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="OrderedItems" xml:space="preserve">
+    <value>Ordered Items</value>
+  </data>
+  <data name="OrderStatus" xml:space="preserve">
+    <value>Order Status</value>
+  </data>
+  <data name="OrderSummary" xml:space="preserve">
+    <value>Order Summary</value>
+  </data>
+  <data name="Paid" xml:space="preserve">
+    <value>Paid at</value>
   </data>
   <data name="Password" xml:space="preserve">
     <value>Password</value>
@@ -372,11 +438,17 @@
   <data name="PasswordResetSuccessfully" xml:space="preserve">
     <value>Password reset successfully</value>
   </data>
+  <data name="Payment" xml:space="preserve">
+    <value>Payment</value>
+  </data>
   <data name="PaymentHistory" xml:space="preserve">
     <value>Payment History</value>
   </data>
   <data name="Payments" xml:space="preserve">
     <value>Payments</value>
+  </data>
+  <data name="PaymentStatus" xml:space="preserve">
+    <value>Payment Status</value>
   </data>
   <data name="PaymentTime" xml:space="preserve">
     <value>Payment Time</value>
@@ -399,6 +471,9 @@
   <data name="PerProductsDetailedUNGrouped" xml:space="preserve">
     <value>Per Products Detailed (Ungrouped)</value>
   </data>
+  <data name="Phone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
   <data name="PlannedPaymentType" xml:space="preserve">
     <value>Planned Payment Type</value>
   </data>
@@ -414,14 +489,26 @@
   <data name="PriceTotal" xml:space="preserve">
     <value>Price Total</value>
   </data>
+  <data name="Primary" xml:space="preserve">
+    <value>Primary</value>
+  </data>
   <data name="PrintPDF" xml:space="preserve">
     <value>Print PDF</value>
+  </data>
+  <data name="Product" xml:space="preserve">
+    <value>Product</value>
   </data>
   <data name="ProductID" xml:space="preserve">
     <value>Product ID</value>
   </data>
+  <data name="ProductImages" xml:space="preserve">
+    <value>Product Images</value>
+  </data>
   <data name="ProductNumber" xml:space="preserve">
     <value>Product Number</value>
+  </data>
+  <data name="Published" xml:space="preserve">
+    <value>Published</value>
   </data>
   <data name="PurchasePayments" xml:space="preserve">
     <value>Purchases &amp; Payments</value>
@@ -437,6 +524,12 @@
   </data>
   <data name="Register" xml:space="preserve">
     <value>Register</value>
+  </data>
+  <data name="Reservations" xml:space="preserve">
+    <value>Reservations</value>
+  </data>
+  <data name="Reserved" xml:space="preserve">
+    <value>Reserved</value>
   </data>
   <data name="ResetPassword" xml:space="preserve">
     <value>Reset Password</value>
@@ -459,6 +552,9 @@
   <data name="SaleTime" xml:space="preserve">
     <value>Sale Time</value>
   </data>
+  <data name="SaveUpdate" xml:space="preserve">
+    <value>Save Update</value>
+  </data>
   <data name="ScanQRCode" xml:space="preserve">
     <value>Scan QR Code</value>
   </data>
@@ -477,6 +573,18 @@
   <data name="SellerPaymentType" xml:space="preserve">
     <value>Seller/PaymentType</value>
   </data>
+  <data name="SEODescription" xml:space="preserve">
+    <value>SEO Description</value>
+  </data>
+  <data name="SEOTitle" xml:space="preserve">
+    <value>SEO Title</value>
+  </data>
+  <data name="SetPrimary" xml:space="preserve">
+    <value>Set Primary</value>
+  </data>
+  <data name="ShortDescription" xml:space="preserve">
+    <value>Short Description</value>
+  </data>
   <data name="SignUp" xml:space="preserve">
     <value>Sign Up</value>
   </data>
@@ -488,6 +596,15 @@
   </data>
   <data name="StartDate" xml:space="preserve">
     <value>Start Date</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="StatusHistory" xml:space="preserve">
+    <value>Status History</value>
+  </data>
+  <data name="StatusNote" xml:space="preserve">
+    <value>Status Note</value>
   </data>
   <data name="Submit" xml:space="preserve">
     <value>Submit</value>
@@ -522,6 +639,15 @@
   <data name="UngroupedPDF" xml:space="preserve">
     <value>Ungrouped PDF</value>
   </data>
+  <data name="UpdateStatus" xml:space="preserve">
+    <value>Update Status</value>
+  </data>
+  <data name="Upload" xml:space="preserve">
+    <value>Upload</value>
+  </data>
+  <data name="UploadProductPhotos" xml:space="preserve">
+    <value>Upload product photos, choose a primary image, and remove old ones.</value>
+  </data>
   <data name="ViewPaymentHistory" xml:space="preserve">
     <value>Payment History</value>
   </data>
@@ -531,8 +657,80 @@
   <data name="ViewSalesReport" xml:space="preserve">
     <value>View Sales Report</value>
   </data>
+  <data name="VisibleOnlyToAdmins" xml:space="preserve">
+    <value>Visible only to admins</value>
+  </data>
   <data name="Waiting" xml:space="preserve">
     <value>Waiting</value>
+  </data>
+  <data name="WebOrders" xml:space="preserve">
+    <value>Web Orders</value>
+  </data>
+  <data name="WebOrderStatus_Pending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="WebOrderStatus_AwaitingPayment" xml:space="preserve">
+    <value>Awaiting payment</value>
+  </data>
+  <data name="WebOrderStatus_Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="WebOrderStatus_Processing" xml:space="preserve">
+    <value>Processing</value>
+  </data>
+  <data name="WebOrderStatus_Shipped" xml:space="preserve">
+    <value>Shipped</value>
+  </data>
+  <data name="WebOrderStatus_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="WebOrderStatus_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="WebOrderStatus_Refunded" xml:space="preserve">
+    <value>Refunded</value>
+  </data>
+  <data name="WebPaymentStatus_Pending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="WebPaymentStatus_Authorized" xml:space="preserve">
+    <value>Authorized</value>
+  </data>
+  <data name="WebPaymentStatus_Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="WebPaymentStatus_Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="WebPaymentStatus_Refunded" xml:space="preserve">
+    <value>Refunded</value>
+  </data>
+  <data name="WebFulfillmentStatus_Unfulfilled" xml:space="preserve">
+    <value>Unfulfilled</value>
+  </data>
+  <data name="WebFulfillmentStatus_Processing" xml:space="preserve">
+    <value>Processing</value>
+  </data>
+  <data name="WebFulfillmentStatus_Shipped" xml:space="preserve">
+    <value>Shipped</value>
+  </data>
+  <data name="WebFulfillmentStatus_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="WebFulfillmentStatus_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="InventoryReservationStatus_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="InventoryReservationStatus_Released" xml:space="preserve">
+    <value>Released</value>
+  </data>
+  <data name="InventoryReservationStatus_Converted" xml:space="preserve">
+    <value>Converted</value>
+  </data>
+  <data name="InventoryReservationStatus_Expired" xml:space="preserve">
+    <value>Expired</value>
   </data>
   <data name="Width" xml:space="preserve">
     <value>Width</value>

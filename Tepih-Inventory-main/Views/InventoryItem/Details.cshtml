@@ -1,4 +1,4 @@
-﻿@model Inventar.Models.Tepih
+@model Inventar.Models.Tepih
 <link rel="stylesheet" href="~/css/Details.css" asp-append-version="true" />
 
 @{
@@ -67,7 +67,7 @@
     {
         <tr>
             <th>@Inventar.Resources.Resource.Price</th>
-            <td>@Html.DisplayFor(model => model.Price)</td>
+            <td>@($"{Model.Price:0.00} €")</td>
         </tr>
     }
     <tr>
@@ -79,6 +79,11 @@
         <td>@Html.DisplayFor(model => model.Description)</td>
     </tr>
 </table>
+
 <div>
-    <a asp-action="Index" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+    <a asp-action="Index" class="btn btn-secondary btn-sm mt-3">@Inventar.Resources.Resource.BackToList</a>
+    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm mt-3">@Inventar.Resources.Resource.Edit</a>
+    }
 </div>

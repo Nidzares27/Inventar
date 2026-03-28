@@ -1,0 +1,83 @@
+@model Inventar.Storefront.ViewModels.Catalog.ProductDetailsViewModel
+@{
+    ViewData["Title"] = Model.SeoTitle;
+}
+
+<section class="product-details">
+    <div class="product-details__gallery">
+        @if (Model.GalleryUrls.Count > 0)
+        {
+            <img class="product-details__main-image" src="@Model.GalleryUrls[0]" alt="@Model.Name" />
+            @if (Model.GalleryUrls.Count > 1)
+            {
+                <div class="product-details__thumbs">
+                    @foreach (var imageUrl in Model.GalleryUrls.Skip(1))
+                    {
+                        <img src="@imageUrl" alt="@Model.Name" />
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="product-card__placeholder product-card__placeholder--large">Fotografije uskoro</div>
+        }
+    </div>
+
+    <div class="product-details__content">
+        <span class="eyebrow">@Model.Name</span>
+        <h1>@Model.CollectionName</h1>
+@*         <span class="eyebrow">@Model.CollectionName</span>
+        <h1>@Model.Name</h1> *@
+
+        <div class="product-details__meta">
+            @if (!string.IsNullOrWhiteSpace(Model.SizeLabel))
+            {
+                <span>@Model.SizeLabel</span>
+            }
+            <span>@Model.Color</span>
+        </div>
+
+        <div class="price-block price-block--large">
+            <span class="price-block__current">@Model.CurrentPrice.ToString("0.00") €</span>
+            @if (Model.CompareAtPrice.HasValue)
+            {
+                <span class="price-block__old">@Model.CompareAtPrice.Value.ToString("0.00") €</span>
+            }
+        </div>
+
+        <p class="product-details__status">
+            @(Model.AvailableQuantity > 0 ? $"Dostupno odmah: {Model.AvailableQuantity} kom." : "Trenutno nije dostupno")
+        </p>
+
+        <p class="product-details__description">@Model.Description</p>
+
+        <form asp-controller="Cart" asp-action="Add" method="post" class="product-details__actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="productId" value="@Model.Id" />
+            <input type="hidden" name="quantity" value="1" />
+            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+            <button type="submit" class="button" @(Model.AvailableQuantity <= 0 ? "disabled" : null)>Dodaj u korpu</button>
+            <a class="button button--ghost" asp-controller="Catalog" asp-action="Index">Nazad na katalog</a>
+        </form>
+    </div>
+</section>
+
+@if (Model.RelatedProducts.Count > 0)
+{
+    <section class="section">
+        <div class="section__header">
+            <div>
+                <span class="eyebrow">Slično</span>
+                <h2>Još iz iste kolekcije</h2>
+            </div>
+        </div>
+
+        <div class="product-grid">
+            @foreach (var product in Model.RelatedProducts)
+            {
+                <partial name="_ProductCard" model="product" />
+            }
+        </div>
+    </section>
+}

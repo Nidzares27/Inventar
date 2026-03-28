@@ -1,0 +1,278 @@
+@using Inventar.ViewModels.Inventory
+@model EditTepihViewModel
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>@Inventar.Resources.Resource.EditProduct</h1>
+
+@if (TempData["StorefrontSuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (TempData["StorefrontErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-warning">@errorMessage</div>
+}
+
+<hr />
+
+<div class="row g-4">
+    <div class="col-12">
+        <form asp-action="Edit" class="row g-3">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Disabled" />
+            <input type="hidden" asp-for="QRCodeUrl" />
+            <input type="hidden" asp-for="DateTime" />
+
+            <div class="col-sm-6">
+                <label asp-for="Name" class="control-label">@Inventar.Resources.Resource.Name</label>
+                <input asp-for="Name" class="form-control" readonly />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-3">
+                <label asp-for="ProductNumber" class="control-label">@Inventar.Resources.Resource.ProductNumber</label>
+                <input asp-for="ProductNumber" class="form-control" readonly />
+                <span asp-validation-for="ProductNumber" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-3">
+                <label asp-for="Model" class="control-label">Model</label>
+                <input asp-for="Model" class="form-control" readonly />
+                <span asp-validation-for="Model" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-4">
+                <label asp-for="Color" class="control-label">@Inventar.Resources.Resource.Color</label>
+                <input asp-for="Color" class="form-control" readonly />
+                <span asp-validation-for="Color" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-4">
+                <label asp-for="DateTime" class="control-label">@Inventar.Resources.Resource.DateTime</label>
+                <input asp-for="DateTime" class="form-control" readonly />
+                <span asp-validation-for="DateTime" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-4">
+                <label asp-for="Slug" class="control-label">Slug</label>
+                <input asp-for="Slug" class="form-control" />
+                <span asp-validation-for="Slug" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-3">
+                <label asp-for="Quantity" class="control-label">@Inventar.Resources.Resource.Quantity</label>
+                <input asp-for="Quantity" class="form-control" />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-3">
+                <label asp-for="ReservedQuantity" class="control-label">@Inventar.Resources.Resource.Reserved</label>
+                <input asp-for="ReservedQuantity" class="form-control" readonly />
+            </div>
+
+            <div class="col-sm-3">
+                <label asp-for="AvailableQuantity" class="control-label">@Inventar.Resources.Resource.Available</label>
+                <input asp-for="AvailableQuantity" class="form-control" readonly />
+            </div>
+
+            <div class="col-sm-3">
+                <label asp-for="PerM2" class="control-label">@Inventar.Resources.Resource.PerM2</label>
+                <div class="checkbox-field">
+                    <input asp-for="PerM2" />
+                </div>
+            </div>
+
+            <div class="col-sm-4">
+                <label asp-for="Length" class="control-label">@Inventar.Resources.Resource.Length</label>
+                <input asp-for="Length" step="any" class="form-control" readonly />
+                <span asp-validation-for="Length" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-4">
+                <label asp-for="Width" class="control-label">@Inventar.Resources.Resource.Width</label>
+                <input asp-for="Width" step="any" class="form-control" readonly />
+                <span asp-validation-for="Width" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-4">
+                <label asp-for="QRCodeUrl" class="control-label">QR Code Url</label>
+                <input asp-for="QRCodeUrl" class="form-control" readonly />
+            </div>
+
+            <div class="col-sm-3">
+                <label asp-for="Price" class="control-label">@Inventar.Resources.Resource.Price</label>
+                <input asp-for="Price" step="any" class="form-control" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-3">
+                <label asp-for="OnlinePrice" class="control-label">@Inventar.Resources.Resource.OnlinePrice</label>
+                <input asp-for="OnlinePrice" step="any" class="form-control" />
+                <span asp-validation-for="OnlinePrice" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-3">
+                <label asp-for="IsPublished" class="control-label">@Inventar.Resources.Resource.Published</label>
+                <div class="checkbox-field">
+                    <input asp-for="IsPublished" />
+                </div>
+            </div>
+
+            <div class="col-sm-3">
+                <label class="control-label">@Inventar.Resources.Resource.eCommerceReady</label>
+                <input class="form-control" readonly value="@(Model.IsPublished ? "Yes" : "No")" />
+            </div>
+
+            <div class="col-sm-6">
+                <label asp-for="Description" class="control-label">@Inventar.Resources.Resource.Description</label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-6">
+                <label asp-for="ShortDescription" class="control-label">@Inventar.Resources.Resource.ShortDescription</label>
+                <textarea asp-for="ShortDescription" class="form-control"></textarea>
+                <span asp-validation-for="ShortDescription" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-6">
+                <label asp-for="SeoTitle" class="control-label">@Inventar.Resources.Resource.SEOTitle</label>
+                <input asp-for="SeoTitle" class="form-control" />
+                <span asp-validation-for="SeoTitle" class="text-danger"></span>
+            </div>
+
+            <div class="col-sm-6">
+                <label asp-for="SeoDescription" class="control-label">@Inventar.Resources.Resource.SEODescription</label>
+                <textarea asp-for="SeoDescription" class="form-control"></textarea>
+                <span asp-validation-for="SeoDescription" class="text-danger"></span>
+            </div>
+
+            <div class="col-12">
+                <input type="submit" value="@Inventar.Resources.Resource.Edit" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+
+    <div class="col-12">
+        <div class="card storefront-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h4 class="mb-1">@Inventar.Resources.Resource.ProductImages</h4>
+                        <small class="text-muted">@Inventar.Resources.Resource.UploadProductPhotos </small> @* Upload product photos, choose a primary image, and remove old ones. *@
+                    </div>
+                </div>
+
+                <form asp-action="UploadStorefrontImages" method="post" enctype="multipart/form-data" class="row g-3 mt-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" asp-for="Id" />
+                    <div class="col-md-5">
+                        <label class="control-label" for="files">@Inventar.Resources.Resource.ProductImages</label>
+                        <input id="files" name="files" class="form-control" type="file" accept="image/*" multiple />
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="control-label" for="altText">@Inventar.Resources.Resource.AltText</label>
+                        <input id="altText" name="altText" class="form-control" type="text" placeholder="@Inventar.Resources.Resource.OptionalSharedAltText" /> @* Optional shared alt text for uploaded images *@
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-outline-primary w-100">@Inventar.Resources.Resource.Upload</button>
+                    </div>
+                </form>
+
+                @if (Model.ProductImages.Count == 0)
+                {
+                    <div class="alert alert-light border mt-3 mb-0">@Inventar.Resources.Resource.NoImagesUploadedYet</div>
+                }
+                else
+                {
+                    <div class="row g-3 mt-2">
+                        @foreach (var image in Model.ProductImages)
+                        {
+                            <div class="col-md-4 col-lg-3">
+                                <div class="card h-100 image-card">
+                                    <img src="@(image.ThumbnailUrl ?? image.Url)" alt="@(image.AltText ?? Model.Name)" class="card-img-top storefront-thumb" />
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start gap-2">
+                                            <strong>#@image.SortOrder</strong>
+                                            @if (image.IsPrimary)
+                                            {
+                                                <span class="badge bg-success">@Inventar.Resources.Resource.Primary</span>
+                                            }
+                                        </div>
+                                        <div class="small text-muted mt-2">@(image.AltText ?? "No alt text")</div>
+                                    </div>
+                                    <div class="card-footer bg-white border-0 d-grid gap-2">
+                                        @if (!image.IsPrimary)
+                                        {
+                                            <form asp-action="SetPrimaryStorefrontImage" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@Model.Id" />
+                                                <input type="hidden" name="imageId" value="@image.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success w-100">@Inventar.Resources.Resource.SetPrimary</button>
+                                            </form>
+                                        }
+
+                                        <form asp-action="DeleteStorefrontImage" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@Model.Id" />
+                                            <input type="hidden" name="imageId" value="@image.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">@Inventar.Resources.Resource.DeleteImage</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary btn-sm mt-3">@Inventar.Resources.Resource.BackToList</a>
+</div>
+
+<style>
+    label {
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    textarea,
+    input:not([type="checkbox"]) {
+        border: 1.5px solid blueviolet !important;
+    }
+
+    .checkbox-field {
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+    }
+
+    .checkbox-field input[type="checkbox"] {
+        width: 1.4rem;
+        height: 1.4rem;
+    }
+
+    .storefront-card {
+        border: 1px solid #ded1ff;
+        box-shadow: 0 8px 20px rgba(80, 40, 140, 0.08);
+    }
+
+    .storefront-thumb {
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-bottom: 1px solid #eee;
+    }
+
+    .image-card {
+        border-color: #ece3ff;
+    }
+</style>

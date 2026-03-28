@@ -22,14 +22,14 @@ namespace Inventar.Services
             _cloudinary = new Cloudinary(acc);
             this._logger = logger;
         }
-        public async Task<ImageUploadResult> UploadToCloudinary(string filePath, MemoryStream stream)
+        public async Task<ImageUploadResult> UploadToCloudinary(string filePath, Stream stream, string folder)
         {
             try
             {
                 var uploadParams = new ImageUploadParams()
                 {
                     File = new FileDescription(filePath, stream),
-                    Folder = "TepisiQRCodes"
+                    Folder = folder
                 };
 
                 var uploadResult = await _cloudinary.UploadAsync(uploadParams);

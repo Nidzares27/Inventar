@@ -1,0 +1,85 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\PC\\OneDrive\\Desktop\\Inventar-Stabilna Verzija\\Inventar.Storefront\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{DF3C8522-AD84-7F79-3C49-3259D7C55B06}|Inventar.Storefront.csproj|c:\\users\\pc\\onedrive\\desktop\\inventar-stabilna verzija\\inventar.storefront\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{DF3C8522-AD84-7F79-3C49-3259D7C55B06}|Inventar.Storefront.csproj|solutionrelative:views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DF3C8522-AD84-7F79-3C49-3259D7C55B06}|Inventar.Storefront.csproj|c:\\users\\pc\\onedrive\\desktop\\inventar-stabilna verzija\\inventar.storefront\\views\\info\\privacypolicy.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{DF3C8522-AD84-7F79-3C49-3259D7C55B06}|Inventar.Storefront.csproj|solutionrelative:views\\info\\privacypolicy.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DF3C8522-AD84-7F79-3C49-3259D7C55B06}|Inventar.Storefront.csproj|c:\\users\\pc\\onedrive\\desktop\\inventar-stabilna verzija\\inventar.storefront\\views\\info\\shipping.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{DF3C8522-AD84-7F79-3C49-3259D7C55B06}|Inventar.Storefront.csproj|solutionrelative:views\\info\\shipping.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DF3C8522-AD84-7F79-3C49-3259D7C55B06}|Inventar.Storefront.csproj|c:\\users\\pc\\onedrive\\desktop\\inventar-stabilna verzija\\inventar.storefront\\views\\info\\contact.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{DF3C8522-AD84-7F79-3C49-3259D7C55B06}|Inventar.Storefront.csproj|solutionrelative:views\\info\\contact.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 1281,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\Inventar-Stabilna Verzija\\Inventar.Storefront\\Views\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "Views\\Shared\\_Layout.cshtml",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\Inventar-Stabilna Verzija\\Inventar.Storefront\\Views\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "Views\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-28T15:47:19.854Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Shipping.cshtml",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\Inventar-Stabilna Verzija\\Inventar.Storefront\\Views\\Info\\Shipping.cshtml",
+              "RelativeDocumentMoniker": "Views\\Info\\Shipping.cshtml",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\Inventar-Stabilna Verzija\\Inventar.Storefront\\Views\\Info\\Shipping.cshtml",
+              "RelativeToolTip": "Views\\Info\\Shipping.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-28T15:11:43.419Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PrivacyPolicy.cshtml",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\Inventar-Stabilna Verzija\\Inventar.Storefront\\Views\\Info\\PrivacyPolicy.cshtml",
+              "RelativeDocumentMoniker": "Views\\Info\\PrivacyPolicy.cshtml",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\Inventar-Stabilna Verzija\\Inventar.Storefront\\Views\\Info\\PrivacyPolicy.cshtml",
+              "RelativeToolTip": "Views\\Info\\PrivacyPolicy.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-28T15:11:42.292Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Contact.cshtml",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\Inventar-Stabilna Verzija\\Inventar.Storefront\\Views\\Info\\Contact.cshtml",
+              "RelativeDocumentMoniker": "Views\\Info\\Contact.cshtml",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\Inventar-Stabilna Verzija\\Inventar.Storefront\\Views\\Info\\Contact.cshtml",
+              "RelativeToolTip": "Views\\Info\\Contact.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-28T15:11:40.879Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -20,8 +20,19 @@ namespace Inventar.ViewModels.Inventory
         public string Color { get; set; }
         [Range(0, int.MaxValue)]
         public decimal Price { get; set; }
+        [Range(0, int.MaxValue)]
+        public decimal? OnlinePrice { get; set; }
         public bool PerM2 { get; set; }
         public string? Description { get; set; }
+        public string? ShortDescription { get; set; }
+        public string? SeoTitle { get; set; }
+        public string? SeoDescription { get; set; }
+        public string? Slug { get; set; }
+        public bool IsPublished { get; set; }
+        [Range(0, int.MaxValue)]
+        public int ReservedQuantity { get; set; }
+        public int AvailableQuantity { get; set; }
         public bool Disabled { get; set; }
+        public List<StorefrontProductImageViewModel> ProductImages { get; set; } = new();
     }
 }

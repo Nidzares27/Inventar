@@ -1,0 +1,56 @@
+@model Inventar.Storefront.ViewModels.Catalog.ProductCardViewModel
+
+<article class="product-card">
+    <a class="product-card__image-link" asp-controller="Catalog" asp-action="Details" asp-route-slug="@Model.Slug">
+        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+        {
+            <img class="product-card__image" src="@Model.ImageUrl" alt="@Model.Name" loading="lazy" />
+        }
+        else
+        {
+            <div class="product-card__placeholder">Bez fotografije</div>
+        }
+    </a>
+
+    <div class="product-card__body">
+        <span class="product-card__collection">@Model.Model</span>
+        <h3 class="product-card__title">
+            <a asp-controller="Catalog" asp-action="Details">@Model.Name</a>
+        </h3>
+@*         <span class="product-card__collection">@Model.CollectionName</span>
+        <h3 class="product-card__title">
+            <a asp-controller="Catalog" asp-action="Details" asp-route-slug="@Model.Slug">@Model.Name</a>
+        </h3> *@
+        <p class="product-card__meta">
+            @if (!string.IsNullOrWhiteSpace(Model.SizeLabel))
+            {
+                <span>@Model.SizeLabel</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Color))
+            {
+                <span>@Model.Color</span>
+            }
+        </p>
+        <p class="product-card__description">@Model.Description</p>
+
+        <div class="product-card__footer">
+            <div class="price-block">
+                <span class="price-block__current">@Model.CurrentPrice.ToString("0.00") €</span>
+                @if (Model.CompareAtPrice.HasValue)
+                {
+                    <span class="price-block__old">@Model.CompareAtPrice.Value.ToString("0.00") €</span>
+                }
+            </div>
+
+            <form asp-controller="Cart" asp-action="Add" method="post" class="product-card__form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productId" value="@Model.Id" />
+                <input type="hidden" name="quantity" value="1" />
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                <button type="submit" class="button button--secondary" @(Model.AvailableQuantity <= 0 ? "disabled" : null)>
+                    @(Model.AvailableQuantity > 0 ? "Dodaj u korpu" : "Trenutno nije dostupno")
+                </button>
+            </form>
+        </div>
+    </div>
+</article>

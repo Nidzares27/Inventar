@@ -1,0 +1,266 @@
+@model IEnumerable<Inventar.Models.Tepih>
+
+<h2>@Inventar.Resources.Resource.InventoryItems</h2>
+
+<table id="TepisiTable" class="table stripe tabela" style="font-weight:500">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Id</th>
+            <th>@Inventar.Resources.Resource.ProductNumber</th>
+            <th>@Inventar.Resources.Resource.Name</th>
+            <th>Model</th>
+            <th>@Inventar.Resources.Resource.Color</th>
+            <th>@Inventar.Resources.Resource.Size</th>
+            <th>m2</th>
+            <th>@Inventar.Resources.Resource.M2Total</th>
+            <th>@Inventar.Resources.Resource.Price</th>
+            <th>@Inventar.Resources.Resource.OnlinePrice</th>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <th>@Inventar.Resources.Resource.Reserved</th>
+            <th>@Inventar.Resources.Resource.Available</th>
+            <th>@Inventar.Resources.Resource.Published</th>
+            <th></th>
+        </tr>
+
+        <tr class="filters">
+            <th><input style="width:2rem" disabled></th>
+            <th><input style="width:5rem" placeholder="Id"></th>
+            <th><input style="width:5rem" placeholder="ProductNumber"></th>
+            <th><input style="width:7.5rem" placeholder="Name"></th>
+            <th><input style="width:5rem" placeholder="Model"></th>
+            <th><input style="width:7.5rem" placeholder="Color"></th>
+            <th><input style="width:5rem" placeholder="Size"></th>
+            <th><input style="width:5rem" placeholder="m2"></th>
+            <th><input style="width:5rem" placeholder="M2Total"></th>
+            <th><input style="width:5rem" placeholder="Price"></th>
+            <th><input style="width:6rem" placeholder="Online"></th>
+            <th><input style="width:5rem" placeholder="Qty"></th>
+            <th><input style="width:5rem" placeholder="Reserved"></th>
+            <th><input style="width:5rem" placeholder="Available"></th>
+            <th><input style="width:5rem" placeholder="Published"></th>
+            <th><input style="width:5rem" disabled></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            var itemM2 = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : (decimal?)null;
+            var itemM2Total = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.Quantity), 2) : (decimal?)null;
+            var availableQuantity = Math.Max(item.Quantity - item.ReservedQuantity, 0);
+
+            <tr>
+                <td></td>
+
+                <td>
+                    @if (User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"))
+                    {
+                        <a asp-controller="StorefrontCatalog" asp-action="Details" asp-route-id="@item.Id">@item.Id</a>
+                    }
+                    else
+                    {
+                        @item.Id
+                    }
+                </td>
+
+                <td>
+                    @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
+                    {
+                        @item.ProductNumber
+                    }
+                </td>
+
+                <td>@item.Name</td>
+                <td>@item.Model</td>
+                <td>@item.Color</td>
+                <td>@((item.Width != null && item.Length != null) ? $"{item.Width}X{item.Length}" : "")</td>
+                <td>@(itemM2?.ToString("0.##") ?? "")</td>
+                <td>@(itemM2Total?.ToString("0.##") ?? "")</td>
+
+                <td style="color:@(item.PerM2 ? "green" : "black")">
+                    @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
+                    {
+                        @($"{item.Price:0.00} €")
+                    }
+                </td>
+
+                <td>
+                    @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
+                    {
+                        @($"{(item.OnlinePrice ?? item.Price):0.00} €")
+                    }
+                </td>
+
+                <td>@item.Quantity</td>
+                <td>@item.ReservedQuantity</td>
+                <td>@availableQuantity</td>
+                <td>@(item.IsPublished ? "Yes" : "No")</td>
+
+                <td>
+                    @if (User.IsInRole("admin") || User.IsInRole("superadmin"))
+                    {
+                        <a asp-controller="StorefrontCatalog" asp-action="Edit" asp-route-id="@item.Id">@Inventar.Resources.Resource.Edit</a>
+                        <a asp-controller="StorefrontCatalog" asp-action="Delete" asp-route-id="@item.Id">@Inventar.Resources.Resource.Delete</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+{
+    <a class="btn btn-primary btn-success" href="/InventoryItem/Create">@Inventar.Resources.Resource.AddNewProduct</a>
+    <button id="downloadPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+}
+
+@{
+    var priceVisible = User.IsInRole("admin") || User.IsInRole("superadmin");
+    var columnVisibility = new List<bool>
+    {
+        true,
+        User.IsInRole("admin") || User.IsInRole("employee") || User.IsInRole("superadmin"),
+        User.IsInRole("admin") || User.IsInRole("superadmin"),
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        priceVisible,
+        priceVisible,
+        true,
+        true,
+        true,
+        priceVisible,
+        priceVisible
+    };
+
+    var visibilityJson = System.Text.Json.JsonSerializer.Serialize(
+        columnVisibility.Select((v, i) => new { targets = i, visible = v })
+    );
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#TepisiTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                order: [[1, "desc"]],
+                orderCellsTop: true,
+                fixedHeader: true,
+                columnDefs: @Html.Raw(visibilityJson)
+            });
+
+            $('#TepisiTable thead tr:eq(1) th').each(function (index) {
+                var input = $('input', this);
+                if (input.length === 0) return;
+
+                input.on('keyup change', function () {
+                    var visibleIndex = table.column(index + ':visible').index();
+                    if (visibleIndex !== undefined) {
+                        table.column(visibleIndex).search(this.value).draw();
+                    }
+                });
+            });
+
+            function updateTotals() {
+                var totalQuantity = 0;
+                var totalAvailable = 0;
+                var totalM2 = 0;
+
+                table.rows({ filter: 'applied' }).data().each(function (value) {
+                    totalQuantity += parseFloat(value[11]) || 0;
+                    totalAvailable += parseFloat(value[13]) || 0;
+                    totalM2 += parseFloat(value[8]) || 0;
+                });
+
+                $('#totalQuantity').text(totalQuantity);
+                $('#totalAvailable').text(totalAvailable);
+                $('#totalM2').text(totalM2.toFixed(2));
+            }
+
+            $('#TepisiTable').after(`
+                <div style="margin-top: 10px; font-weight: bold;">
+                    @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span> |
+                    Available: <span id="totalAvailable">0</span> |
+                    @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span>
+                </div>
+            `);
+
+            table.on('draw', function () {
+                updateTotals();
+
+                let counter = 1;
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    $('td:eq(0)', this.node()).html(counter++);
+                });
+            });
+
+            updateTotals();
+            table.draw();
+        });
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#downloadPDF').on('click', function () {
+                var table = $('#TepisiTable').DataTable();
+                var data = [];
+
+                table.rows({ search: 'applied' }).every(function () {
+                    var row = this.node();
+                    var rowData = [];
+                    $(row).find('td').each(function () {
+                        rowData.push($(this).text().trim());
+                    });
+                    data.push(rowData);
+                });
+
+                var filters = {};
+                $('#TepisiTable thead tr:eq(1) th').each(function (i) {
+                    var input = $(this).find('input');
+                    if (input.length > 0) {
+                        filters[i] = input.val();
+                    }
+                });
+
+                var heading = $('h2').text();
+                var columnHeaders = [];
+                $('#TepisiTable thead tr:eq(0) th').each(function (i, th) {
+                    if (i < $(this).closest('tr').children().length - 1) {
+                        columnHeaders.push($(th).text().trim());
+                    }
+                });
+
+                var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
+                var totalM2 = parseFloat($('#totalM2').text()) || 0;
+
+                $.ajax({
+                    url: '@Url.Action("GenerateInventoryPDF", "Pdf")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        heading: heading,
+                        data: data,
+                        filters: filters,
+                        columnHeaders: columnHeaders,
+                        totalQuantity: totalQuantity,
+                        totalM2: totalM2
+                    }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    success: function (blob) {
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = 'Inventar.pdf';
+                        link.click();
+                    }
+                });
+            });
+        });
+    </script>
+}

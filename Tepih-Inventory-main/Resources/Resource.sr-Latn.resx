@@ -135,11 +135,17 @@
   <data name="AllAccounts" xml:space="preserve">
     <value>Svi nalozi</value>
   </data>
+  <data name="AltText" xml:space="preserve">
+    <value>Alternativni Text</value>
+  </data>
   <data name="Amount" xml:space="preserve">
     <value>Iznos</value>
   </data>
   <data name="AmountPaid" xml:space="preserve">
     <value>Iznos plaćen</value>
+  </data>
+  <data name="Available" xml:space="preserve">
+    <value>Dostupno</value>
   </data>
   <data name="BackToList" xml:space="preserve">
     <value>Nazad na listu</value>
@@ -162,11 +168,20 @@
   <data name="BuysPerProduct" xml:space="preserve">
     <value>Kupovine po proizvodima</value>
   </data>
+  <data name="By" xml:space="preserve">
+    <value>Od strane</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Otkaži</value>
   </data>
   <data name="Cash" xml:space="preserve">
     <value>Gotovina</value>
+  </data>
+  <data name="CatalogInventory" xml:space="preserve">
+    <value>Katalog Inventar</value>
+  </data>
+  <data name="Changed" xml:space="preserve">
+    <value>Promijenjeno</value>
   </data>
   <data name="ClearCart" xml:space="preserve">
     <value>Isprazni korpu</value>
@@ -189,11 +204,17 @@
   <data name="CreateAccount" xml:space="preserve">
     <value>Kreiraj nalog</value>
   </data>
+  <data name="Created" xml:space="preserve">
+    <value>Kreirano</value>
+  </data>
   <data name="CreateProduct" xml:space="preserve">
     <value>Kreiraj proizvod</value>
   </data>
   <data name="CreatingProduct" xml:space="preserve">
     <value>Kreiranje proizvoda</value>
+  </data>
+  <data name="Customer" xml:space="preserve">
+    <value>Kupac</value>
   </data>
   <data name="CustomerFullName" xml:space="preserve">
     <value>Puno ime kupca</value>
@@ -227,6 +248,9 @@
   </data>
   <data name="DeleteDebt" xml:space="preserve">
     <value>Obriši dug</value>
+  </data>
+  <data name="DeleteImage" xml:space="preserve">
+    <value>Obriši sliku</value>
   </data>
   <data name="DeletePayment" xml:space="preserve">
     <value>Obriši plaćanje</value>
@@ -264,6 +288,9 @@
   <data name="Download" xml:space="preserve">
     <value>Preuzmi</value>
   </data>
+  <data name="eCommerceReady" xml:space="preserve">
+    <value>e-Commerce Spremno</value>
+  </data>
   <data name="Edit" xml:space="preserve">
     <value>Izmijeni</value>
   </data>
@@ -285,6 +312,9 @@
   <data name="EndDate" xml:space="preserve">
     <value>Krajnji datum</value>
   </data>
+  <data name="Expires" xml:space="preserve">
+    <value>Ističe</value>
+  </data>
   <data name="Filter" xml:space="preserve">
     <value>Filtriraj</value>
   </data>
@@ -297,6 +327,9 @@
   <data name="From" xml:space="preserve">
     <value>Do</value>
   </data>
+  <data name="Fulfillment" xml:space="preserve">
+    <value>Ispunjenje</value>
+  </data>
   <data name="FullName" xml:space="preserve">
     <value>Puno ime</value>
   </data>
@@ -308,6 +341,9 @@
   </data>
   <data name="Home" xml:space="preserve">
     <value>Početna</value>
+  </data>
+  <data name="InternalNote" xml:space="preserve">
+    <value>Interna napomena</value>
   </data>
   <data name="Inventory" xml:space="preserve">
     <value>Inventar</value>
@@ -357,8 +393,38 @@
   <data name="NoAccount" xml:space="preserve">
     <value>Nemate nalog?</value>
   </data>
+  <data name="NoImagesUploadedYet" xml:space="preserve">
+    <value>Još uvek nije otpremljena nijedna slika.</value>
+  </data>
   <data name="NoResultsFound" xml:space="preserve">
     <value>Nema rezultata!</value>
+  </data>
+  <data name="Note" xml:space="preserve">
+    <value>Napomena</value>
+  </data>
+  <data name="OnlinePrice" xml:space="preserve">
+    <value>Onlajn Cijena</value>
+  </data>
+  <data name="OptionalNoteForTheStatusHistory" xml:space="preserve">
+    <value>Opcionalna napomena za istoriju statusa</value>
+  </data>
+  <data name="OptionalSharedAltText" xml:space="preserve">
+    <value>Opcioni deljeni alternativni tekst za otpremljene slike</value>
+  </data>
+  <data name="Order" xml:space="preserve">
+    <value>Narudžbina</value>
+  </data>
+  <data name="OrderedItems" xml:space="preserve">
+    <value>Naručene stavke</value>
+  </data>
+  <data name="OrderStatus" xml:space="preserve">
+    <value>Status porudžbine</value>
+  </data>
+  <data name="OrderSummary" xml:space="preserve">
+    <value>Rezime porudžbine</value>
+  </data>
+  <data name="Paid" xml:space="preserve">
+    <value>Plaćeno</value>
   </data>
   <data name="Password" xml:space="preserve">
     <value>Šifra</value>
@@ -372,11 +438,17 @@
   <data name="PasswordResetSuccessfully" xml:space="preserve">
     <value>Uspješno promjenjena lozinka</value>
   </data>
+  <data name="Payment" xml:space="preserve">
+    <value>Plaćanje</value>
+  </data>
   <data name="PaymentHistory" xml:space="preserve">
     <value>Istorija plaćanja</value>
   </data>
   <data name="Payments" xml:space="preserve">
     <value>Plaćanja</value>
+  </data>
+  <data name="PaymentStatus" xml:space="preserve">
+    <value>Status plaćanja</value>
   </data>
   <data name="PaymentTime" xml:space="preserve">
     <value>Vrijeme plaćanja</value>
@@ -399,6 +471,9 @@
   <data name="PerProductsDetailedUNGrouped" xml:space="preserve">
     <value>Po proizvodima Detaljno (Negrupisano)</value>
   </data>
+  <data name="Phone" xml:space="preserve">
+    <value>Telefon</value>
+  </data>
   <data name="PlannedPaymentType" xml:space="preserve">
     <value>Planirani tip plaćanja</value>
   </data>
@@ -414,14 +489,26 @@
   <data name="PriceTotal" xml:space="preserve">
     <value>Cijena ukupno</value>
   </data>
+  <data name="Primary" xml:space="preserve">
+    <value>Primarna</value>
+  </data>
   <data name="PrintPDF" xml:space="preserve">
     <value>Odštampaj PDF</value>
+  </data>
+  <data name="Product" xml:space="preserve">
+    <value>Proizvod</value>
   </data>
   <data name="ProductID" xml:space="preserve">
     <value>Proizvod ID</value>
   </data>
+  <data name="ProductImages" xml:space="preserve">
+    <value>Slike proizvoda</value>
+  </data>
   <data name="ProductNumber" xml:space="preserve">
     <value>Šifra</value>
+  </data>
+  <data name="Published" xml:space="preserve">
+    <value>Objavljeno</value>
   </data>
   <data name="PurchasePayments" xml:space="preserve">
     <value>Plaćanja &amp; uplate</value>
@@ -437,6 +524,12 @@
   </data>
   <data name="Register" xml:space="preserve">
     <value>Registracija</value>
+  </data>
+  <data name="Reservations" xml:space="preserve">
+    <value>Rezervacije</value>
+  </data>
+  <data name="Reserved" xml:space="preserve">
+    <value>Rezervisano</value>
   </data>
   <data name="ResetPassword" xml:space="preserve">
     <value>Resetuj šifru</value>
@@ -459,6 +552,9 @@
   <data name="SaleTime" xml:space="preserve">
     <value>Vrijeme prodaje</value>
   </data>
+  <data name="SaveUpdate" xml:space="preserve">
+    <value>Sačuvaj ažuriranje</value>
+  </data>
   <data name="ScanQRCode" xml:space="preserve">
     <value>Skeniraj QR kod</value>
   </data>
@@ -477,6 +573,18 @@
   <data name="SellerPaymentType" xml:space="preserve">
     <value>Prodavac/tip plaćanja</value>
   </data>
+  <data name="SEODescription" xml:space="preserve">
+    <value>SEO Opis</value>
+  </data>
+  <data name="SEOTitle" xml:space="preserve">
+    <value>SEO Naslov</value>
+  </data>
+  <data name="SetPrimary" xml:space="preserve">
+    <value>Postavi Primarno</value>
+  </data>
+  <data name="ShortDescription" xml:space="preserve">
+    <value>Kratak opis</value>
+  </data>
   <data name="SignUp" xml:space="preserve">
     <value>Registruj se</value>
   </data>
@@ -488,6 +596,15 @@
   </data>
   <data name="StartDate" xml:space="preserve">
     <value>Početni datum</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="StatusHistory" xml:space="preserve">
+    <value>Istorija statusa</value>
+  </data>
+  <data name="StatusNote" xml:space="preserve">
+    <value>Statusna napomena</value>
   </data>
   <data name="Submit" xml:space="preserve">
     <value>Potvrdi</value>
@@ -522,6 +639,15 @@
   <data name="UngroupedPDF" xml:space="preserve">
     <value>Negrupisani PDF</value>
   </data>
+  <data name="UpdateStatus" xml:space="preserve">
+    <value>Ažuriranje statusa</value>
+  </data>
+  <data name="Upload" xml:space="preserve">
+    <value>Otpremi</value>
+  </data>
+  <data name="UploadProductPhotos" xml:space="preserve">
+    <value>Otpremite fotografije proizvoda, izaberite glavnu sliku i uklonite stare.</value>
+  </data>
   <data name="ViewPaymentHistory" xml:space="preserve">
     <value>Istorija plaćanaja</value>
   </data>
@@ -531,8 +657,14 @@
   <data name="ViewSalesReport" xml:space="preserve">
     <value>Pogledaj izvještaj prodaja</value>
   </data>
+  <data name="VisibleOnlyToAdmins" xml:space="preserve">
+    <value>Vidljivo samo adminima</value>
+  </data>
   <data name="Waiting" xml:space="preserve">
     <value>Čekanje</value>
+  </data>
+  <data name="WebOrders" xml:space="preserve">
+    <value>Web Narudžbine</value>
   </data>
   <data name="Width" xml:space="preserve">
     <value>Širina</value>
@@ -545,5 +677,71 @@
   </data>
   <data name="YourPasswordHasBeenResetSuccessfully" xml:space="preserve">
     <value>Vaša lozinka je uspješno promjenjena</value>
+  </data>
+  <data name="WebOrderStatus_Pending" xml:space="preserve">
+    <value>Na čekanju</value>
+  </data>
+  <data name="WebOrderStatus_AwaitingPayment" xml:space="preserve">
+    <value>Čeka uplatu</value>
+  </data>
+  <data name="WebOrderStatus_Paid" xml:space="preserve">
+    <value>Plaćeno</value>
+  </data>
+  <data name="WebOrderStatus_Processing" xml:space="preserve">
+    <value>U obradi</value>
+  </data>
+  <data name="WebOrderStatus_Shipped" xml:space="preserve">
+    <value>Poslato</value>
+  </data>
+  <data name="WebOrderStatus_Completed" xml:space="preserve">
+    <value>Završeno</value>
+  </data>
+  <data name="WebOrderStatus_Cancelled" xml:space="preserve">
+    <value>Otkazano</value>
+  </data>
+  <data name="WebOrderStatus_Refunded" xml:space="preserve">
+    <value>Refundirano</value>
+  </data>
+  <data name="WebPaymentStatus_Pending" xml:space="preserve">
+    <value>Na čekanju</value>
+  </data>
+  <data name="WebPaymentStatus_Authorized" xml:space="preserve">
+    <value>Autorizovano</value>
+  </data>
+  <data name="WebPaymentStatus_Paid" xml:space="preserve">
+    <value>Plaćeno</value>
+  </data>
+  <data name="WebPaymentStatus_Failed" xml:space="preserve">
+    <value>Neuspjelo</value>
+  </data>
+  <data name="WebPaymentStatus_Refunded" xml:space="preserve">
+    <value>Refundirano</value>
+  </data>
+  <data name="WebFulfillmentStatus_Unfulfilled" xml:space="preserve">
+    <value>Neizvršeno</value>
+  </data>
+  <data name="WebFulfillmentStatus_Processing" xml:space="preserve">
+    <value>U obradi</value>
+  </data>
+  <data name="WebFulfillmentStatus_Shipped" xml:space="preserve">
+    <value>Poslato</value>
+  </data>
+  <data name="WebFulfillmentStatus_Completed" xml:space="preserve">
+    <value>Završeno</value>
+  </data>
+  <data name="WebFulfillmentStatus_Cancelled" xml:space="preserve">
+    <value>Otkazano</value>
+  </data>
+  <data name="InventoryReservationStatus_Active" xml:space="preserve">
+    <value>Aktivna</value>
+  </data>
+  <data name="InventoryReservationStatus_Released" xml:space="preserve">
+    <value>Oslobodjena</value>
+  </data>
+  <data name="InventoryReservationStatus_Converted" xml:space="preserve">
+    <value>Pretvorena</value>
+  </data>
+  <data name="InventoryReservationStatus_Expired" xml:space="preserve">
+    <value>Istekla</value>
   </data>
 </root>

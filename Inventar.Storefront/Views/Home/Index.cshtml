@@ -1,0 +1,20 @@
+@model Inventar.Storefront.ViewModels.Home.HomeIndexViewModel
+@{
+    ViewData["Title"] = "Početna";
+}
+
+<section class="section">
+    <div class="section__header">
+        <div>
+            <h2>Izdvojeno</h2>
+        </div>
+        <a class="section__link" asp-controller="Catalog" asp-action="Index">Prikaži sve</a>
+    </div>
+
+    <div class="product-grid">
+        @foreach (var product in Model.FeaturedProducts)
+        {
+            <partial name="_ProductCard" model="product" />
+        }
+    </div>
+</section>

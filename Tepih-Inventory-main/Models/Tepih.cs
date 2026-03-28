@@ -26,7 +26,33 @@ namespace Inventar.Models
         public decimal Price { get; set; } /*double*/
         public bool PerM2 { get; set; }
         public string? Description { get; set; }
-        public bool Disabled { get; set; } 
+        public bool Disabled { get; set; }
+        // Storefront fields
+        public bool IsPublished { get; set; }
+
+        [StringLength(160)]
+        public string? Slug { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public decimal? OnlinePrice { get; set; }
+
+        [StringLength(240)]
+        public string? ShortDescription { get; set; }
+
+        [StringLength(160)]
+        public string? SeoTitle { get; set; }
+
+        [StringLength(320)]
+        public string? SeoDescription { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public int ReservedQuantity { get; set; }
+
+        [Timestamp]
+        public byte[]? RowVersion { get; set; }
         public virtual ICollection<Prodaja> Prodaje { get; set; }
+        public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
+        public virtual ICollection<WebOrderItem> WebOrderItems { get; set; } = new List<WebOrderItem>();
+        public virtual ICollection<InventoryReservation> InventoryReservations { get; set; } = new List<InventoryReservation>();
     }
 }

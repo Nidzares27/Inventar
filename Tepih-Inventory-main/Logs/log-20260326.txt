@@ -1,0 +1,2 @@
+2026-03-26 18:26:42.651 +01:00 [INF] [Anonymous] Expired 1 active storefront reservations.
+2026-03-26 18:27:05.120 +01:00 [WRN] [Anonymous] User entered an incorrect password!

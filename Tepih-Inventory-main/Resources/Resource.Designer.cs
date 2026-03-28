@@ -19,7 +19,7 @@ namespace Inventar.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resource {
@@ -115,6 +115,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Alt Text.
+        /// </summary>
+        public static string AltText {
+            get {
+                return ResourceManager.GetString("AltText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Amount.
         /// </summary>
         public static string Amount {
@@ -129,6 +138,15 @@ namespace Inventar.Resources {
         public static string AmountPaid {
             get {
                 return ResourceManager.GetString("AmountPaid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Available.
+        /// </summary>
+        public static string Available {
+            get {
+                return ResourceManager.GetString("Available", resourceCulture);
             }
         }
         
@@ -196,6 +214,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to By.
+        /// </summary>
+        public static string By {
+            get {
+                return ResourceManager.GetString("By", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Cancel {
@@ -210,6 +237,24 @@ namespace Inventar.Resources {
         public static string Cash {
             get {
                 return ResourceManager.GetString("Cash", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Catalog Inventory.
+        /// </summary>
+        public static string CatalogInventory {
+            get {
+                return ResourceManager.GetString("CatalogInventory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changed.
+        /// </summary>
+        public static string Changed {
+            get {
+                return ResourceManager.GetString("Changed", resourceCulture);
             }
         }
         
@@ -277,6 +322,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Created.
+        /// </summary>
+        public static string Created {
+            get {
+                return ResourceManager.GetString("Created", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Create Product.
         /// </summary>
         public static string CreateProduct {
@@ -291,6 +345,15 @@ namespace Inventar.Resources {
         public static string CreatingProduct {
             get {
                 return ResourceManager.GetString("CreatingProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Customer.
+        /// </summary>
+        public static string Customer {
+            get {
+                return ResourceManager.GetString("Customer", resourceCulture);
             }
         }
         
@@ -390,6 +453,15 @@ namespace Inventar.Resources {
         public static string DeleteDebt {
             get {
                 return ResourceManager.GetString("DeleteDebt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Image.
+        /// </summary>
+        public static string DeleteImage {
+            get {
+                return ResourceManager.GetString("DeleteImage", resourceCulture);
             }
         }
         
@@ -502,6 +574,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to e-Commerce Ready.
+        /// </summary>
+        public static string eCommerceReady {
+            get {
+                return ResourceManager.GetString("eCommerceReady", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
         public static string Edit {
@@ -565,6 +646,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expires.
+        /// </summary>
+        public static string Expires {
+            get {
+                return ResourceManager.GetString("Expires", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filter.
         /// </summary>
         public static string Filter {
@@ -597,6 +687,15 @@ namespace Inventar.Resources {
         public static string From {
             get {
                 return ResourceManager.GetString("From", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fulfillment.
+        /// </summary>
+        public static string Fulfillment {
+            get {
+                return ResourceManager.GetString("Fulfillment", resourceCulture);
             }
         }
         
@@ -637,6 +736,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Internal Note.
+        /// </summary>
+        public static string InternalNote {
+            get {
+                return ResourceManager.GetString("InternalNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Inventory.
         /// </summary>
         public static string Inventory {
@@ -651,6 +759,42 @@ namespace Inventar.Resources {
         public static string InventoryItems {
             get {
                 return ResourceManager.GetString("InventoryItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Active.
+        /// </summary>
+        public static string InventoryReservationStatus_Active {
+            get {
+                return ResourceManager.GetString("InventoryReservationStatus_Active", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Converted.
+        /// </summary>
+        public static string InventoryReservationStatus_Converted {
+            get {
+                return ResourceManager.GetString("InventoryReservationStatus_Converted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expired.
+        /// </summary>
+        public static string InventoryReservationStatus_Expired {
+            get {
+                return ResourceManager.GetString("InventoryReservationStatus_Expired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Released.
+        /// </summary>
+        public static string InventoryReservationStatus_Released {
+            get {
+                return ResourceManager.GetString("InventoryReservationStatus_Released", resourceCulture);
             }
         }
         
@@ -781,11 +925,101 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No images uploaded yet..
+        /// </summary>
+        public static string NoImagesUploadedYet {
+            get {
+                return ResourceManager.GetString("NoImagesUploadedYet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No results found!.
         /// </summary>
         public static string NoResultsFound {
             get {
                 return ResourceManager.GetString("NoResultsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note.
+        /// </summary>
+        public static string Note {
+            get {
+                return ResourceManager.GetString("Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Online Price.
+        /// </summary>
+        public static string OnlinePrice {
+            get {
+                return ResourceManager.GetString("OnlinePrice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional note for the status history.
+        /// </summary>
+        public static string OptionalNoteForTheStatusHistory {
+            get {
+                return ResourceManager.GetString("OptionalNoteForTheStatusHistory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional shared alt text for uploaded images.
+        /// </summary>
+        public static string OptionalSharedAltText {
+            get {
+                return ResourceManager.GetString("OptionalSharedAltText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Order.
+        /// </summary>
+        public static string Order {
+            get {
+                return ResourceManager.GetString("Order", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ordered Items.
+        /// </summary>
+        public static string OrderedItems {
+            get {
+                return ResourceManager.GetString("OrderedItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Order Status.
+        /// </summary>
+        public static string OrderStatus {
+            get {
+                return ResourceManager.GetString("OrderStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Order Summary.
+        /// </summary>
+        public static string OrderSummary {
+            get {
+                return ResourceManager.GetString("OrderSummary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paid at.
+        /// </summary>
+        public static string Paid {
+            get {
+                return ResourceManager.GetString("Paid", resourceCulture);
             }
         }
         
@@ -826,6 +1060,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Payment.
+        /// </summary>
+        public static string Payment {
+            get {
+                return ResourceManager.GetString("Payment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Payment History.
         /// </summary>
         public static string PaymentHistory {
@@ -840,6 +1083,15 @@ namespace Inventar.Resources {
         public static string Payments {
             get {
                 return ResourceManager.GetString("Payments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Payment Status.
+        /// </summary>
+        public static string PaymentStatus {
+            get {
+                return ResourceManager.GetString("PaymentStatus", resourceCulture);
             }
         }
         
@@ -907,6 +1159,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Phone.
+        /// </summary>
+        public static string Phone {
+            get {
+                return ResourceManager.GetString("Phone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Planned Payment Type.
         /// </summary>
         public static string PlannedPaymentType {
@@ -952,11 +1213,29 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Primary.
+        /// </summary>
+        public static string Primary {
+            get {
+                return ResourceManager.GetString("Primary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Print PDF.
         /// </summary>
         public static string PrintPDF {
             get {
                 return ResourceManager.GetString("PrintPDF", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product.
+        /// </summary>
+        public static string Product {
+            get {
+                return ResourceManager.GetString("Product", resourceCulture);
             }
         }
         
@@ -970,11 +1249,29 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product Images.
+        /// </summary>
+        public static string ProductImages {
+            get {
+                return ResourceManager.GetString("ProductImages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product Number.
         /// </summary>
         public static string ProductNumber {
             get {
                 return ResourceManager.GetString("ProductNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Published.
+        /// </summary>
+        public static string Published {
+            get {
+                return ResourceManager.GetString("Published", resourceCulture);
             }
         }
         
@@ -1020,6 +1317,24 @@ namespace Inventar.Resources {
         public static string Register {
             get {
                 return ResourceManager.GetString("Register", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reservations.
+        /// </summary>
+        public static string Reservations {
+            get {
+                return ResourceManager.GetString("Reservations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reserved.
+        /// </summary>
+        public static string Reserved {
+            get {
+                return ResourceManager.GetString("Reserved", resourceCulture);
             }
         }
         
@@ -1087,6 +1402,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Save Update.
+        /// </summary>
+        public static string SaveUpdate {
+            get {
+                return ResourceManager.GetString("SaveUpdate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scan QR Code.
         /// </summary>
         public static string ScanQRCode {
@@ -1141,6 +1465,42 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to SEO Description.
+        /// </summary>
+        public static string SEODescription {
+            get {
+                return ResourceManager.GetString("SEODescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SEO Title.
+        /// </summary>
+        public static string SEOTitle {
+            get {
+                return ResourceManager.GetString("SEOTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set Primary.
+        /// </summary>
+        public static string SetPrimary {
+            get {
+                return ResourceManager.GetString("SetPrimary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Short Description.
+        /// </summary>
+        public static string ShortDescription {
+            get {
+                return ResourceManager.GetString("ShortDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sign Up.
         /// </summary>
         public static string SignUp {
@@ -1173,6 +1533,33 @@ namespace Inventar.Resources {
         public static string StartDate {
             get {
                 return ResourceManager.GetString("StartDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status.
+        /// </summary>
+        public static string Status {
+            get {
+                return ResourceManager.GetString("Status", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status History.
+        /// </summary>
+        public static string StatusHistory {
+            get {
+                return ResourceManager.GetString("StatusHistory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status Note.
+        /// </summary>
+        public static string StatusNote {
+            get {
+                return ResourceManager.GetString("StatusNote", resourceCulture);
             }
         }
         
@@ -1276,6 +1663,33 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Update Status.
+        /// </summary>
+        public static string UpdateStatus {
+            get {
+                return ResourceManager.GetString("UpdateStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload.
+        /// </summary>
+        public static string Upload {
+            get {
+                return ResourceManager.GetString("Upload", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload product photos, choose a primary image, and remove old ones..
+        /// </summary>
+        public static string UploadProductPhotos {
+            get {
+                return ResourceManager.GetString("UploadProductPhotos", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Payment History.
         /// </summary>
         public static string ViewPaymentHistory {
@@ -1303,11 +1717,191 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Visible only to admins.
+        /// </summary>
+        public static string VisibleOnlyToAdmins {
+            get {
+                return ResourceManager.GetString("VisibleOnlyToAdmins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waiting.
         /// </summary>
         public static string Waiting {
             get {
                 return ResourceManager.GetString("Waiting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancelled.
+        /// </summary>
+        public static string WebFulfillmentStatus_Cancelled {
+            get {
+                return ResourceManager.GetString("WebFulfillmentStatus_Cancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Completed.
+        /// </summary>
+        public static string WebFulfillmentStatus_Completed {
+            get {
+                return ResourceManager.GetString("WebFulfillmentStatus_Completed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Processing.
+        /// </summary>
+        public static string WebFulfillmentStatus_Processing {
+            get {
+                return ResourceManager.GetString("WebFulfillmentStatus_Processing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shipped.
+        /// </summary>
+        public static string WebFulfillmentStatus_Shipped {
+            get {
+                return ResourceManager.GetString("WebFulfillmentStatus_Shipped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unfulfilled.
+        /// </summary>
+        public static string WebFulfillmentStatus_Unfulfilled {
+            get {
+                return ResourceManager.GetString("WebFulfillmentStatus_Unfulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Web Orders.
+        /// </summary>
+        public static string WebOrders {
+            get {
+                return ResourceManager.GetString("WebOrders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Awaiting payment.
+        /// </summary>
+        public static string WebOrderStatus_AwaitingPayment {
+            get {
+                return ResourceManager.GetString("WebOrderStatus_AwaitingPayment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancelled.
+        /// </summary>
+        public static string WebOrderStatus_Cancelled {
+            get {
+                return ResourceManager.GetString("WebOrderStatus_Cancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Completed.
+        /// </summary>
+        public static string WebOrderStatus_Completed {
+            get {
+                return ResourceManager.GetString("WebOrderStatus_Completed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paid.
+        /// </summary>
+        public static string WebOrderStatus_Paid {
+            get {
+                return ResourceManager.GetString("WebOrderStatus_Paid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pending.
+        /// </summary>
+        public static string WebOrderStatus_Pending {
+            get {
+                return ResourceManager.GetString("WebOrderStatus_Pending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Processing.
+        /// </summary>
+        public static string WebOrderStatus_Processing {
+            get {
+                return ResourceManager.GetString("WebOrderStatus_Processing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refunded.
+        /// </summary>
+        public static string WebOrderStatus_Refunded {
+            get {
+                return ResourceManager.GetString("WebOrderStatus_Refunded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shipped.
+        /// </summary>
+        public static string WebOrderStatus_Shipped {
+            get {
+                return ResourceManager.GetString("WebOrderStatus_Shipped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Authorized.
+        /// </summary>
+        public static string WebPaymentStatus_Authorized {
+            get {
+                return ResourceManager.GetString("WebPaymentStatus_Authorized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed.
+        /// </summary>
+        public static string WebPaymentStatus_Failed {
+            get {
+                return ResourceManager.GetString("WebPaymentStatus_Failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paid.
+        /// </summary>
+        public static string WebPaymentStatus_Paid {
+            get {
+                return ResourceManager.GetString("WebPaymentStatus_Paid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pending.
+        /// </summary>
+        public static string WebPaymentStatus_Pending {
+            get {
+                return ResourceManager.GetString("WebPaymentStatus_Pending", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refunded.
+        /// </summary>
+        public static string WebPaymentStatus_Refunded {
+            get {
+                return ResourceManager.GetString("WebPaymentStatus_Refunded", resourceCulture);
             }
         }
         

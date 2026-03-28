@@ -1,0 +1,86 @@
+@model Inventar.Storefront.ViewModels.Cart.CartPageViewModel
+@{
+    ViewData["Title"] = "Korpa";
+}
+
+<section class="page-head">
+    <span class="eyebrow">Korpa</span>
+</section>
+
+@if (Model.Lines.Count == 0)
+{
+    <div class="empty-state">
+        <h3>Korpa je trenutno prazna.</h3>
+        <p>Krenite od kataloga i sačuvajte nekoliko modela za uži izbor.</p>
+        <a class="button" asp-controller="Catalog" asp-action="Index">Pogledaj proizvode</a>
+    </div>
+}
+else
+{
+    <section class="cart-layout">
+        <div class="cart-lines">
+            @foreach (var line in Model.Lines)
+            {
+                <article class="cart-line">
+                    @if (!string.IsNullOrWhiteSpace(line.ImageUrl))
+                    {
+                        <img class="cart-line__image" src="@line.ImageUrl" alt="@line.Name" />
+                    }
+                    else
+                    {
+                        <div class="product-card__placeholder cart-line__image">Bez fotografije</div>
+                    }
+
+                    <div class="cart-line__content">
+                        <span class="eyebrow">@line.Model</span>
+                        <h2><a asp-controller="Catalog" asp-action="Details">@line.Name</a></h2>
+@*                         <h2><a asp-controller="Catalog" asp-action="Details" asp-route-slug="@line.Slug">@line.Name</a></h2>
+ *@                        <p>@if (!string.IsNullOrWhiteSpace(line.SizeLabel)) { <span>@line.SizeLabel</span> } <span>• @line.Color</span></p>
+                        <p class="cart-line__price">@line.UnitPrice.ToString("0.00") € po kom.</p>
+
+                        @if (line.HasAvailabilityIssue)
+                        {
+                            <p class="cart-line__warning">Tražena količina je veća od trenutno dostupne (@line.AvailableQuantity).</p>
+                        }
+
+                        <div class="cart-line__actions">
+                            <form asp-controller="Cart" asp-action="Update" method="post" class="cart-line__quantity-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@line.ProductId" />
+                                <input type="number" name="quantity" min="0" value="@line.Quantity" />
+                                <button type="submit" class="button button--secondary">Ažuriraj</button>
+                            </form>
+
+                            <form asp-controller="Cart" asp-action="Remove" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@line.ProductId" />
+                                <button type="submit" class="button button--ghost">Ukloni</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="cart-line__total">@line.LineTotal.ToString("0.00") €</div>
+                </article>
+            }
+        </div>
+
+        <aside class="summary-card">
+            <span class="eyebrow">Sažetak</span>
+            <div class="summary-card__row">
+                <span>Ukupno artikala</span>
+                <strong>@Model.TotalItems</strong>
+            </div>
+            <div class="summary-card__row">
+                <span>Iznos</span>
+                <strong>@Model.Subtotal.ToString("0.00") €</strong>
+            </div>
+
+            @if (Model.HasAvailabilityIssues)
+            {
+                <p class="flash flash--error">Prije nastavka korigujte količine koje prelaze trenutno dostupno stanje.</p>
+            }
+
+            <a class="button button--full" asp-controller="Checkout" asp-action="Index">Nastavi na narudžbu</a>
+        </aside>
+    </section>
+}

@@ -60,6 +60,13 @@
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Sales" asp-action="PerDay">@Inventar.Resources.Resource.PerDay</a></li>
                                     </ul>
                                 </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">e-Commerce</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="StorefrontCatalog" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.CatalogInventory</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="StorefrontOrder" asp-action="Index" data-loading="true">@Inventar.Resources.Resource.WebOrders</a></li>
+                                    </ul>
+                                </li>
 @*                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">@Inventar.Resources.Resource.Buyers</a>
                                     <ul class="dropdown-menu">

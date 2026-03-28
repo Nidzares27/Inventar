@@ -1,0 +1,97 @@
+@model Inventar.Storefront.ViewModels.Catalog.CatalogIndexViewModel
+@{
+    ViewData["Title"] = "Proizvodi";
+}
+
+<section class="page-head">
+    <span class="eyebrow">Katalog</span>
+</section>
+
+<section class="filters">
+    <form asp-controller="Catalog" asp-action="Index" method="get" class="filters__form">
+        <div class="field">
+            <label for="q">Pretraga</label>
+            <input id="q" name="q" value="@Model.Query" placeholder="Naziv, model, boja..." />
+        </div>
+
+        <div class="field">
+            <label for="collection">Kolekcija</label>
+            <select id="collection" name="collection">
+                <option value="">Sve kolekcije</option>
+                @foreach (var collection in Model.Collections)
+                {
+                    <option value="@collection" selected="@(Model.Collection == collection ? "selected" : null)">@collection</option>
+                }
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="color">Boja</label>
+            <select id="color" name="color">
+                <option value="">Sve boje</option>
+                @foreach (var color in Model.Colors)
+                {
+                    <option value="@color" selected="@(Model.Color == color ? "selected" : null)">@color</option>
+                }
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="sort">Sortiranje</label>
+            <select id="sort" name="sort">
+                <option value="featured" selected="@(Model.Sort == "featured" ? "selected" : null)">Najnovije</option>
+                <option value="price-asc" selected="@(Model.Sort == "price-asc" ? "selected" : null)">Cijena: niža ka višoj</option>
+                <option value="price-desc" selected="@(Model.Sort == "price-desc" ? "selected" : null)">Cijena: viša ka nižoj</option>
+                <option value="name" selected="@(Model.Sort == "name" ? "selected" : null)">Naziv</option>
+            </select>
+        </div>
+
+        <button type="submit" class="button">Primijeni</button>
+    </form>
+</section>
+
+<section class="section">
+    <div class="section__header">
+        <div>
+            <span class="eyebrow">Rezultati</span>
+            <h2>@Model.TotalCount proizvoda u ponudi</h2>
+        </div>
+    </div>
+
+    @if (Model.Products.Count == 0)
+    {
+        <div class="empty-state">
+            <h3>Nema rezultata za odabrane filtere.</h3>
+            <p>Pokušajte bez boje ili kolekcije, ili pregledajte kompletnu ponudu.</p>
+            <a class="button" asp-controller="Catalog" asp-action="Index">Očisti filtere</a>
+        </div>
+    }
+    else
+    {
+        <div class="product-grid">
+            @foreach (var product in Model.Products)
+            {
+                <partial name="_ProductCard" model="product" />
+            }
+        </div>
+    }
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="pagination" aria-label="Paginacija">
+            @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+            {
+                <a class="pagination__link @(pageNumber == Model.CurrentPage ? "is-active" : null)"
+                   asp-controller="Catalog"
+                   asp-action="Index"
+                   asp-route-q="@Model.Query"
+                   asp-route-collection="@Model.Collection"
+                   asp-route-color="@Model.Color"
+                   asp-route-sort="@Model.Sort"
+                   asp-route-page="@pageNumber">
+                    @pageNumber
+                </a>
+            }
+        </nav>
+    }
+</section>
