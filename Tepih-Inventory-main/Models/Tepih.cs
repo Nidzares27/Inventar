@@ -11,6 +11,14 @@ namespace Inventar.Models
         public string ProductNumber { get; set; }
         [StringLength(30)]
         public string Model { get; set; }
+        [Required]
+        [StringLength(100)]
+        [Display(Name = "Broader Category")]
+        public string BroaderCategory { get; set; } = string.Empty;
+        [Required]
+        [StringLength(100)]
+        [Display(Name = "Narrower Category")]
+        public string NarrowerCategory { get; set; } = string.Empty;
         [DisplayFormat(DataFormatString = "{0:dd-MM-yyyy HH:mm:ss}", ApplyFormatInEditMode = true)]
         public string? DateTime { get; set; }
         [Range(0, int.MaxValue)]
@@ -25,10 +33,14 @@ namespace Inventar.Models
         [Range(0, int.MaxValue)]
         public decimal Price { get; set; } /*double*/
         public bool PerM2 { get; set; }
+        public bool PoMjeri { get; set; }
+        public bool CreatedForDirectSale { get; set; }
+        [StringLength(6)]
+        public string? UnID { get; set; }
         public string? Description { get; set; }
         public bool Disabled { get; set; }
         // Storefront fields
-        public bool IsPublished { get; set; }
+        public bool IsPublished { get; set; } = true;
 
         [StringLength(160)]
         public string? Slug { get; set; }

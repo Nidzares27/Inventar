@@ -6,8 +6,11 @@ namespace Inventar.ViewModels.StorefrontAdmin
     {
         public WebOrder Order { get; set; } = null!;
         public IReadOnlyList<WebOrderItem> Items { get; set; } = Array.Empty<WebOrderItem>();
+        public IReadOnlyList<StorefrontOrderEditableLineViewModel> EditableItems { get; set; } = Array.Empty<StorefrontOrderEditableLineViewModel>();
         public IReadOnlyList<WebOrderStatusHistory> StatusHistory { get; set; } = Array.Empty<WebOrderStatusHistory>();
         public IReadOnlyList<InventoryReservation> Reservations { get; set; } = Array.Empty<InventoryReservation>();
+        public IReadOnlyList<PoMjeriOrderItemAdminViewModel> PoMjeriItems { get; set; } = Array.Empty<PoMjeriOrderItemAdminViewModel>();
+        public bool CanEditItems { get; set; }
         public WebOrderStatusUpdateViewModel StatusUpdate { get; set; } = new();
         public IReadOnlyList<string> AvailableOrderStatuses { get; set; } = Array.Empty<string>();
         public IReadOnlyList<string> AvailablePaymentStatuses { get; set; } = Array.Empty<string>();

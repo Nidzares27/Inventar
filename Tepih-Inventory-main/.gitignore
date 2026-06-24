@@ -1,5 +1,8 @@
-﻿################################################################################
+################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-
+Logs/*.txt
+publish-output/
+appsettings.Local.json
+appsettings.*.local.json

@@ -65,7 +65,7 @@
                 <td>@(item.PerM2 ? Math.Round((decimal)item.M2Total, 2) : "")</td>
                 <td>@item.Quantity</td>
                 <td>@item.Rabat</td>
-                <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price€</td>
+                <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)€</td>
                 <td>@Math.Round((item.PerM2 ?
                     item.Rabat != null || item.Rabat > 0 ? (item.Price * (decimal)item.M2Total) - (((decimal)item.Rabat /100) * (item.Price * (decimal)item.M2Total)) : item.Price * (decimal)item.M2Total
                     : item.Rabat != null || item.Rabat > 0 ? (item.Price * item.Quantity) - (((decimal)item.Rabat / 100) * (item.Price * item.Quantity)) : item.Price * item.Quantity)

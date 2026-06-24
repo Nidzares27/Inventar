@@ -32,7 +32,9 @@ namespace Inventar.Repository
 
         public async Task<IEnumerable<Tepih>> GetAllUndisabledAsync()
         {
-            return await _context.Tepisi.Where(i => i.Disabled == false).ToListAsync();
+            return await _context.Tepisi
+                .Where(i => i.Disabled == false && !i.CreatedForDirectSale)
+                .ToListAsync();
         }
 
         public async Task<Tepih> GetByIdAsync(int id)

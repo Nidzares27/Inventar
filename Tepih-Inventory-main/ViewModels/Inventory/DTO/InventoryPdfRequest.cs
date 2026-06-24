@@ -7,6 +7,7 @@
         public Dictionary<int, string> Filters { get; set; }
         public List<string> ColumnHeaders { get; set; }
         public int TotalQuantity { get; set; }
-        public decimal TotalM2 { get; set; }
+        public decimal? TotalM2 { get; set; }
+        public bool IncludeTotalM2 { get; set; } = true;
     }
 }

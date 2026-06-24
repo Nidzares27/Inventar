@@ -32,12 +32,14 @@ namespace Inventar.Data
                 entity.Property(x => x.OnlinePrice).HasColumnType("decimal(18,2)");
                 entity.Property(x => x.RowVersion).IsRowVersion();
                 entity.HasIndex(x => x.Slug).IsUnique().HasFilter("[Slug] IS NOT NULL");
+                entity.HasIndex(x => x.UnID).IsUnique().HasFilter("[UnID] IS NOT NULL");
             });
 
             builder.Entity<ProductImage>(entity =>
             {
                 entity.ToTable("ProductImages", "commerce");
                 entity.Property(x => x.CreatedUtc).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(x => x.MediaType).HasMaxLength(20).HasDefaultValue("image");
                 entity.HasIndex(x => new { x.TepihId, x.SortOrder });
                 entity.HasIndex(x => new { x.TepihId, x.IsPrimary });
                 entity.HasOne(x => x.Tepih)
@@ -95,10 +97,20 @@ namespace Inventar.Data
                     .WithMany(x => x.Reservations)
                     .HasForeignKey(x => x.WebOrderId)
                     .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(x => x.WebOrderItem)
+                    .WithMany(x => x.Reservations)
+                    .HasForeignKey(x => x.WebOrderItemId)
+                    .OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(x => x.Tepih)
                     .WithMany(x => x.InventoryReservations)
                     .HasForeignKey(x => x.TepihId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<Prodaja>(entity =>
+            {
+                entity.Property(x => x.Price).HasColumnType("decimal(18,4)");
+                entity.Property(x => x.DirectSaleOriginalTotal).HasColumnType("decimal(18,2)");
             });
         }
     }

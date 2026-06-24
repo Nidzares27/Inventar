@@ -1,0 +1,24 @@
+@media (min-width: 1500px) {
+    #newPassword {
+        width: 80%;
+    }
+
+    #rstBtn {
+        width: 20%;
+    }
+}
+@media (max-width: 1499px) {
+    #newPassword {
+        width: 25rem;
+    }
+
+    #rstBtn {
+        width: 10rem;
+    }
+}
+input {
+    border: 1.5px solid blueviolet !important;
+}
+#Nalozi thead tr:first-child th {
+    background-color: khaki; /* Change to any color you want */
+}

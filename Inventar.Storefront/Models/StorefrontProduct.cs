@@ -15,6 +15,12 @@ public class StorefrontProduct
     [StringLength(30)]
     public string Model { get; set; } = string.Empty;
 
+    [StringLength(100)]
+    public string BroaderCategory { get; set; } = string.Empty;
+
+    [StringLength(100)]
+    public string NarrowerCategory { get; set; } = string.Empty;
+
     [StringLength(40)]
     public string Color { get; set; } = string.Empty;
 
@@ -25,6 +31,10 @@ public class StorefrontProduct
     public decimal Price { get; set; }
     public decimal? OnlinePrice { get; set; }
     public bool PerM2 { get; set; }
+    public bool PoMjeri { get; set; }
+
+    [StringLength(6)]
+    public string? UnID { get; set; }
     public string? Description { get; set; }
     public string? ShortDescription { get; set; }
     public string? SeoTitle { get; set; }

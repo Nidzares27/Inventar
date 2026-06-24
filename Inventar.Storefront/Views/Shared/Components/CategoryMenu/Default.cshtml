@@ -1,0 +1,66 @@
+@model Inventar.Storefront.ViewModels.Layout.CategoryMenuViewModel
+
+@if (Model.CategoryGroups.Count == 0)
+{
+    <a asp-controller="Catalog" asp-action="Index">Kategorije</a>
+}
+else
+{
+    <div class="category-menu @(Model.IsMobile ? "category-menu--mobile" : null)" data-dropdown-root>
+        <button class="category-menu__toggle" type="button" data-dropdown-toggle aria-expanded="false">
+            <span class="category-menu__toggle-label">Kategorije</span>
+            <span class="category-menu__caret" aria-hidden="true"></span>
+        </button>
+
+        <div class="category-menu__panel" data-dropdown-panel hidden>
+            <a class="category-menu__all"
+               asp-controller="Catalog"
+               asp-action="Index">
+                Sve kategorije
+            </a>
+
+            @foreach (var group in Model.CategoryGroups)
+            {
+                var hasNarrowerCategories = group.NarrowerCategories.Count > 0;
+
+                <div class="category-menu__group" data-submenu-group>
+                    <div class="category-menu__group-header">
+                        <a class="category-menu__broader"
+                           asp-controller="Catalog"
+                           asp-action="Index"
+                           asp-route-broaderCategory="@group.BroaderCategory">
+                            @group.BroaderCategory
+                        </a>
+
+                        @if (hasNarrowerCategories)
+                        {
+                            <button class="category-menu__expand"
+                                    type="button"
+                                    data-submenu-toggle
+                                    aria-expanded="false"
+                                    aria-label="Prikazi podkategorije za @group.BroaderCategory">
+                                <span class="category-menu__caret category-menu__caret--small" aria-hidden="true"></span>
+                            </button>
+                        }
+                    </div>
+
+                    @if (hasNarrowerCategories)
+                    {
+                        <div class="category-menu__submenu" data-submenu hidden>
+                            @foreach (var narrowerCategory in group.NarrowerCategories)
+                            {
+                                <a class="category-menu__narrower"
+                                   asp-controller="Catalog"
+                                   asp-action="Index"
+                                   asp-route-broaderCategory="@group.BroaderCategory"
+                                   asp-route-narrowerCategory="@narrowerCategory">
+                                    @narrowerCategory
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}

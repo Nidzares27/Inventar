@@ -1,0 +1,4 @@
+Logs/*.txt
+publish-output/
+appsettings.Local.json
+appsettings.*.local.json

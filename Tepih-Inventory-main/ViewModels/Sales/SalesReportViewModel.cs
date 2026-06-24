@@ -8,6 +8,7 @@ namespace Inventar.ViewModels.Sales
         public string ProductNumber { get; set; }
         public string Name { get; set; }
         public string Model { get; set; }
+        public bool PoMjeri { get; set; }
         public int? Length { get; set; }
         public int? Width { get; set; }
         public string? Size { get; set; }

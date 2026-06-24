@@ -1,0 +1,54 @@
+@model Inventar.Storefront.ViewModels.Account.AccountLoginViewModel
+@{
+    ViewData["Title"] = "Prijava";
+}
+
+<section class="page-head">
+    <span class="eyebrow">Moj nalog</span>
+    <h1>Prijavite se putem emaila</h1>
+    <p>Unesite email adresu i poslaćemo vam jednokratni kod za bezbjednu prijavu.</p>
+</section>
+
+<section class="account-auth-card">
+    <form asp-controller="Account" asp-action="Login" method="post" class="checkout-form">
+        <div asp-validation-summary="ModelOnly" class="flash flash--error"></div>
+        <input asp-for="ReturnUrl" type="hidden" />
+
+        <div class="field">
+            <label asp-for="Email"></label>
+            <input asp-for="Email" />
+            <span asp-validation-for="Email" class="field__error"></span>
+        </div>
+
+        <label class="account-checkbox">
+            <input asp-for="RememberMe" />
+            <span>Zapamti me na ovom uredjaju.</span>
+        </label>
+
+        <button type="submit" class="button button--full">Pošalji kod za prijavu</button>
+    </form>
+
+    @if (Model.IsGoogleLoginAvailable)
+    {
+        <div class="account-auth-divider" aria-hidden="true">
+            <span>Ili</span>
+        </div>
+
+        <form asp-controller="Account" asp-action="GoogleLogin" method="post" class="account-oauth-form">
+            @Html.AntiForgeryToken()
+            <input asp-for="ReturnUrl" type="hidden" />
+            <button type="submit" class="button button--ghost button--full account-google-button">
+                <span class="account-google-button__mark">G</span>
+                <span>Nastavi uz Google</span>
+            </button>
+        </form>
+
+@*         <p class="account-auth-note">
+            Nakon Google prijave, odvescemo korisnika na profil ukoliko treba da dopuni podatke za dostavu.
+        </p> *@
+    }
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,4 +1,4 @@
-@using Inventar.ViewModels.Inventory
+﻿@using Inventar.ViewModels.Inventory
 @model EditTepihViewModel
 @{
     ViewData["Title"] = "Edit";
@@ -13,16 +13,16 @@
     <input type="hidden" asp-for="Id" />
     <input type="hidden" asp-for="Disabled" />
 
-    <div class="col-sm-6">
-        <label asp-for="Name" class="control-label">@Inventar.Resources.Resource.Name</label>
-        <input asp-for="Name" class="form-control" readonly />
-        <span asp-validation-for="Name" class="text-danger"></span>
-    </div>
-
     <div class="col-sm-3">
         <label asp-for="ProductNumber" class="control-label">@Inventar.Resources.Resource.ProductNumber</label>
         <input asp-for="ProductNumber" class="form-control" readonly />
         <span asp-validation-for="ProductNumber" class="text-danger"></span>
+    </div>
+
+    <div class="col-sm-6">
+        <label asp-for="Name" class="control-label">@Inventar.Resources.Resource.Name</label>
+        <input asp-for="Name" class="form-control" readonly />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="col-sm-3">
@@ -32,52 +32,93 @@
     </div>
 
     <div class="col-sm-4">
-        <label asp-for="Color" class="control-label">@Inventar.Resources.Resource.Color</label>
-        <input asp-for="Color" class="form-control" readonly />
-        <span asp-validation-for="Color" class="text-danger"></span>
+        <label asp-for="BroaderCategory" class="control-label">@Inventar.Resources.Resource.BroaderCategory</label>
+        <input asp-for="BroaderCategory" class="form-control" />
+        <span asp-validation-for="BroaderCategory" class="text-danger"></span>
     </div>
 
     <div class="col-sm-4">
+        <label asp-for="NarrowerCategory" class="control-label">@Inventar.Resources.Resource.NarrowerCategory</label>
+        <input asp-for="NarrowerCategory" class="form-control" />
+        <span asp-validation-for="NarrowerCategory" class="text-danger"></span>
+    </div>
+
+    <div class="col-sm-4">
+        <label asp-for="UnID" class="control-label">UnID</label>
+        <input asp-for="UnID" class="form-control" readonly />
+    </div>
+
+    <div class="col-sm-6">
         <label asp-for="DateTime" class="control-label">@Inventar.Resources.Resource.DateTime</label>
         <input asp-for="DateTime" class="form-control" readonly />
         <span asp-validation-for="DateTime" class="text-danger"></span>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-sm-6">
         <label asp-for="QRCodeUrl" class="control-label">QR Code Url</label>
         <input asp-for="QRCodeUrl" class="form-control" readonly />
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-sm-6">
+        <label asp-for="Color" class="control-label">@Inventar.Resources.Resource.Color</label>
+        <input asp-for="Color" class="form-control" readonly />
+        <span asp-validation-for="Color" class="text-danger"></span>
+    </div>
+
+    <div class="col-sm-3">
         <label asp-for="Quantity" class="control-label">@Inventar.Resources.Resource.Quantity</label>
-        <input asp-for="Quantity" class="form-control" />
+        <input asp-for="Quantity" class="form-control" readonly="@Model.PoMjeri" />
         <span asp-validation-for="Quantity" class="text-danger"></span>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-sm-3">
         <label asp-for="Price" class="control-label">@Inventar.Resources.Resource.Price</label>
-        <input asp-for="Price" step="any" class="form-control" />
+        <input asp-for="Price" step="0.01" class="form-control" value="@Model.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" />
         <span asp-validation-for="Price" class="text-danger"></span>
     </div>
 
-    <div class="col-sm-4">
-        <label asp-for="PerM2" class="control-label">@Inventar.Resources.Resource.PerM2</label>
-        <div class="checkbox-field">
-            <input asp-for="PerM2" />
-        </div>
+    <div class="col-sm-3">
+        <label asp-for="Width" class="control-label">@Inventar.Resources.Resource.Width</label>
+        <input asp-for="Width" step="any" class="form-control" readonly />
+        <span asp-validation-for="Width" class="text-danger"></span>
     </div>
 
-    <div class="col-sm-6">
+    <div class="col-sm-3">
         <label asp-for="Length" class="control-label">@Inventar.Resources.Resource.Length</label>
         <input asp-for="Length" step="any" class="form-control" readonly />
         <span asp-validation-for="Length" class="text-danger"></span>
     </div>
 
-    <div class="col-sm-6">
-        <label asp-for="Width" class="control-label">@Inventar.Resources.Resource.Width</label>
-        <input asp-for="Width" step="any" class="form-control" readonly />
-        <span asp-validation-for="Width" class="text-danger"></span>
+    <div class="col-sm-3">
+        <label asp-for="RemainingSize" class="control-label">Remaining size</label>
+        <input asp-for="RemainingSize" class="form-control" readonly />
     </div>
+
+    <div class="col-sm-1">
+        <label asp-for="PerM2" class="control-label">@Inventar.Resources.Resource.PerM2</label>
+        <div class="checkbox-field">
+            <input asp-for="PerM2" disabled="@Model.PoMjeri" />
+        </div>
+    </div>
+
+    <div class="col-sm-2">
+        <label asp-for="PoMjeri" class="control-label">Po mjeri</label>
+        <div class="checkbox-field">
+            <input asp-for="PoMjeri" disabled />
+        </div>
+    </div>
+
+@*     @if (Model.PoMjeri)
+    {
+        <div class="col-sm-6">
+            <label asp-for="UnID" class="control-label">UnID</label>
+            <input asp-for="UnID" class="form-control" readonly />
+        </div>
+        <div class="col-sm-6">
+            <label asp-for="RemainingSize" class="control-label">Remaining size</label>
+            <input asp-for="RemainingSize" class="form-control" readonly />
+        </div>
+    } *@
 
     <div class="col-12">
         <label asp-for="Description" class="control-label">@Inventar.Resources.Resource.Description</label>

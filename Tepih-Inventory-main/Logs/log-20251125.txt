@@ -1,6 +1,0 @@
-2025-11-25 14:12:58.145 +01:00 [ERR] [AdminAdmin] PDF generation failed for purchase: TANJA SAVIĆ
-System.InvalidOperationException: Nullable object must have a value.
-   at System.Nullable`1.get_Value()
-   at Inventar.Controllers.PdfController.<>c.<Faktura>b__19_1(IGrouping`2 g) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\PdfController.cs:line 1650
-   at System.Linq.Enumerable.SelectEnumerableIterator`2.MoveNext()
-   at Inventar.Controllers.PdfController.Faktura(String custName, String vrijemeProdaje, List`1 model) in C:\Users\DeskPC\Desktop\Tepih-Inventory-main\Tepih-Inventory-main\Controllers\PdfController.cs:line 1709

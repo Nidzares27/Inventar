@@ -14,6 +14,7 @@ namespace Inventar.ViewModels.Shared
         public int? Length { get; set; }
         [Range(1, int.MaxValue)]
         public int? Width { get; set; }
+        public bool PoMjeri { get; set; }
         public decimal? M2PerUnit { get; set; }
         public decimal? M2Total { get; set; }
         public string Color { get; set; }
@@ -22,6 +23,7 @@ namespace Inventar.ViewModels.Shared
         public decimal Price { get; set; }
         public bool PerM2 { get; set; }
         public decimal PriceTotal { get; set; }
+        public bool IsDirectSaleProduct { get; set; }
         [Range(0, int.MaxValue)]
         public int Quantity { get; set; }
         [Display(Name = "Customer Full Name")]

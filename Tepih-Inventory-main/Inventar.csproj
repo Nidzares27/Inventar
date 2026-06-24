@@ -4,27 +4,51 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>inventar-admin-fb19ccfb-f63b-4331-8589-a48abf8f4a6c</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="obj\**\*.cs" />
+    <Compile Remove="obj-security\**\*.cs" />
+    <Compile Remove="obj-codex\**\*.cs" />
+    <Compile Remove="codex-build\**\*.cs" />
+    <Compile Remove="codex-build-*\**\*.cs" />
+    <EmbeddedResource Remove="obj\**" />
+    <EmbeddedResource Remove="obj-security\**" />
+    <EmbeddedResource Remove="obj-codex\**" />
+    <EmbeddedResource Remove="codex-build\**" />
+    <EmbeddedResource Remove="codex-build-*\**" />
+    <Content Remove="obj\**" />
+    <Content Remove="obj-security\**" />
+    <Content Remove="obj-codex\**" />
+    <Content Remove="codex-build\**" />
+    <Content Remove="codex-build-*\**" />
+    <None Remove="obj\**" />
+    <None Remove="obj-security\**" />
+    <None Remove="obj-codex\**" />
+    <None Remove="codex-build\**" />
+    <None Remove="codex-build-*\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="CloudinaryDotNet" Version="1.28.0" />
-    <PackageReference Include="itext" Version="9.5.0" />
-    <PackageReference Include="itext.bouncy-castle-adapter" Version="9.5.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.5" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5">
+    <PackageReference Include="CloudinaryDotNet" Version="1.29.2" />
+    <PackageReference Include="itext" Version="9.6.0" />
+    <PackageReference Include="itext.bouncy-castle-adapter" Version="9.6.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9" />
     <PackageReference Include="SendGrid" Version="9.29.3" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Enrichers.AspnetcoreHttpcontext" Version="1.1.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.5" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.9" />
     <PackageReference Include="ZXing.Net" Version="0.16.11" />
   </ItemGroup>
 

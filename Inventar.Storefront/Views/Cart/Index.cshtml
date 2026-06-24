@@ -17,11 +17,13 @@
 }
 else
 {
-    <section class="cart-layout">
+    <section class="cart-layout" data-cart-page>
         <div class="cart-lines">
+            <div class="flash flash--error cart-feedback" data-cart-feedback hidden></div>
+
             @foreach (var line in Model.Lines)
             {
-                <article class="cart-line">
+                <article class="cart-line" data-cart-line data-line-id="@line.LineId">
                     @if (!string.IsNullOrWhiteSpace(line.ImageUrl))
                     {
                         <img class="cart-line__image" src="@line.ImageUrl" alt="@line.Name" />
@@ -32,34 +34,66 @@ else
                     }
 
                     <div class="cart-line__content">
-                        <span class="eyebrow">@line.Model</span>
-                        <h2><a asp-controller="Catalog" asp-action="Details">@line.Name</a></h2>
-@*                         <h2><a asp-controller="Catalog" asp-action="Details" asp-route-slug="@line.Slug">@line.Name</a></h2>
- *@                        <p>@if (!string.IsNullOrWhiteSpace(line.SizeLabel)) { <span>@line.SizeLabel</span> } <span>• @line.Color</span></p>
+                        <h2>
+                            <a asp-controller="Catalog" asp-action="Details" asp-route-slug="@line.Slug">@line.ShortDescription</a>
+                        </h2>
+                        <p>
+                            @if (!string.IsNullOrWhiteSpace(line.SizeLabel))
+                            {
+                                <span>@line.SizeLabel</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(line.Color))
+                            {
+                                <span> - @line.Color</span>
+                            }
+                        </p>
                         <p class="cart-line__price">@line.UnitPrice.ToString("0.00") € po kom.</p>
 
-                        @if (line.HasAvailabilityIssue)
-                        {
-                            <p class="cart-line__warning">Tražena količina je veća od trenutno dostupne (@line.AvailableQuantity).</p>
-                        }
-
                         <div class="cart-line__actions">
-                            <form asp-controller="Cart" asp-action="Update" method="post" class="cart-line__quantity-form">
+                            <form asp-controller="Cart"
+                                  asp-action="Update"
+                                  method="post"
+                                  class="cart-line__quantity-form"
+                                  data-cart-line-form
+                                  data-product-id="@line.ProductId">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="productId" value="@line.ProductId" />
-                                <input type="number" name="quantity" min="0" value="@line.Quantity" />
-                                <button type="submit" class="button button--secondary">Ažuriraj</button>
+                                <input type="hidden" name="lineId" value="@line.LineId" />
+
+                                <div class="cart-line__quantity-stepper">
+                                    <button type="button"
+                                            class="cart-line__quantity-button"
+                                            data-cart-decrement
+                                            aria-label="Smanji količinu">
+                                        -
+                                    </button>
+
+                                    <input type="number"
+                                           name="quantity"
+                                           min="1"
+                                           max="@line.MaxOrderQuantity"
+                                           value="@line.Quantity"
+                                           inputmode="numeric"
+                                           data-cart-quantity-input />
+
+                                    <button type="button"
+                                            class="cart-line__quantity-button"
+                                            data-cart-increment
+                                            aria-label="Povećaj kolicinu">
+                                        +
+                                    </button>
+                                </div>
                             </form>
 
                             <form asp-controller="Cart" asp-action="Remove" method="post">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="productId" value="@line.ProductId" />
+                                <input type="hidden" name="lineId" value="@line.LineId" />
                                 <button type="submit" class="button button--ghost">Ukloni</button>
                             </form>
                         </div>
                     </div>
 
-                    <div class="cart-line__total">@line.LineTotal.ToString("0.00") €</div>
+                    <div class="cart-line__total" data-cart-line-total>@line.LineTotal.ToString("0.00") €</div>
                 </article>
             }
         </div>
@@ -68,11 +102,11 @@ else
             <span class="eyebrow">Sažetak</span>
             <div class="summary-card__row">
                 <span>Ukupno artikala</span>
-                <strong>@Model.TotalItems</strong>
+                <strong data-cart-total-items>@Model.TotalItems</strong>
             </div>
             <div class="summary-card__row">
                 <span>Iznos</span>
-                <strong>@Model.Subtotal.ToString("0.00") €</strong>
+                <strong data-cart-subtotal>@Model.Subtotal.ToString("0.00") €</strong>
             </div>
 
             @if (Model.HasAvailabilityIssues)
@@ -80,7 +114,7 @@ else
                 <p class="flash flash--error">Prije nastavka korigujte količine koje prelaze trenutno dostupno stanje.</p>
             }
 
-            <a class="button button--full" asp-controller="Checkout" asp-action="Index">Nastavi na narudžbu</a>
+            <a class="button button--full" asp-controller="Checkout" asp-action="Index">Nastavi na narudžbinu</a>
         </aside>
     </section>
 }

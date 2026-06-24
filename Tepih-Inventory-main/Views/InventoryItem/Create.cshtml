@@ -1,7 +1,25 @@
 ﻿@model Tepih
+@{
+    var createSuccessMessage = TempData["CreateSuccessMessage"] as string;
+    var createQrPdfUrl = TempData["CreateQrPdfUrl"] as string;
+}
 
 <h2>@Inventar.Resources.Resource.CreateProduct</h2>
-<h6 style="color:green">@ViewBag.OldProductUpdate</h6>
+@if (!string.IsNullOrWhiteSpace(createSuccessMessage))
+{
+    <div id="createSuccessAlert"
+         class="alert alert-success alert-dismissible fade show d-flex flex-wrap align-items-center gap-2"
+         role="alert"
+         data-auto-download-url="@createQrPdfUrl">
+        <span>@createSuccessMessage</span>
+@*         @if (!string.IsNullOrWhiteSpace(createQrPdfUrl))
+        {
+            <span class="small text-success-emphasis">QR PDF preuzimanje je pokrenuto automatski.</span>
+            <a class="btn btn-outline-success btn-sm" href="@createQrPdfUrl" target="_blank" rel="noopener">Preuzmi QR PDF</a>
+        } *@
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 <small style="color:red">@Inventar.Resources.Resource.MandatoryFields</small>
 @if (TempData["MissingLengthWidth"] != null)
 {
@@ -28,6 +46,18 @@
         <input type="text" class="form-control" asp-for="Model" />
     </div>
     <div class="col-sm-6">
+@*         <label asp-for="BroaderCategory"></label><span style="color:red">*</span>
+ *@        <label for="BroaderCategory">@Inventar.Resources.Resource.BroaderCategory<span style="color:red">*</span></label>
+        <input type="text" class="form-control" asp-for="BroaderCategory" />
+        <span asp-validation-for="BroaderCategory" class="text-danger"></span>
+    </div>
+    <div class="col-sm-6">
+@*         <label asp-for="NarrowerCategory"></label><span style="color:red">*</span>
+ *@        <label for="NarrowerCategory">@Inventar.Resources.Resource.NarrowerCategory<span style="color:red">*</span></label>
+        <input type="text" class="form-control" asp-for="NarrowerCategory" />
+        <span asp-validation-for="NarrowerCategory" class="text-danger"></span>
+    </div>
+    <div class="col-sm-6">
         <label for="Color">@Inventar.Resources.Resource.Color<span style="color:red">*</span></label>
         <input type="text" class="form-control" asp-for="Color" />
     </div>
@@ -45,7 +75,7 @@
     </div>
     <div class="col-sm-6">
         <label for="Price">@Inventar.Resources.Resource.Price<span style="color:red">*</span></label>
-        <input type="number" step="any" class="form-control" asp-for="Price" />
+        <input type="number" step="0.01" class="form-control" asp-for="Price" value="@(Model.Price == 0 ? string.Empty : Model.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))" />
     </div>
     <div class="col-sm-6">
         <label for="Description">@Inventar.Resources.Resource.Description</label>
@@ -55,6 +85,12 @@
         <div class="form-check">
             <input type="checkbox" id="PerM2" asp-for="PerM2" style="vertical-align:middle" />
             <label for="PerM2" style="vertical-align:middle; margin-bottom:0">@Inventar.Resources.Resource.PerM2</label>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="form-check">
+            <input type="checkbox" id="PoMjeri" asp-for="PoMjeri" style="vertical-align:middle" />
+            <label for="PoMjeri" style="vertical-align:middle; margin-bottom:0">@Inventar.Resources.Resource.PerMeasure</label>
         </div>
     </div>
     <div class="col-12">
@@ -75,6 +111,35 @@
             document.getElementById("loading-spinner-prodCreate").style.display = "none";
         }, 3000);
     });
+
+    function syncPoMjeriWithPerM2() {
+        const poMjeriCheckbox = document.getElementById("PoMjeri");
+        const perM2Checkbox = document.getElementById("PerM2");
+
+        if (poMjeriCheckbox.checked) {
+            perM2Checkbox.checked = true;
+        }
+    }
+
+    document.getElementById("PoMjeri").addEventListener("change", syncPoMjeriWithPerM2);
+    document.getElementById("PerM2").addEventListener("change", function () {
+        if (document.getElementById("PoMjeri").checked) {
+            this.checked = true;
+        }
+    });
+
+    syncPoMjeriWithPerM2();
+
+    const createSuccessAlert = document.getElementById("createSuccessAlert");
+    const autoDownloadUrl = createSuccessAlert?.dataset.autoDownloadUrl;
+
+    if (autoDownloadUrl) {
+        const downloadFrame = document.createElement("iframe");
+        downloadFrame.style.display = "none";
+        downloadFrame.src = autoDownloadUrl;
+        downloadFrame.setAttribute("aria-hidden", "true");
+        document.body.appendChild(downloadFrame);
+    }
 </script>
 @* <script>
     function toggleDimensions() {

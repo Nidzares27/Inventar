@@ -1,0 +1,292 @@
+﻿@using System.Text.Json
+@model Inventar.ViewModels.Inventory.GroupedQrCodeDetailsViewModel
+@{
+    var isAdminLike = User.IsInRole("admin") || User.IsInRole("superadmin");
+    var isEmployee = User.IsInRole("employee");
+    var isUser = User.IsInRole("user");
+    var isCompactRole = isEmployee || isUser;
+    var canPrintPdf = User.Identity?.IsAuthenticated == true && (isAdminLike || isEmployee || isUser);
+
+    const int rowNumberColumnIndex = 0;
+    const int actionColumnIndex = 11;
+    const int quantityColumnIndex = 9;
+    const int m2TotalColumnIndex = 10;
+
+    var columnVisibility = new List<bool>
+    {
+        isAdminLike,    // #
+        false,          // Id
+        isAdminLike,    // ProductNumber
+        true,           // Name
+        isAdminLike,    // Price
+        true,           // Model
+        true,           // Color
+        true,           // Size
+        !isCompactRole, // m2
+        true,           // Quantity
+        !isCompactRole, // M2Total
+        isAdminLike     // Actions
+    };
+
+    var visibilityJson = JsonSerializer.Serialize(
+        columnVisibility.Select((isVisible, index) => new { targets = index, visible = isVisible }));
+}
+
+<div class="inventory-page-header">
+    <h2>@Inventar.Resources.Resource.QRCodesGrouped - @Model.ProductNumber / @Model.Name / @Model.Model / @Model.Color</h2>
+</div>
+
+<table id="TepisiTable"
+       class="table stripe tabela inventory-table @(isCompactRole ? "inventory-table--compact" : string.Empty)"
+       style="font-weight:500">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Id</th>
+            <th>@Inventar.Resources.Resource.ProductNumber</th>
+            <th>@Inventar.Resources.Resource.Name</th>
+            <th>@Inventar.Resources.Resource.Price</th>
+            <th>Model</th>
+            <th>@Inventar.Resources.Resource.Color</th>
+            <th>@Inventar.Resources.Resource.Size</th>
+            <th>m2</th>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <th>@Inventar.Resources.Resource.M2Total</th>
+            <th></th>
+        </tr>
+        <tr class="filters">
+            <th><input style="width:2rem" disabled /></th>
+            <th><input style="width:5rem" placeholder="Id" /></th>
+            <th><input style="width:5rem" placeholder="ProductNumber" /></th>
+            <th><input style="width:7.5rem" placeholder="Name" /></th>
+            <th><input style="width:5rem" placeholder="Price" /></th>
+            <th><input style="width:5rem" placeholder="Model" /></th>
+            <th><input style="width:7.5rem" placeholder="Color" /></th>
+            <th><input style="width:5rem" placeholder="Size" /></th>
+            <th><input style="width:5rem" placeholder="m2" /></th>
+            <th><input style="width:5rem" placeholder="Qty" /></th>
+            <th><input style="width:5rem" placeholder="M2Total" /></th>
+            <th><input style="width:5rem" disabled /></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Products)
+        {
+            var itemM2 = item.PerM2 && item.Length.HasValue && item.Width.HasValue
+                ? Math.Round((decimal)(item.Length.Value * item.Width.Value) / 10000, 2)
+                : (decimal?)null;
+            var itemM2Total = itemM2.HasValue ? Math.Round(itemM2.Value * item.Quantity, 2) : (decimal?)null;
+            var rowClass = item.PoMjeri
+                ? "inventory-row--po-mjeri"
+                : item.Quantity < 0
+                    ? "inventory-row--negative"
+                    : item.Quantity == 0
+                        ? "inventory-row--empty"
+                        : item.Quantity <= 2
+                            ? "inventory-row--low"
+                            : "inventory-row--healthy";
+
+            <tr class="inventory-row @rowClass">
+                <td>
+                    @if (isAdminLike)
+                    {
+                        <a asp-controller="InventoryItem" asp-action="Details" asp-route-id="@item.Id"></a>
+                    }
+                </td>
+
+                <td>@item.Id</td>
+
+                <td>@item.ProductNumber</td>
+
+                <td>
+                    @if (isEmployee)
+                    {
+                        <a asp-controller="InventoryItem" asp-action="Details" asp-route-id="@item.Id">@item.Name</a>
+                    }
+                    else
+                    {
+                        @item.Name
+                    }
+                </td>
+
+                <td style="color:@(item.PerM2 ? "green" : "black")">
+                    @if (isAdminLike)
+                    {
+                        @($"{item.Price:0.00} €")
+                    }
+                </td>
+
+                <td>@item.Model</td>
+                <td>@item.Color</td>
+                <td>@((item.Width != null && item.Length != null) ? $"{item.Width}X{item.Length}" : "")</td>
+                <td>@(itemM2?.ToString("0.##") ?? "")</td>
+                <td>@item.Quantity</td>
+                <td>@(itemM2Total?.ToString("0.##") ?? "")</td>
+
+                <td>
+                    @if (isAdminLike)
+                    {
+                        <a asp-controller="InventoryItem" asp-action="Edit" asp-route-id="@item.Id">@Inventar.Resources.Resource.Edit</a>
+                        <a asp-controller="InventoryItem" asp-action="Delete" asp-route-id="@item.Id">@Inventar.Resources.Resource.Delete</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="inventory-summary-bar">
+    <div class="inventory-summary-bar__totals">
+        <span>@Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span></span>
+        <span>|</span>
+        <span>@Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span></span>
+    </div>
+    <div class="inventory-legend" aria-label="Inventory row colors legend">
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--po-mjeri"></span>@Inventar.Resources.Resource.PerMeasureProduct</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--negative"></span>@Inventar.Resources.Resource.Quantity < 0</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--empty"></span>@Inventar.Resources.Resource.Quantity 0</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--low"></span>@Inventar.Resources.Resource.Quantity 1-2</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--healthy"></span>@Inventar.Resources.Resource.Quantity > 2</span>
+    </div>
+</div>
+
+<a class="btn btn-secondary" asp-controller="InventoryItem" asp-action="QRCodesGrouped">@Inventar.Resources.Resource.BackToList</a>
+
+@if (canPrintPdf)
+{
+    <button id="downloadPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#TepisiTable').DataTable({
+                paging: true,
+                pageLength: 25,
+                order: [[1, "desc"]],
+                orderCellsTop: true,
+                fixedHeader: true,
+                columnDefs: @Html.Raw(visibilityJson)
+            });
+
+            $('#TepisiTable thead tr:eq(1) th').each(function (index) {
+                var input = $('input', this);
+                if (input.length === 0) {
+                    return;
+                }
+
+                input.on('keyup change', function () {
+                    if (table.column(index).visible()) {
+                        table.column(index).search(this.value).draw();
+                    }
+                });
+            });
+
+            function updateTotals() {
+                var totalQuantity = 0;
+                var totalM2 = 0;
+
+                table.rows({ filter: 'applied' }).data().each(function (value) {
+                    totalQuantity += parseFloat(value[@quantityColumnIndex]) || 0;
+                    totalM2 += parseFloat(value[@m2TotalColumnIndex]) || 0;
+                });
+
+                $('#totalQuantity').text(totalQuantity);
+                $('#totalM2').text(totalM2.toFixed(2));
+            }
+            table.on('draw', function () {
+                updateTotals();
+
+                let counter = 1;
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    var rowNumber = counter++;
+                    var firstCell = $('td:eq(@rowNumberColumnIndex)', this.node());
+                    var link = firstCell.find('a');
+
+                    if (link.length) {
+                        var href = link.attr('href');
+                        table.cell(this.index(), @rowNumberColumnIndex).data('<a href="' + href + '">' + rowNumber + '</a>');
+                    } else {
+                        table.cell(this.index(), @rowNumberColumnIndex).data(rowNumber);
+                    }
+                });
+            });
+
+            updateTotals();
+            table.draw();
+        });
+    </script>
+
+    @if (canPrintPdf)
+    {
+        <script>
+            $(document).ready(function () {
+                $('#downloadPDF').on('click', function () {
+                    var table = $('#TepisiTable').DataTable();
+                    var visibleColumnIndexes = table
+                        .columns()
+                        .indexes()
+                        .toArray()
+                        .filter(function (columnIndex) {
+                            return table.column(columnIndex).visible();
+                        })
+                        .filter(function (columnIndex) { return columnIndex !== @actionColumnIndex; });
+
+                    function getPlainText(value) {
+                        return $('<div>').html(value ?? '').text().trim();
+                    }
+
+                    var data = [];
+
+                    table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                        var rowDataSource = this.data();
+                        var rowData = [];
+
+                        visibleColumnIndexes.forEach(function (columnIndex) {
+                            rowData.push(getPlainText(rowDataSource[columnIndex]));
+                        });
+
+                        data.push(rowData);
+                    });
+
+                    var filters = {};
+                    visibleColumnIndexes.forEach(function (columnIndex, pdfIndex) {
+                        filters[pdfIndex] = table.column(columnIndex).search() || "";
+                    });
+
+                    var heading = $('h2').text();
+                    var columnHeaders = visibleColumnIndexes.map(function (columnIndex) {
+                        return getPlainText($(table.column(columnIndex).header()).text());
+                    });
+
+                    var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
+                    var totalM2 = parseFloat($('#totalM2').text()) || 0;
+
+                    $.ajax({
+                        url: '@Url.Action("GenerateInventoryPDF", "Pdf")',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            heading: heading,
+                            data: data,
+                            filters: filters,
+                            columnHeaders: columnHeaders,
+                            totalQuantity: totalQuantity,
+                            totalM2: totalM2,
+                            includeTotalM2: true
+                        }),
+                        xhrFields: {
+                            responseType: 'blob'
+                        },
+                        success: function (blob) {
+                            var link = document.createElement('a');
+                            link.href = window.URL.createObjectURL(blob);
+                            link.download = 'Inventar.pdf';
+                            link.click();
+                        }
+                    });
+                });
+            });
+        </script>
+    }
+}

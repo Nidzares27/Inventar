@@ -1,7 +1,17 @@
 @model Inventar.Storefront.ViewModels.Catalog.ProductCardViewModel
+@{
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+}
 
 <article class="product-card">
     <a class="product-card__image-link" asp-controller="Catalog" asp-action="Details" asp-route-slug="@Model.Slug">
+        @if (Model.ShowSoldOutOverlay)
+        {
+            <span class="product-image-overlay product-image-overlay--card">
+                @Inventar.Storefront.Services.StorefrontStockRules.SoldOutOverlayText
+            </span>
+        }
+
         @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
         {
             <img class="product-card__image" src="@Model.ImageUrl" alt="@Model.Name" loading="lazy" />
@@ -13,24 +23,6 @@
     </a>
 
     <div class="product-card__body">
-        <span class="product-card__collection">@Model.Model</span>
-        <h3 class="product-card__title">
-            <a asp-controller="Catalog" asp-action="Details">@Model.Name</a>
-        </h3>
-@*         <span class="product-card__collection">@Model.CollectionName</span>
-        <h3 class="product-card__title">
-            <a asp-controller="Catalog" asp-action="Details" asp-route-slug="@Model.Slug">@Model.Name</a>
-        </h3> *@
-        <p class="product-card__meta">
-            @if (!string.IsNullOrWhiteSpace(Model.SizeLabel))
-            {
-                <span>@Model.SizeLabel</span>
-            }
-            @if (!string.IsNullOrWhiteSpace(Model.Color))
-            {
-                <span>@Model.Color</span>
-            }
-        </p>
         <p class="product-card__description">@Model.Description</p>
 
         <div class="product-card__footer">
@@ -42,15 +34,33 @@
                 }
             </div>
 
-            <form asp-controller="Cart" asp-action="Add" method="post" class="product-card__form">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="productId" value="@Model.Id" />
-                <input type="hidden" name="quantity" value="1" />
-                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
-                <button type="submit" class="button button--secondary" @(Model.AvailableQuantity <= 0 ? "disabled" : null)>
-                    @(Model.AvailableQuantity > 0 ? "Dodaj u korpu" : "Trenutno nije dostupno")
+            @if (Model.HasSelectableOptions)
+            {
+                <a class="button button--secondary product-card__cta product-card__cta--options"
+                   asp-controller="Catalog"
+                   asp-action="Details"
+                   asp-route-slug="@Model.Slug">
+                    Izaberite opcije
+                </a>
+            }
+            else if (Model.CanAddToCart)
+            {
+                <form asp-controller="Cart" asp-action="Add" method="post" class="product-card__cta-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@Model.DirectAddProductId" />
+                    <input type="hidden" name="quantity" value="1" />
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit" class="button product-card__cta product-card__cta--add">
+                        Dodaj u korpu
+                    </button>
+                </form>
+            }
+            else
+            {
+                <button type="button" class="button product-card__cta product-card__cta--sold-out" disabled>
+                    @Inventar.Storefront.Services.StorefrontStockRules.SoldOutStatusText
                 </button>
-            </form>
+            }
         </div>
     </div>
 </article>

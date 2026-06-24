@@ -1,4 +1,5 @@
 ﻿@using Inventar.ViewModels.Inventory
+@using System.Globalization
 @model ScannedProductsOverviewViewModel
 
 <h2>@Inventar.Resources.Resource.BuyerInfo</h2>
@@ -56,12 +57,9 @@
 <table id="productTable" class="table table-hover table-striped">
     <thead>
         <tr>
-            <th scope="col">ID</th>
-            <th scope="col">@Inventar.Resources.Resource.ProductNumber</th>
             <th scope="col">@Inventar.Resources.Resource.Name</th>
             <th scope="col">Model</th>
             <th scope="col">@Inventar.Resources.Resource.Size</th>
-            <th scope="col">@Inventar.Resources.Resource.M2Total</th>
             <th scope="col">@Inventar.Resources.Resource.Color</th>
 @*             @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
             {
@@ -80,15 +78,20 @@
     <tbody>
         @foreach (var item in  Model.Products)
         {
-            <tr data-perm2="@item.PerM2" data-id="@item.Id">
-                <th scope="row">
-                    @item.Id
-                </th>
-                <td>
-                    @item.ProductNumber
-                </td>
+            <tr data-perm2="@item.PerM2"
+                data-po-mjeri="@item.PoMjeri"
+                data-direct-sale="@item.IsDirectSaleProduct"
+                data-direct-total="@(item.DirectSaleOriginalTotal?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+                data-line-id="@item.LineId"
+                data-product-id="@item.Id"
+                data-length="@(item.Length?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")"
+                data-m2-total="@(item.M2Total?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0")">
                 <td>
                     @item.Name
+                    @if (item.IsDirectSaleProduct)
+                    {
+                        <div class="small text-warning-emphasis">@Inventar.Resources.Resource.TemporaryProduct</div>
+                    }
                 </td>
                 <td>
                     @item.Model
@@ -103,23 +106,35 @@
                 {
                     <td style="white-space: nowrap"></td>
                 }
-                <td id="m2Total-@item.Id" class="m2Total">
-                    @(item.PerM2 ? @item.M2Total : "")
-                </td>
                 <td>
                     @item.Color
                 </td>
                 <td style="display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")">
-                    <input type="number" style="width:5rem" class="rabat" value="@item.Rabat" min="0" max="100">
+                    <input type="number"
+                           style="width:5rem"
+                           class="rabat"
+                           value="@item.Rabat"
+                           min="0"
+                           max="100">
                 </td>
                 <td style="display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")">
-                    <input type="number" style="width:5rem" class="price" value="@item.Price" min="0.1" required>
+                    <input type="number"
+                           style="width:5rem"
+                           class="price"
+                           value="@item.Price.ToString("0.00", CultureInfo.InvariantCulture)"
+                           min="0"
+                           step="0.01"
+                           required>
                 </td>
-                <td id="quantity-@item.Id" class="quantity">
+                <td id="quantity-@item.LineId" class="quantity">
                     @item.Quantity
+                    @if (item.IsDirectSaleProduct)
+                    {
+                        <div class="small text-muted">@Inventar.Resources.Resource.FixedQuantity</div>
+                    }
                 </td>
-                <td id="priceTotal-@item.Id" class="priceTotal" style="color:@(item.PerM2 ? "green" : "black"); display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")">
-                    @(Math.Round(item.PriceTotal,2)) €
+                <td id="priceTotal-@item.LineId" class="priceTotal" style="color:@(item.PerM2 ? "green" : "black"); display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "table-cell" : "none")">
+                    @item.PriceTotal.ToString("0.00", CultureInfo.InvariantCulture) €
                 </td>
             </tr>
         }
@@ -127,7 +142,7 @@
 </table>
 <div class="d-flex justify-content-between align-items-center mt-2">
     <div>
-        <button id="createExcel" class="btn btn-success">CreateExcel</button>
+        <button id="createExcel" class="btn btn-success">Excel</button>
     </div>
     <div style="text-align: right;">
         <strong>@Inventar.Resources.Resource.Total: <span id="totalPrice">0</span>€</strong>
@@ -151,6 +166,11 @@
     }
     input{
         border: 2px solid #111 !important;
+    }
+
+    .input-locked {
+        background-color: #f3f3f3;
+        cursor: not-allowed;
     }
 
         input.is-invalid {
@@ -178,12 +198,45 @@
         }
 </style>
 <script>
+    function parseUiNumber(value) {
+        if (value == null) {
+            return 0;
+        }
+
+        const normalizedValue = value
+            .toString()
+            .replace(/\s/g, "")
+            .replace("€", "")
+            .replace(",", ".");
+
+        const parsedValue = parseFloat(normalizedValue);
+        return Number.isFinite(parsedValue) ? parsedValue : 0;
+    }
+
+    function calculateLengthFactor(lengthValue) {
+        const normalizedLength = Math.max(parseUiNumber(lengthValue), 100);
+        return normalizedLength / 100;
+    }
+
+    function calculateRowBaseTotal(row, price, quantity, m2Total) {
+        const perM2 = row.dataset.perm2 === "True";
+        const poMjeri = row.dataset.poMjeri === "True";
+
+        if (poMjeri) {
+            return price * calculateLengthFactor(row.dataset.length) * quantity;
+        }
+
+        if (perM2) {
+            return price * m2Total;
+        }
+
+        return price * quantity;
+    }
+
     function calculateTotal() {
         let sum = 0;
-        console.log("calculateTotal poceo");
         document.querySelectorAll(".priceTotal").forEach(function (element) {
-            console.log(element.textContent);
-            sum += parseFloat(element.textContent) || 0;
+            sum += parseUiNumber(element.textContent);
         });
         document.getElementById("totalPrice").textContent = sum.toFixed(2);
     }
@@ -195,39 +248,25 @@
         let pm2s = document.querySelectorAll("tr[data-perm2]");
         let prices = document.querySelectorAll(".price");
         let quantitys = document.querySelectorAll(".quantity");
-        let m2Totals = document.querySelectorAll(".m2Total");
 
         for (let i = 0; i < priceTotals.length; i++) {
-            let priceTotal = parseFloat(priceTotals[i].textContent);
-            let pm2 = pm2s[i].dataset.perm2;
-            let rabat = parseFloat(rabats[i].value);
-            let price = parseFloat(prices[i].value);
+            let row = pm2s[i];
+            let priceTotal = parseUiNumber(priceTotals[i].textContent);
+            let rabat = parseUiNumber(rabats[i].value);
+            let price = parseUiNumber(prices[i].value);
             let quantity = parseInt(quantitys[i].textContent);
-            let m2Total = parseFloat(m2Totals[i].textContent);
-
-            let totalPricePerUnit = price * quantity;
-            let totalPricePerM2 = (price * m2Total);
+            let m2Total = parseUiNumber(row.dataset.m2Total || "0");
+            let totalPrice = calculateRowBaseTotal(row, price, quantity, m2Total);
 
             if (rabat) {
-                let rbt = rabat / 100
-                if (pm2 == "True") {
-                    totalPricePerM2 -= rbt * totalPricePerM2;
-                    sum += totalPricePerM2;
-                }
-                if (pm2 == "False") {
-                    totalPricePerUnit -= rbt * totalPricePerUnit;
-                    sum += totalPricePerUnit;
-                }
+                let rbt = rabat / 100;
+                totalPrice -= rbt * totalPrice;
+                sum += totalPrice;
             } else {
                 sum += priceTotal;
             }
 
-            if (pm2 == "True") {
-                priceTotals[i].textContent = totalPricePerM2.toFixed(2) + "€";
-            }
-            if (pm2 == "False") {
-                priceTotals[i].textContent = totalPricePerUnit.toFixed(2) + "€";
-            }
+            priceTotals[i].textContent = totalPrice.toFixed(2) + "€";
         }
         document.getElementById("totalPrice").textContent = sum.toFixed(2);
     }
@@ -238,10 +277,9 @@
             let priceInput = row.querySelector(".price");
             let rabatInput = row.querySelector(".rabat");
 
-            let price = parseFloat(row.querySelector(".price").value);
-            let pm2 = row.dataset.perm2;
+            let price = parseUiNumber(row.querySelector(".price").value);
             let quantity = parseInt(row.querySelector(".quantity").textContent) || 0;
-            let m2Total = parseFloat(row.querySelector(".m2Total").textContent) || 0;
+            let m2Total = parseUiNumber(row.dataset.m2Total || "0");
             let rabat = parseInt(row.querySelector(".rabat").value);
 
             // Basic validation
@@ -252,42 +290,36 @@
                 priceInput.classList.remove("is-invalid");
             }
 
-            let totalPricePerUnit = price * quantity;
-            let totalPricePerM2 = price * m2Total;
+            let totalPrice = calculateRowBaseTotal(row, price, quantity, m2Total);
 
             if (rabat) {
-                let rbt = rabat / 100
-                if (pm2 == "True") {
-                    totalPricePerM2 -= rbt * totalPricePerM2;
-                }
-                if (pm2 == "False") {
-                    totalPricePerUnit -= rbt * totalPricePerUnit;
-                }
+                let rbt = rabat / 100;
+                totalPrice -= rbt * totalPrice;
             }
 
-            if (pm2 == "True") {
-                row.querySelector(".priceTotal").textContent = totalPricePerM2.toFixed(2) + "€";
-            }
-            if (pm2 == "False") {
-                row.querySelector(".priceTotal").textContent = totalPricePerUnit.toFixed(2) + "€";
-            }
+            row.querySelector(".priceTotal").textContent = totalPrice.toFixed(2) + "€";
 
             calculateTotal();
                 // --- Sync updated values into productsForExport array --- //
-            let productId = Number(row.dataset.id);
-            let p = productsForExport.find(x => x.Id === productId);
+            let lineId = row.dataset.lineId;
+            let p = productsForExport.find(x => x.LineId === lineId);
 
             if (p) {
-                p.Rabat = rabat;       // update Rabat
-                p.Price = price;       // update Price
+                p.Rabat = rabat;
+                p.Price = price;
+                p.PriceTotal = Number(totalPrice.toFixed(2));
+
+                if (p.IsDirectSaleProduct) {
+                    p.DirectSaleOriginalTotal = p.PriceTotal;
+                }
             }
 
-            saveToServer(row.dataset.id, price, rabat);
+            saveToServer(row.dataset.lineId, price, rabat);
         }
 
-        function saveToServer(id, price, rabat) {
+        function saveToServer(lineId, price, rabat) {
             let data = {
-                id: Number(id),
+                lineId: lineId,
                 price: Number(price),
                 rabat: Number(rabat),
             };
@@ -298,7 +330,11 @@
                 body: JSON.stringify(data)
             })
                 .then(response => response.json())
-                .then(data => console.log("Server Response:", data))
+                .then(data => {
+                    if (data.success === false && data.message) {
+                        alert(data.message);
+                    }
+                })
                 .catch(error => console.error("Error:", error));
         }
 
@@ -356,7 +392,7 @@
     function validateForm() {
         let valid = true;
         document.querySelectorAll(".price").forEach(input => {
-            if (!input.value || parseFloat(input.value) < 0) {
+            if (!input.value || parseUiNumber(input.value) < 0) {
                 input.classList.add("is-invalid");
                 valid = false;
             } else {

@@ -1,1 +1,0 @@
-2025-08-28 11:58:53.880 +02:00 [WRN] [AdminAdmin] ProcessQRCode: Couldn't find a product with properties matching QR Code data: ND/JJ/R3/50/100/JJ/True

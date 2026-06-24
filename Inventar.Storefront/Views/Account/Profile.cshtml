@@ -1,0 +1,79 @@
+@model Inventar.Storefront.ViewModels.Account.AccountProfileViewModel
+@{
+    ViewData["Title"] = "Profil";
+}
+
+<section class="page-head">
+    <span class="eyebrow">Profil</span>
+    <h1>Podaci za dostavu</h1>
+    <p>Ovi podaci će automatski popuniti checkout formu kada ste prijavljeni.</p>
+</section>
+
+<partial name="_AccountNav" />
+
+<section class="account-auth-card">
+    <form asp-controller="Account" asp-action="Profile" method="post" class="checkout-form">
+        <div asp-validation-summary="ModelOnly" class="flash flash--error"></div>
+
+        <div class="checkout-form__grid account-profile-grid">
+            <div class="field field--half">
+                <label asp-for="FirstName"></label>
+                <input asp-for="FirstName" />
+                <span asp-validation-for="FirstName" class="field__error"></span>
+            </div>
+
+            <div class="field field--half">
+                <label asp-for="LastName"></label>
+                <input asp-for="LastName" />
+                <span asp-validation-for="LastName" class="field__error"></span>
+            </div>
+
+            <div class="field field--full">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" readonly />
+            </div>
+
+            <div class="field field--half">
+                <label asp-for="Phone"></label>
+                <input asp-for="Phone" />
+                <span asp-validation-for="Phone" class="field__error"></span>
+            </div>
+
+            <div class="field field--full">
+                <label asp-for="AddressLine1"></label>
+                <input asp-for="AddressLine1" />
+                <span asp-validation-for="AddressLine1" class="field__error"></span>
+            </div>
+
+            <div class="field field--full">
+                <label asp-for="AddressLine2"></label>
+                <input asp-for="AddressLine2" />
+                <span asp-validation-for="AddressLine2" class="field__error"></span>
+            </div>
+
+            <div class="field field--half">
+                <label asp-for="City"></label>
+                <input asp-for="City" />
+                <span asp-validation-for="City" class="field__error"></span>
+            </div>
+
+            <div class="field field--half">
+                <label asp-for="PostalCode"></label>
+                <input asp-for="PostalCode" />
+                <span asp-validation-for="PostalCode" class="field__error"></span>
+            </div>
+
+            <div class="field field--half">
+                <label asp-for="Country"></label>
+                <input asp-for="Country" />
+                <span asp-validation-for="Country" class="field__error"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="button button--full">Sačuvaj profil</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

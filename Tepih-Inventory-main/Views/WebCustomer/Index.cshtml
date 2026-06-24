@@ -1,0 +1,185 @@
+@model Inventar.ViewModels.StorefrontAdmin.WebCustomerAdminIndexViewModel
+
+@{
+    ViewData["Title"] = "Web Customers";
+}
+
+<h2>@Inventar.Resources.Resource.WebCustomer</h2>
+
+@if (Model.EmailGroups.Count == 0)
+{
+    <div class="alert alert-light border mb-0">
+        @Inventar.Resources.Resource.ThereAreNoCompletedWebOrdersToDisplay.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle web-customer-table" id="webCustomerTable">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>@Inventar.Resources.Resource.FullName</th>
+                    <th>@Inventar.Resources.Resource.Phone</th>
+                    <th>@Inventar.Resources.Resource.Orders</th>
+                    <th>@Inventar.Resources.Resource.ItemsOrdered</th>
+                    <th>@Inventar.Resources.Resource.TotalMoneySpent</th>
+                    <th></th>
+                </tr>
+                <tr class="web-customer-table__filters">
+                    <th>
+                        <input type="text" id="webCustomerEmailFilter" class="form-control" placeholder="Filter" />
+                    </th>
+                    <th>
+                        <input type="text" id="webCustomerNameFilter" class="form-control" placeholder="Filter" />
+                    </th>
+                    <th>
+                        <input type="text" id="webCustomerPhoneFilter" class="form-control" placeholder="Filter" />
+                    </th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (var emailGroupIndex = 0; emailGroupIndex < Model.EmailGroups.Count; emailGroupIndex++)
+                {
+                    var emailGroup = Model.EmailGroups[emailGroupIndex];
+                    var emailGroupKey = $"email-group-{emailGroupIndex}";
+                    var emailCellClass = emailGroupIndex % 2 == 0
+                        ? "web-customer-table__email-cell--odd"
+                        : "web-customer-table__email-cell--even";
+
+                    for (var customerIndex = 0; customerIndex < emailGroup.Customers.Count; customerIndex++)
+                    {
+                        var customer = emailGroup.Customers[customerIndex];
+
+                        <tr class="web-customer-row"
+                            data-email-group-key="@emailGroupKey"
+                            data-email="@(customer.CustomerEmail ?? string.Empty)"
+                            data-customer-name="@customer.CustomerName"
+                            data-customer-phone="@(customer.CustomerPhone ?? string.Empty)">
+                            <td class="web-customer-table__email-cell @emailCellClass"
+                                data-email-cell="true"
+                                data-email-group-key="@emailGroupKey">
+                                @(string.IsNullOrWhiteSpace(emailGroup.CustomerEmail) ? "-" : emailGroup.CustomerEmail)
+                            </td>
+                            <td>@customer.CustomerName</td>
+                            <td>@(string.IsNullOrWhiteSpace(customer.CustomerPhone) ? "-" : customer.CustomerPhone)</td>
+                            <td>@customer.OrderCount</td>
+                            <td>@customer.TotalItemsOrdered</td>
+                            <td>@($"{customer.TotalMoneySpent:0.00} €")</td>
+                            <td class="text-nowrap">
+                                <a asp-controller="StorefrontOrder"
+                                   asp-action="Index"
+                                   asp-route-customerEmail="@customer.CustomerEmail"
+                                   asp-route-customerName="@customer.CustomerName"
+                                   asp-route-completedOnly="true">
+                                    @Inventar.Resources.Resource.ViewOrders
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="web-customer-table__load-more">
+        <button type="button" id="loadMoreWebCustomerRows" class="btn btn-outline-primary">
+            @Inventar.Resources.Resource.LoadAnother30Rows
+        </button>
+    </div>
+}
+
+@section Scripts {
+    @if (Model.EmailGroups.Count > 0)
+    {
+        <script>
+            (function () {
+                const rows = Array.from(document.querySelectorAll('#webCustomerTable tbody .web-customer-row'));
+                const emailFilter = document.getElementById('webCustomerEmailFilter');
+                const nameFilter = document.getElementById('webCustomerNameFilter');
+                const phoneFilter = document.getElementById('webCustomerPhoneFilter');
+
+                function normalizeValue(value) {
+                    return (value || '').trim().toLowerCase();
+                }
+
+                function updateMergedEmailCells() {
+                    const emailCells = Array.from(document.querySelectorAll('#webCustomerTable .web-customer-table__email-cell'));
+                    emailCells.forEach(cell => {
+                        cell.style.display = 'table-cell';
+                        cell.rowSpan = 1;
+                    });
+
+                    const visibleRows = rows.filter(row => row.style.display !== 'none');
+                    let currentGroupKey = null;
+                    let currentGroupRows = [];
+
+                    function applyCurrentGroup() {
+                        if (currentGroupRows.length === 0) {
+                            return;
+                        }
+
+                        const firstCell = currentGroupRows[0].querySelector('.web-customer-table__email-cell');
+                        if (firstCell) {
+                            firstCell.rowSpan = currentGroupRows.length;
+                        }
+
+                        for (let index = 1; index < currentGroupRows.length; index += 1) {
+                            const duplicateCell = currentGroupRows[index].querySelector('.web-customer-table__email-cell');
+                            if (duplicateCell) {
+                                duplicateCell.style.display = 'none';
+                            }
+                        }
+                    }
+
+                    visibleRows.forEach(row => {
+                        const groupKey = row.dataset.emailGroupKey || '';
+                        if (groupKey !== currentGroupKey) {
+                            applyCurrentGroup();
+                            currentGroupKey = groupKey;
+                            currentGroupRows = [row];
+                            return;
+                        }
+
+                        currentGroupRows.push(row);
+                    });
+
+                    applyCurrentGroup();
+                }
+
+                function applyFilters() {
+                    const emailValue = normalizeValue(emailFilter.value);
+                    const nameValue = normalizeValue(nameFilter.value);
+                    const phoneValue = normalizeValue(phoneFilter.value);
+
+                    rows.forEach(row => {
+                        const matchesEmail = !emailValue || normalizeValue(row.dataset.email).includes(emailValue);
+                        const matchesName = !nameValue || normalizeValue(row.dataset.customerName).includes(nameValue);
+                        const matchesPhone = !phoneValue || normalizeValue(row.dataset.customerPhone).includes(phoneValue);
+
+                        row.dataset.filterMatch = matchesEmail && matchesName && matchesPhone ? 'true' : 'false';
+                    });
+
+                    rowLoader.refresh(true);
+                }
+
+                const rowLoader = window.InventarTableLoadMore.init({
+                    rowSelector: '#webCustomerTable tbody .web-customer-row',
+                    loadMoreButtonId: 'loadMoreWebCustomerRows',
+                    pageSize: 30,
+                    onAfterRender: updateMergedEmailCells
+                });
+
+                [emailFilter, nameFilter, phoneFilter].forEach(input => {
+                    input.addEventListener('input', applyFilters);
+                });
+
+                applyFilters();
+            })();
+        </script>
+    }
+}

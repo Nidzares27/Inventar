@@ -1,69 +1,234 @@
-@model Inventar.Storefront.ViewModels.Catalog.CatalogIndexViewModel
+﻿@model Inventar.Storefront.ViewModels.Catalog.CatalogIndexViewModel
 @{
     ViewData["Title"] = "Proizvodi";
+
+    var selectedCategoryLabel = "Sve kategorije";
+    if (!string.IsNullOrWhiteSpace(Model.BroaderCategory) && !string.IsNullOrWhiteSpace(Model.NarrowerCategory))
+    {
+        selectedCategoryLabel = $"{Model.BroaderCategory} / {Model.NarrowerCategory}";
+    }
+    else if (!string.IsNullOrWhiteSpace(Model.NarrowerCategory))
+    {
+        selectedCategoryLabel = Model.NarrowerCategory;
+    }
+    else if (!string.IsNullOrWhiteSpace(Model.BroaderCategory))
+    {
+        selectedCategoryLabel = Model.BroaderCategory;
+    }
+
+    var hasSearchQuery = !string.IsNullOrWhiteSpace(Model.Query);
+    var clearFiltersUrl = Url.Action(
+        "Index",
+        "Catalog",
+        new
+        {
+            q = Model.Query,
+            sort = Model.Sort
+        }) ?? "/proizvodi";
 }
 
-<section class="page-head">
+<section class="page-head page-head--catalog">
     <span class="eyebrow">Katalog</span>
+    @if (!string.Equals(selectedCategoryLabel, "Sve kategorije", StringComparison.OrdinalIgnoreCase))
+    {
+        <span class="page-head__category">@selectedCategoryLabel</span>
+    }
 </section>
 
-<section class="filters">
-    <form asp-controller="Catalog" asp-action="Index" method="get" class="filters__form">
-        <div class="field">
-            <label for="q">Pretraga</label>
-            <input id="q" name="q" value="@Model.Query" placeholder="Naziv, model, boja..." />
+@if (hasSearchQuery)
+{
+    <section class="catalog-search-state">
+        <div>
+            <span class="eyebrow">Rezultati pretrage</span>
+            <h2>Pretraga za "@Model.Query"</h2>
         </div>
 
-        <div class="field">
-            <label for="collection">Kolekcija</label>
-            <select id="collection" name="collection">
-                <option value="">Sve kolekcije</option>
-                @foreach (var collection in Model.Collections)
-                {
-                    <option value="@collection" selected="@(Model.Collection == collection ? "selected" : null)">@collection</option>
-                }
-            </select>
+        <form asp-controller="Catalog" asp-action="Index" method="get" class="catalog-search-state__form">
+            <input type="hidden" name="broaderCategory" value="@Model.BroaderCategory" />
+            <input type="hidden" name="narrowerCategory" value="@Model.NarrowerCategory" />
+            <input type="hidden" name="color" value="@Model.Color" />
+            <input type="hidden" name="sort" value="@Model.Sort" />
+
+            <label class="catalog-search-state__label" for="catalog-query-input">Pretraga</label>
+            <div class="catalog-search-state__input-wrap catalog-search-state__input-wrap--search-shell">
+                <input id="catalog-query-input"
+                       name="q"
+                       value="@Model.Query"
+                       placeholder="Pretražite proizvode"
+                       autocomplete="off"
+                       data-search-clear-input />
+@*                 <button class="catalog-search-state__clear"
+                        type="button"
+                        data-search-clear
+                        aria-label="Obrisi pretragu">
+                    ×
+                </button> *@
+                <button class="catalog-search-state__submit"
+                        type="submit"
+                        aria-label="Pretraži">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <path d="M10.5 4a6.5 6.5 0 1 0 4.09 11.55l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z" />
+                    </svg>
+                </button>
+            </div>
+        </form>
+    </section>
+}
+
+<section class="catalog-toolbar" data-catalog-toolbar>
+    <div class="catalog-toolbar__mobile-bar">
+        <button class="catalog-toolbar__mobile-toggle"
+                type="button"
+                data-catalog-panel-toggle
+                aria-expanded="false"
+                aria-controls="catalog-toolbar-form">
+            Filteri i sortiranje
+        </button>
+
+        <p class="catalog-toolbar__mobile-count">@Model.TotalCount proizvoda</p>
+    </div>
+
+    <div class="catalog-toolbar__backdrop" data-catalog-panel-backdrop hidden></div>
+
+    <form id="catalog-toolbar-form"
+          asp-controller="Catalog"
+          asp-action="Index"
+          method="get"
+          class="catalog-toolbar__form"
+          data-catalog-filters>
+        <input type="hidden" name="q" value="@Model.Query" />
+
+        <div class="catalog-toolbar__panel-header">
+            <div>
+                <p class="eyebrow">Katalog</p>
+                <strong>Filteri i sortiranje</strong>
+            </div>
+
+            <button class="catalog-toolbar__panel-close"
+                    type="button"
+                    data-catalog-panel-close
+                    aria-label="Zatvori filtere i sortiranje">
+                x
+            </button>
         </div>
 
-        <div class="field">
-            <label for="color">Boja</label>
-            <select id="color" name="color">
-                <option value="">Sve boje</option>
-                @foreach (var color in Model.Colors)
-                {
-                    <option value="@color" selected="@(Model.Color == color ? "selected" : null)">@color</option>
-                }
-            </select>
+        <div class="catalog-toolbar__group catalog-toolbar__group--filters">
+            <div class="field field--toolbar">
+                <label class="catalog-toolbar__label" for="catalog-category-toggle">Kategorija</label>
+                <input type="hidden" name="broaderCategory" value="@Model.BroaderCategory" data-category-broader />
+                <input type="hidden" name="narrowerCategory" value="@Model.NarrowerCategory" data-category-narrower />
+
+                <div class="filter-category-picker" data-dropdown-root data-filter-category-picker>
+                    <button id="catalog-category-toggle"
+                            class="filter-category-picker__toggle catalog-toolbar__control"
+                            type="button"
+                            data-dropdown-toggle
+                            aria-expanded="false">
+                        <span class="filter-category-picker__label" data-category-label>@selectedCategoryLabel</span>
+                        <span class="filter-category-picker__caret" aria-hidden="true"></span>
+                    </button>
+
+                    <div class="filter-category-picker__panel" data-dropdown-panel hidden>
+                        <button class="filter-category-picker__option @(string.IsNullOrWhiteSpace(Model.BroaderCategory) && string.IsNullOrWhiteSpace(Model.NarrowerCategory) ? "is-selected" : null)"
+                                type="button"
+                                data-category-option
+                                data-broader-category=""
+                                data-narrower-category=""
+                                data-category-label="Sve kategorije">
+                            Sve kategorije
+                        </button>
+
+                        @foreach (var categoryGroup in Model.CategoryGroups)
+                        {
+                            var hasNarrowerCategories = categoryGroup.NarrowerCategories.Count > 0;
+                            var broaderSelected = string.Equals(Model.BroaderCategory, categoryGroup.BroaderCategory, StringComparison.OrdinalIgnoreCase)
+                                && string.IsNullOrWhiteSpace(Model.NarrowerCategory);
+
+                            <div class="filter-category-picker__group" data-submenu-group>
+                                <div class="filter-category-picker__group-header">
+                                    <button class="filter-category-picker__option filter-category-picker__option--broader @(broaderSelected ? "is-selected" : null)"
+                                            type="button"
+                                            data-category-option
+                                            data-broader-category="@categoryGroup.BroaderCategory"
+                                            data-narrower-category=""
+                                            data-category-label="@categoryGroup.BroaderCategory">
+                                        @categoryGroup.BroaderCategory
+                                    </button>
+
+                                    @if (hasNarrowerCategories)
+                                    {
+                                        <button class="filter-category-picker__expand"
+                                                type="button"
+                                                data-submenu-toggle
+                                                aria-expanded="false"
+                                                aria-label="Prikaži uže kategorije za @categoryGroup.BroaderCategory">
+                                            <span class="filter-category-picker__caret filter-category-picker__caret--small" aria-hidden="true"></span>
+                                        </button>
+                                    }
+                                </div>
+
+                                @if (hasNarrowerCategories)
+                                {
+                                    <div class="filter-category-picker__submenu" data-submenu hidden>
+                                        @foreach (var narrowerCategory in categoryGroup.NarrowerCategories)
+                                        {
+                                            var narrowerSelected = string.Equals(Model.BroaderCategory, categoryGroup.BroaderCategory, StringComparison.OrdinalIgnoreCase)
+                                                && string.Equals(Model.NarrowerCategory, narrowerCategory, StringComparison.OrdinalIgnoreCase);
+
+                                            <button class="filter-category-picker__option filter-category-picker__option--narrower @(narrowerSelected ? "is-selected" : null)"
+                                                    type="button"
+                                                    data-category-option
+                                                    data-broader-category="@categoryGroup.BroaderCategory"
+                                                    data-narrower-category="@narrowerCategory"
+                                                    data-category-label="@($"{categoryGroup.BroaderCategory} / {narrowerCategory}")">
+                                                @narrowerCategory
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="field field--toolbar">
+                <label class="catalog-toolbar__label" for="color">Boja</label>
+                <select id="color" name="color" class="catalog-toolbar__control" data-auto-submit>
+                    <option value="">Sve boje</option>
+                    @foreach (var color in Model.Colors)
+                    {
+                        <option value="@color" selected="@(Model.Color == color ? "selected" : null)">@color</option>
+                    }
+                </select>
+            </div>
         </div>
 
-        <div class="field">
-            <label for="sort">Sortiranje</label>
-            <select id="sort" name="sort">
-                <option value="featured" selected="@(Model.Sort == "featured" ? "selected" : null)">Najnovije</option>
-                <option value="price-asc" selected="@(Model.Sort == "price-asc" ? "selected" : null)">Cijena: niža ka višoj</option>
-                <option value="price-desc" selected="@(Model.Sort == "price-desc" ? "selected" : null)">Cijena: viša ka nižoj</option>
-                <option value="name" selected="@(Model.Sort == "name" ? "selected" : null)">Naziv</option>
-            </select>
-        </div>
+        <div class="catalog-toolbar__group catalog-toolbar__group--meta">
+            <p class="catalog-toolbar__count">@Model.TotalCount proizvoda</p>
 
-        <button type="submit" class="button">Primijeni</button>
+            <div class="field field--toolbar field--toolbar-sort">
+                <label class="catalog-toolbar__label" for="sort">Sortiranje</label>
+                <select id="sort" name="sort" class="catalog-toolbar__control" data-auto-submit>
+                    <option value="newest-desc" selected="@(Model.Sort == "newest-desc" || Model.Sort == "featured" ? "selected" : null)">Od najnovijih ka najstarijim</option>
+                    <option value="newest-asc" selected="@(Model.Sort == "newest-asc" ? "selected" : null)">Od najstarijih ka najnovijim</option>
+                    <option value="price-asc" selected="@(Model.Sort == "price-asc" ? "selected" : null)">Cijena: niža ka višoj</option>
+                    <option value="price-desc" selected="@(Model.Sort == "price-desc" ? "selected" : null)">Cijena: viša ka nižoj</option>
+                    <option value="name-asc" selected="@(Model.Sort == "name-asc" || Model.Sort == "name" ? "selected" : null)">Naziv A-Z</option>
+                    <option value="name-desc" selected="@(Model.Sort == "name-desc" ? "selected" : null)">Naziv Z-A</option>
+                </select>
+            </div>
+        </div>
     </form>
 </section>
 
-<section class="section">
-    <div class="section__header">
-        <div>
-            <span class="eyebrow">Rezultati</span>
-            <h2>@Model.TotalCount proizvoda u ponudi</h2>
-        </div>
-    </div>
-
+<section class="section section--catalog-results">
     @if (Model.Products.Count == 0)
     {
         <div class="empty-state">
             <h3>Nema rezultata za odabrane filtere.</h3>
-            <p>Pokušajte bez boje ili kolekcije, ili pregledajte kompletnu ponudu.</p>
-            <a class="button" asp-controller="Catalog" asp-action="Index">Očisti filtere</a>
+            <p>Pokušajte bez boje ili kategorija, ili pregledajte kompletnu ponudu.</p>
+            <a class="button" href="@clearFiltersUrl">Očisti filtere</a>
         </div>
     }
     else
@@ -85,7 +250,8 @@
                    asp-controller="Catalog"
                    asp-action="Index"
                    asp-route-q="@Model.Query"
-                   asp-route-collection="@Model.Collection"
+                   asp-route-broaderCategory="@Model.BroaderCategory"
+                   asp-route-narrowerCategory="@Model.NarrowerCategory"
                    asp-route-color="@Model.Color"
                    asp-route-sort="@Model.Sort"
                    asp-route-page="@pageNumber">

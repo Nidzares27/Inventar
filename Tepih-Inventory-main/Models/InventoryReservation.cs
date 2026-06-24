@@ -6,8 +6,12 @@ namespace Inventar.Models
     {
         public int Id { get; set; }
         public int WebOrderId { get; set; }
+        public int? WebOrderItemId { get; set; }
         public int TepihId { get; set; }
         public int Quantity { get; set; }
+        public int? CutWidth { get; set; }
+        public int? CutLength { get; set; }
+        public int? ConsumedLengthPerUnit { get; set; }
 
         [Required]
         [StringLength(30)]
@@ -21,6 +25,7 @@ namespace Inventar.Models
         public string? Reason { get; set; }
 
         public virtual WebOrder WebOrder { get; set; } = null!;
+        public virtual WebOrderItem? WebOrderItem { get; set; }
         public virtual Tepih Tepih { get; set; } = null!;
     }
 }

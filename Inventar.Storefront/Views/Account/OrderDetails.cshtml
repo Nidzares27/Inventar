@@ -1,0 +1,82 @@
+@model Inventar.Storefront.ViewModels.Account.AccountOrderDetailsViewModel
+@{
+    ViewData["Title"] = "Detalji narudzbine";
+}
+
+<section class="page-head">
+    <span class="eyebrow">Detalji narudžbine</span>
+    <h1>@Model.OrderNumber</h1>
+    <p>Kreirano @Model.CreatedUtc.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</p>
+</section>
+
+<partial name="_AccountNav" />
+
+<section class="account-grid">
+    <article class="content-card">
+        <p><strong>Status:</strong> @Model.Status</p>
+    </article>
+
+    <article class="content-card">
+        <p class="site-footer__title">Dostava</p>
+        <p>
+            @foreach (var addressLine in Model.ShippingAddress.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries))
+            {
+                @addressLine<br />
+            }
+        </p>
+        @if (!string.IsNullOrWhiteSpace(Model.CustomerPhone))
+        {
+            <p>Telefon: @Model.CustomerPhone</p>
+        }
+        <p>Email: @Model.CustomerEmail</p>
+    </article>
+</section>
+
+<section class="content-card">
+    <div class="account-order-lines">
+        @foreach (var line in Model.Lines)
+        {
+            <div class="account-order-line">
+                <div class="account-order-line__media">
+                    @if (!string.IsNullOrWhiteSpace(line.ImageUrl))
+                    {
+                        <img src="@line.ImageUrl" alt="@line.ShortDescription" />
+                    }
+                    else
+                    {
+                        <div class="product-card__placeholder">Bez fotografije</div>
+                    }
+                </div>
+                <div class="account-order-line__content">
+                    <strong>@line.ShortDescription</strong>
+                    @if (!string.IsNullOrWhiteSpace(line.Meta))
+                    {
+                        <p>@line.Meta</p>
+                    }
+                    <span>@line.Quantity x @line.UnitPrice.ToString("0.00") &#8364;</span>
+                </div>
+                <strong>@line.LineTotal.ToString("0.00") &#8364;</strong>
+            </div>
+        }
+    </div>
+
+    <div class="summary-card__row">
+        <span>Artikli</span>
+        <strong>@Model.ItemsTotal.ToString("0.00") &#8364;</strong>
+    </div>
+    <div class="summary-card__row">
+        <span>Dostava</span>
+        <strong>@Model.ShippingTotal.ToString("0.00") &#8364;</strong>
+    </div>
+    <div class="summary-card__row summary-card__row--total">
+        <span>Ukupno</span>
+        <strong>@Model.GrandTotal.ToString("0.00") &#8364;</strong>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.CustomerNote))
+    {
+        <div class="account-helper-text">
+            <strong>Napomena:</strong> @Model.CustomerNote
+        </div>
+    }
+</section>

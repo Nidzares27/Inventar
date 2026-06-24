@@ -25,6 +25,7 @@ public class WebOrderItem
     public int? Length { get; set; }
     public int? Width { get; set; }
     public bool PerM2 { get; set; }
+    public bool PoMjeri { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal LineTotal { get; set; }
@@ -34,4 +35,5 @@ public class WebOrderItem
 
     public WebOrder WebOrder { get; set; } = null!;
     public StorefrontProduct Product { get; set; } = null!;
+    public ICollection<InventoryReservation> Reservations { get; set; } = new List<InventoryReservation>();
 }

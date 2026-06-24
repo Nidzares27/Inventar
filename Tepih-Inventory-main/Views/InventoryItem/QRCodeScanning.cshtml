@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="~/css/QRCodeScanning.css" asp-append-version="true" />
 </head>
 
-<h2>@Inventar.Resources.Resource.ScanQRCode</h2>
+@* <h2>@Inventar.Resources.Resource.ScanQRCode</h2> *@
 @if (TempData["ProductNotFound"] != null)
 {
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -17,179 +17,258 @@
     </div>
 }
 
-<div id="outterDiv" class="d-flex flex-wrap">
+<div id="outterDiv" class="scan-layout">
     <!-- LEFT DIV -->
-    <div id="leftDiv" class="flex-shrink-0" style="min-width: 300px;">
-        <div id="qr-reader" style="width:500px;"></div>
+    <div id="leftDiv">
+        <div id="qr-reader"></div>
         <div id="result"></div>
     </div>
 
-    <!-- RIGHT SIDE (mid + right div together) -->
-    <div id="rightSide" class="flex-grow-1 ms-3">
-        <div class="row">
-            <div id="midDiv" class="col-sm-5">
-                <div style="text-align:center;">
-                    <h5>@Inventar.Resources.Resource.SearchByParams</h5>
-                </div>
+    <div id="productSection">
+        @if (Model != null)
+        {
+            <table id="productTable" class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">@Inventar.Resources.Resource.Name</th>
+                        <th scope="col">Model</th>
+                        <th scope="col">@Inventar.Resources.Resource.Size</th>
+                        <th scope="col">@Inventar.Resources.Resource.Color</th>
+                        @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+                        {
+                            <th scope="col">@Inventar.Resources.Resource.Price</th>
+                        }
+                        else
+                        {
+                            <th style="display:none" scope="col">@Inventar.Resources.Resource.Price</th>
+                        }
+                        <th scope="col">@Inventar.Resources.Resource.Quantity</th>
+                        <th scope="col"></th>
 
-                <form id="formByParameters" asp-action="AddProductByParameters" method="post"
-                      style="margin-bottom:1rem">
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr style="vertical-align:middle" data-line-id="@item.LineId" data-product-id="@item.Id">
+                            <td>
+                                @item.Name
+                                @if (item.IsDirectSaleProduct)
+                                {
+                                    <div class="small text-warning-emphasis">@Inventar.Resources.Resource.TemporaryProduct</div>
+                                }
+                                @if (item.PoMjeri && !string.IsNullOrWhiteSpace(item.UnID))
+                                {
+                                    <div class="small text-muted">@item.UnID</div>
+                                }
+                            </td>
+                            <td>
+                                @item.Model
+                            </td>
+                            @if (item.PerM2 || (!item.PerM2 && (item.Width != null && item.Length != null)))
+                            {
+                                <td style="white-space: nowrap">
+                                    @($"{item.Width}X{item.Length}")
+                                </td>
+                            }
+                            @if (!item.PerM2 && (item.Width == null || item.Length == null))
+                            {
+                                <td style="white-space: nowrap"></td>
+                            }
+                            <td>
+                                @item.Color
+                            </td>
+                            @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+                            {
+                                <td>
+                                    @item.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) €
+                                </td>
+                            }
+                            else
+                            {
+                                <td style="display:none">
+                                    @item.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) €
+                                </td>
+                            }
+                            <td class="quantity-cell">
+                                @if (item.IsDirectSaleProduct)
+                                {
+                                    <div class="quantity-stepper quantity-stepper--locked">
+                                        <span id="quantity-@item.LineId" class="quantity-stepper__value">@item.Quantity</span>
+                                    </div>
+                                    <div class="small text-muted">@Inventar.Resources.Resource.FixedQuantity</div>
+                                }
+                                else
+                                {
+                                    <div class="quantity-stepper">
+                                        <button type="button" class="btn btn-primary btn-sm update-quantity quantity-stepper__button" data-line-id="@item.LineId" data-action="increase" aria-label="Increase quantity">+</button>
+                                        <span id="quantity-@item.LineId" class="quantity-stepper__value">@item.Quantity</span>
+                                        <button type="button" class="btn btn-primary btn-sm update-quantity quantity-stepper__button" data-line-id="@item.LineId" data-action="decrease" aria-label="Decrease quantity">-</button>
+                                    </div>
+                                }
+                                @if (item.PoMjeri && item.MaxAvailableQuantity > 0)
+                                {
+                                    <div class="small text-muted">max @item.MaxAvailableQuantity</div>
+                                }
+                            </td>
+                            <td>
+                                <form asp-action="DeleteScannedProduct" method="post">
+                                    <input type="hidden" name="lineId" value="@item.LineId" />
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <a class="btn btn-secondary @(Model.Any() ? "" : "disabled-link")" href="/InventoryItem/ScannedProductsToBePurchased">@Inventar.Resources.Resource.Complete</a>
+        }
+    </div>
 
-                    <div>
-                        <label for="ProductNumber" style="font-weight:600; color:red">
-                            @Inventar.Resources.Resource.ProductNumber
-                        </label>
-                        <input id="searchProductNumber" type="text" class="form-control"
-                               style="border:solid 0.3px red;" />
+    <div class="scan-toolbar" id="scanToolbar">
+        <button id="openProductPickerModal" type="button" class="btn btn-primary manual-entry-button">
+            @Inventar.Resources.Resource.AddProduct
+        </button>
+        <button id="openCreateProductModal" type="button" class="btn btn-success manual-entry-button">
+            @Inventar.Resources.Resource.CreateProduct
+        </button>
+        <button id="clearSessionBtn" class="btn btn-sm btn-danger clear-session-button">@Inventar.Resources.Resource.ClearCart</button>
+    </div>
+</div>
+<div id="productPickerModal" class="product-picker-modal" hidden>
+    <div id="productPickerModalBackdrop" class="product-picker-modal__backdrop"></div>
+    <div class="product-picker-modal__panel">
+        <button type="button" id="closeProductPickerModal" class="product-picker-modal__close" aria-label="Close">×</button>
+        <h5 class="product-picker-modal__title">@Inventar.Resources.Resource.AddProduct</h5>
+
+        <div class="scan-search-layout scan-search-layout--modal">
+            <div id="midDiv">
+                <form id="formByParameters" asp-action="AddProductByParameters" method="post">
+                    <div class="parameter-grid">
+                        <div>
+                            <input id="searchName" type="text" class="form-control parameter-input" placeholder="@Inventar.Resources.Resource.Name" />
+                        </div>
+
+                        <div>
+                            <input id="searchModel" type="text" class="form-control parameter-input" placeholder="Model" />
+                        </div>
+
+                        <div>
+                            <input id="searchColor" type="text" class="form-control parameter-input" placeholder="@Inventar.Resources.Resource.Color" />
+                        </div>
+
+                        <div>
+                            <input id="searchSize" type="text" class="form-control parameter-input" placeholder="@Inventar.Resources.Resource.Size" />
+                        </div>
                     </div>
 
-                    <div>
-                        <label for="Name" style="font-weight:600; color:red">
-                            @Inventar.Resources.Resource.Name
-                        </label>
-                        <input id="searchName" type="text" class="form-control"
-                               style="border:solid 0.3px red;" />
-                    </div>
-
-                    <div>
-                        <label for="Model" style="font-weight:600; color:red">Model</label>
-                        <input id="searchModel" type="text" class="form-control"
-                               style="border:solid 0.3px red;" />
-                    </div>
-
-                    <div>
-                        <label for="Color" style="font-weight:600; color:red">
-                            @Inventar.Resources.Resource.Color
-                        </label>
-                        <input id="searchColor" type="text" class="form-control"
-                               style="border:solid 0.3px red;" />
-                    </div>
-
-                    <div>
-                        <label for="Size" style="font-weight:600; color:red">
-                            @Inventar.Resources.Resource.Size
-                        </label>
-                        <input id="searchSize" type="text" class="form-control"
-                               style="border:solid 0.3px red;" />
-                    </div>
-
-                    <div>
-                        <button id="clearInputs" type="button" class="btn btn-warning btn-sm"
-                                style="width:120px; margin-top:28px;">
+                    <div class="parameter-actions">
+                        <button id="clearInputs" type="button" class="btn btn-warning btn-sm parameter-clear-button">
                             @Inventar.Resources.Resource.ClearInputs
                         </button>
                     </div>
-
                 </form>
+
+                <div class="product-picker-modal__manual">
+                    <div class="product-picker-modal__manual-title">@Inventar.Resources.Resource.ManuallyEnterId</div>
+                    <form id="myForm" asp-action="ManuallyAddProduct" method="post" class="manual-entry-form">
+                        <input type="number" id="manualId" name="id" class="form-control manual-entry-input" />
+                        <button type="submit" class="btn btn-outline-secondary manual-entry-button">@Inventar.Resources.Resource.AddProduct</button>
+                    </form>
+                </div>
             </div>
 
-            <div id="rightDiv" class="col-sm-7" style="max-height:430px"></div>
+            <div id="rightDiv"></div>
         </div>
     </div>
 </div>
+<div id="createProductModal" class="product-picker-modal" hidden>
+    <div id="createProductModalBackdrop" class="product-picker-modal__backdrop"></div>
+    <div class="product-picker-modal__panel product-picker-modal__panel--compact">
+        <button type="button" id="closeCreateProductModal" class="product-picker-modal__close" aria-label="Close">×</button>
+        <h5 class="product-picker-modal__title">@Inventar.Resources.Resource.CreateProductForSelling</h5>
 
-<form id="myForm" asp-action="ManuallyAddProduct" method="post" style="margin-top:1rem; margin-bottom:1rem">
-    <input type="number" id="manualId" name="id" style="vertical-align:middle" />
-    <button type="submit" style="vertical-align:middle">@Inventar.Resources.Resource.ManuallyEnterId</button>
-</form>
-
-<button id="clearSessionBtn" class="btn btn-sm btn-danger">@Inventar.Resources.Resource.ClearCart</button>
-@if(Model != null)
-{
-    <table id="productTable" class="table table-hover table-striped">
-        <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">@Inventar.Resources.Resource.ProductNumber</th>
-                <th scope="col">@Inventar.Resources.Resource.Name</th>
-                <th scope="col">Model</th>
-                <th scope="col">@Inventar.Resources.Resource.Size</th>
-                <th scope="col">m²</th>
-                <th scope="col">@Inventar.Resources.Resource.M2Total</th>
-                <th scope="col">@Inventar.Resources.Resource.Color</th>
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-                {
-                    <th scope="col">@Inventar.Resources.Resource.Price</th>
-                }
-                else
-                {
-                    <th style="display:none" scope="col">@Inventar.Resources.Resource.Price</th>
-                }
-                <th scope="col">@Inventar.Resources.Resource.Quantity</th>
-                <th scope="col"></th>
-
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr style="vertical-align:middle" data-id="@item.Id">
-                    <th scope="row">
-                        @item.Id
-                    </th>
-                    <td>
-                        @item.ProductNumber
-                    </td>
-                    <td>
-                        @item.Name
-                    </td>
-                    <td>
-                        @item.Model
-                    </td>
-                    @if (item.PerM2 || (!item.PerM2 && (item.Width != null && item.Length != null)))
-                    {
-                        <td style="white-space: nowrap">
-                            @($"{item.Width}X{item.Length}")
-                        </td>
-                    }
-                    @if (!item.PerM2 && (item.Width == null || item.Length == null))
-                    {
-                        <td style="white-space: nowrap"></td>
-                    }
-                    <td class="perUnit">
-                        @(item.PerM2 ? Math.Round((decimal)item.M2PerUnit, 2) : "")
-                    </td>
-                    <td id="m2Total-@item.Id" class="total">
-                        @(item.PerM2 ? Math.Round((decimal)item.M2Total,2) : "")
-                    </td>
-                    <td>
-                        @item.Color
-                    </td>
-                    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-                    {
-                        <td>
-                            @item.Price €
-                        </td>
-                    }
-                    else
-                    {
-                        <td style="display:none">
-                            @item.Price €
-                        </td>
-                    }
-                    <td id="quantity-@item.Id">
-                       @item.Quantity
-                    </td>
-                    <td>
-                        <button class="btn btn-primary btn-sm update-quantity" data-id="@item.Id" data-action="decrease">-</button>
-                        <button class="btn btn-primary btn-sm update-quantity" data-id="@item.Id" data-action="increase">+</button>
-                    </td>
-                    <td>
-                        <form asp-action="DeleteScannedProduct" method="post">
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    <a class="btn btn-secondary @(Model.Any() ? "" : "disabled-link")" href="/InventoryItem/ScannedProductsToBePurchased">@Inventar.Resources.Resource.Complete</a>
-
-}
-//NE BRISATI
+        <div class="product-picker-modal__manual product-picker-modal__manual--standalone product-picker-modal__direct-sale">
+            <form id="directSaleForm" class="direct-sale-form">
+                <div class="direct-sale-form__row direct-sale-form__row--wide">
+                    <label for="directSaleName" class="direct-sale-form__label">@Inventar.Resources.Resource.Name</label>
+                    <input type="text" id="directSaleName" class="form-control manual-entry-input direct-sale-form__input" required />
+                </div>
+                <div class="direct-sale-form__row direct-sale-form__row--split">
+                    <div class="direct-sale-form__pair">
+                        <label for="directSalePrice" class="direct-sale-form__label">@Inventar.Resources.Resource.Price</label>
+                        <input type="number" id="directSalePrice" class="form-control manual-entry-input direct-sale-form__input" min="0" step="0.01" value="0" />
+                    </div>
+                    <div class="direct-sale-form__pair">
+                        <label for="directSaleQuantity" class="direct-sale-form__label">@Inventar.Resources.Resource.Quantity</label>
+                        <input type="number" id="directSaleQuantity" class="form-control manual-entry-input direct-sale-form__input" min="1" step="1" value="1" required />
+                    </div>
+                </div>
+                <div class="direct-sale-form__row direct-sale-form__row--split">
+                    <div class="direct-sale-form__pair">
+                        <label for="directSaleWidth" class="direct-sale-form__label">@Inventar.Resources.Resource.Width</label>
+                        <input type="number" id="directSaleWidth" class="form-control manual-entry-input direct-sale-form__input" min="1" step="1" />
+                    </div>
+                    <div class="direct-sale-form__pair">
+                        <label for="directSaleLength" class="direct-sale-form__label">@Inventar.Resources.Resource.Length</label>
+                        <input type="number" id="directSaleLength" class="form-control manual-entry-input direct-sale-form__input" min="1" step="1" />
+                    </div>
+                </div>
+                <div class="direct-sale-form__row direct-sale-form__row--types">
+                    <span class="direct-sale-form__label">@Inventar.Resources.Resource.Type</span>
+                    <div class="direct-sale-form__types">
+                        <label class="direct-sale-form__type">
+                            <input type="radio" name="directSaleProductType" value="perUnit" checked />
+                            <span>@Inventar.Resources.Resource.PerUnit</span>
+                        </label>
+                        <label class="direct-sale-form__type">
+                            <input type="radio" name="directSaleProductType" value="perM2" />
+                            <span>@Inventar.Resources.Resource.PerM2</span>
+                        </label>
+                        <label class="direct-sale-form__type">
+                            <input type="radio" name="directSaleProductType" value="perMeasure" />
+                            <span>@Inventar.Resources.Resource.PerMeasure</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success manual-entry-button">@Inventar.Resources.Resource.CreateProduct</button>
+            </form>
+        </div>
+    </div>
+</div>
+<div id="poMjeriModal" class="po-mjeri-modal" hidden>
+    <div class="po-mjeri-modal__backdrop"></div>
+    <div class="po-mjeri-modal__panel">
+        <button type="button" id="closePoMjeriModal" class="po-mjeri-modal__close" aria-label="Close">×</button>
+        <h5 id="poMjeriModalTitle">@Inventar.Resources.Resource.PerMeasureProduct</h5>
+        <input type="hidden" id="poMjeriProductId" />
+        <div class="po-mjeri-modal__meta">
+            <div><strong>@Inventar.Resources.Resource.OriginalSize:</strong> <span id="poMjeriOriginalSize"></span></div>
+            <div><strong>@Inventar.Resources.Resource.RemainingSize:</strong> <span id="poMjeriRemainingSize"></span></div>
+            <div><strong>UnID:</strong> <span id="poMjeriUnId"></span></div>
+        </div>
+        <div class="po-mjeri-modal__grid">
+            <div>
+                <label for="poMjeriWidth">@Inventar.Resources.Resource.Width</label>
+                <input id="poMjeriWidthDisplay" type="text" class="form-control" readonly />
+                <input id="poMjeriWidth" type="hidden" />
+            </div>
+            <div>
+                <label for="poMjeriLength">@Inventar.Resources.Resource.Length</label>
+                <input id="poMjeriLength" type="number" min="1" class="form-control" />
+            </div>
+        </div>
+        <div class="po-mjeri-modal__meta">
+            <div><strong>@Inventar.Resources.Resource.MaxAvailableQuantity:</strong> <span id="poMjeriMaxQty">0</span></div>
+        </div>
+        <div id="poMjeriValidation" class="text-danger small" style="min-height:1.25rem;"></div>
+        <div class="po-mjeri-modal__actions">
+            <button type="button" id="submitPoMjeriSelection" class="btn btn-primary">@Inventar.Resources.Resource.AddProduct</button>
+        </div>
+    </div>
+</div>
 @* <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
  *@<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
@@ -215,6 +294,45 @@
 
     let lastScan = "";
     let lastScanTime = 0;
+    let currentPoMjeriSelection = null;
+    const productPickerModal = document.getElementById("productPickerModal");
+    const createProductModal = document.getElementById("createProductModal");
+
+    function openProductPickerModal() {
+        if (!productPickerModal) {
+            return;
+        }
+
+        closeCreateProductModal();
+        productPickerModal.hidden = false;
+        document.getElementById("searchName")?.focus();
+    }
+
+    function closeProductPickerModal() {
+        if (!productPickerModal) {
+            return;
+        }
+
+        productPickerModal.hidden = true;
+    }
+
+    function openCreateProductModal() {
+        if (!createProductModal) {
+            return;
+        }
+
+        closeProductPickerModal();
+        createProductModal.hidden = false;
+        document.getElementById("directSaleName")?.focus();
+    }
+
+    function closeCreateProductModal() {
+        if (!createProductModal) {
+            return;
+        }
+
+        createProductModal.hidden = true;
+    }
 
     function playSuccessBeep() {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -233,6 +351,101 @@
         oscillator.stop(ctx.currentTime + 0.07); // VERY short (70ms)
     }
 
+    function closePoMjeriModal() {
+        currentPoMjeriSelection = null;
+        document.getElementById("poMjeriModal").hidden = true;
+        document.getElementById("poMjeriValidation").textContent = "";
+        document.getElementById("poMjeriWidth").value = "";
+        document.getElementById("poMjeriWidthDisplay").value = "";
+        document.getElementById("poMjeriLength").value = "";
+        document.getElementById("poMjeriMaxQty").textContent = "0";
+    }
+
+    function calculatePoMjeriConsumedLength(selection, customWidth, customLength) {
+        if (!selection || !customWidth || !customLength) {
+            return 0;
+        }
+
+        return customLength <= selection.remainingWidth
+            ? customWidth
+            : customLength;
+    }
+
+    function updatePoMjeriPreview() {
+        const validation = document.getElementById("poMjeriValidation");
+        const maxQtyElement = document.getElementById("poMjeriMaxQty");
+
+        if (!currentPoMjeriSelection) {
+            validation.textContent = "";
+            maxQtyElement.textContent = "0";
+            return false;
+        }
+
+        const width = parseInt(document.getElementById("poMjeriWidth").value, 10);
+        const length = parseInt(document.getElementById("poMjeriLength").value, 10);
+        const availableRemainingLength = currentPoMjeriSelection.availableRemainingLength ?? currentPoMjeriSelection.remainingLength;
+
+        if (!width || !length) {
+            validation.textContent = "";
+            maxQtyElement.textContent = "0";
+            return false;
+        }
+
+        if (length > availableRemainingLength) {
+            validation.textContent = "@Inventar.Resources.Resource.TheEnteredLengthCannotBeGreaterThanTheRemainingLength.";
+            maxQtyElement.textContent = "0";
+            return false;
+        }
+
+        const consumedLength = calculatePoMjeriConsumedLength(currentPoMjeriSelection, width, length);
+        const maxQty = consumedLength > 0
+            ? Math.floor(availableRemainingLength / consumedLength)
+            : 0;
+
+        maxQtyElement.textContent = maxQty.toString();
+        validation.textContent = maxQty < 1
+            ? "@Inventar.Resources.Resource.ThereIsNoLengthAvailableForTheDimensionEntered."
+            : "";
+
+        return maxQty > 0;
+    }
+
+    function openPoMjeriModal(selection) {
+        currentPoMjeriSelection = selection;
+        document.getElementById("poMjeriProductId").value = selection.productId;
+        document.getElementById("poMjeriOriginalSize").textContent = selection.originalSize || "";
+        document.getElementById("poMjeriRemainingSize").textContent = selection.remainingSize || "";
+        document.getElementById("poMjeriUnId").textContent = selection.unId || "-";
+        document.getElementById("poMjeriModalTitle").textContent = `${selection.name} / ${selection.model}`;
+        document.getElementById("poMjeriWidth").value = selection.fixedWidth || selection.remainingWidth || "";
+        document.getElementById("poMjeriWidthDisplay").value = selection.fixedWidth || selection.remainingWidth || "";
+        document.getElementById("poMjeriModal").hidden = false;
+        document.getElementById("poMjeriLength").focus();
+        updatePoMjeriPreview();
+    }
+
+    function handleSelectionResponse(result) {
+        if (result.success && result.requiresCustomSize) {
+            closeProductPickerModal();
+            openPoMjeriModal(result);
+            return;
+        }
+
+        if (result.success) {
+            playSuccessBeep();
+            setTimeout(() => {
+                window.location.href = `/InventoryItem/QRCodeScanning`;
+            }, 80);
+            return;
+        }
+
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                ${result.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+    }
+
     function onScanSuccess(qrCodeMessage) {
         const now = Date.now();
 
@@ -245,23 +458,9 @@
         lastScan = qrCodeMessage;
         lastScanTime = now;
 
-        fetch(`/InventoryItem/ProcessQRCode?data=${qrCodeMessage}`)
+        fetch(`/InventoryItem/ProcessQRCode?data=${encodeURIComponent(qrCodeMessage)}`)
             .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    playSuccessBeep();   // SOUND HERE
-                    setTimeout(() => {
-                        window.location.href = `/InventoryItem/QRCodeScanning`;
-                    }, 80); // tiny delay so sound can play
-                    // window.location.href = `/InventoryItem/QRCodeScanning`;
-                } else {
-                    document.getElementById('result').innerHTML = `
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                            ${result.message}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>`;
-                }
-            })
+            .then(handleSelectionResponse)
             .catch(error => {
                 console.error('Fetch error:', error);
                 document.getElementById('result').innerHTML = `
@@ -276,7 +475,17 @@
     // Delay scanner initialization after page load
     window.addEventListener("load", function () {
         setTimeout(() => {
-            const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+            const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
+                fps: 10,
+                aspectRatio: 1.3333333,
+                qrbox: function (viewfinderWidth, viewfinderHeight) {
+                    const edge = Math.floor(Math.min(viewfinderWidth * 0.94, viewfinderHeight * 0.98));
+                    return {
+                        width: edge,
+                        height: edge
+                    };
+                }
+            });
             html5QrcodeScanner.render(onScanSuccess, onScanError);
         }, 100); // Delay by 3 seconds (adjust as needed)
     });
@@ -288,16 +497,18 @@
 <script>
     $(document).ready(function () {
         $(".update-quantity").click(function () {
-            var itemId = $(this).data("id");
+            var lineId = $(this).data("line-id");
             var action = $(this).data("action");
 
             $.ajax({
                 url: "/InventoryItem/UpdateQuantity",
                 type: "POST",
-                data: { id: itemId, action: action },
+                data: { lineId: lineId, action: action },
                 success: function (newQuantity) {
-                    $("#quantity-" + itemId).text(newQuantity.qty);
-                    $("#m2Total-" + itemId).text(newQuantity.m2Total);
+                    $("#quantity-" + lineId).text(newQuantity.qty);
+                    if (newQuantity.message) {
+                        alert(newQuantity.message);
+                    }
                 },
                 error: function () {
                     alert("Error updating quantity.");
@@ -308,12 +519,104 @@
 </script>
 <script>
     document.getElementById("myForm").addEventListener("submit", function (e) {
+        e.preventDefault();
         var idInput = document.getElementById("manualId").value.trim();
 
         if (idInput === "") {
-            e.preventDefault();
-            document.getElementById("errorMessage").textContent = "Name field cannot be empty!";
+            alert("Unesite ID proizvoda.");
+            return;
         }
+
+        fetch(`/InventoryItem/PrepareProductSelection?id=${encodeURIComponent(idInput)}`)
+            .then(response => response.json())
+            .then(handleSelectionResponse)
+            .catch(error => {
+                console.error(error);
+                alert("Error preparing product.");
+            });
+    });
+
+    document.getElementById("formByParameters").addEventListener("submit", function (e) {
+        e.preventDefault();
+    });
+
+    document.getElementById("directSaleForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById("directSaleName").value.trim();
+        const price = Number(document.getElementById("directSalePrice").value || "0");
+        const quantity = Number(document.getElementById("directSaleQuantity").value || "0");
+        const widthValue = document.getElementById("directSaleWidth").value;
+        const lengthValue = document.getElementById("directSaleLength").value;
+        const width = widthValue === "" ? null : Number(widthValue);
+        const length = lengthValue === "" ? null : Number(lengthValue);
+        const productType = document.querySelector("input[name='directSaleProductType']:checked")?.value || "perUnit";
+
+        if (!name) {
+            alert("Unesite naziv proizvoda.");
+            return;
+        }
+
+        if (!Number.isFinite(quantity) || quantity < 1) {
+            alert("Unesite ispravnu količinu.");
+            return;
+        }
+
+        if (!Number.isFinite(price) || price < 0) {
+            alert("Unesite ispravnu cijenu proizvoda.");
+            return;
+        }
+
+        if (width !== null && (!Number.isFinite(width) || width < 1)) {
+            alert("Unesite ispravnu širinu.");
+            return;
+        }
+
+        if (length !== null && (!Number.isFinite(length) || length < 1)) {
+            alert("Unesite ispravnu dužinu.");
+            return;
+        }
+
+        if (productType !== "perUnit" && (width === null || length === null)) {
+            alert("Za izabrani tip proizvoda morate unijeti širinu i dužinu.");
+            return;
+        }
+
+        if (productType === "perUnit" && ((width === null) !== (length === null))) {
+            alert("Ako unosite dimenziju, unesite i širinu i dužinu.");
+            return;
+        }
+
+        fetch("/InventoryItem/CreateDirectSaleProduct", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: name,
+                price: price,
+                quantity: quantity,
+                width: width,
+                length: length,
+                productType: productType
+            })
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    playSuccessBeep();
+                    setTimeout(() => {
+                        window.location.href = "/InventoryItem/QRCodeScanning";
+                    }, 80);
+                    return;
+                }
+
+                alert(result.message || "Greška prilikom kreiranja proizvoda.");
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Greška prilikom kreiranja proizvoda.");
+            });
     });
 </script>
 <script>
@@ -342,7 +645,6 @@
     function searchTepisi() {
 
         let filters = {
-            productNumber: $("#searchProductNumber").val(),
             name: $("#searchName").val(),
             model: $("#searchModel").val(),
             color: $("#searchColor").val(),
@@ -350,13 +652,12 @@
         };
 
         // If all fields empty → show "No results" and stop
-        if (!filters.productNumber &&
-            !filters.name &&
+        if (!filters.name &&
             !filters.model &&
             !filters.color &&
             !filters.size) {
 
-            $("#rightDiv").html("<p>@Inventar.Resources.Resource.NoResultsFound</p>");
+            $("#rightDiv").hide().empty();
             return;
         }
 
@@ -369,7 +670,7 @@
                 $("#rightDiv").html("");
 
                 if (result.length === 0) {
-                    $("#rightDiv").html("<p>@Inventar.Resources.Resource.NoResultsFound</p>");
+                    $("#rightDiv").html("<p>@Inventar.Resources.Resource.NoResultsFound</p>").show();
                     return;
                 }
 
@@ -383,6 +684,19 @@
                         sizeText = ` - ${item.width}X${item.length}`;
                     }
 
+                    let poMjeriText = "";
+                    if (item.poMjeri) {
+                        let remainingSize = "";
+                        if (item.remainingWidth != null && item.remainingLength != null) {
+                            remainingSize = `${item.remainingWidth}X${item.remainingLength}`;
+                        }
+
+                        poMjeriText = ` - ${remainingSize}`;
+                        if (item.unId) {
+                            poMjeriText += ` / ${item.unId}`;
+                        }
+                    }
+
                     html += `
                         <li class="list-group-item list-group-item-action add-item"
                             data-id="${item.id}">
@@ -391,13 +705,14 @@
                             ${item.model} -
                             ${item.color}
                             ${sizeText}
+                            ${poMjeriText}
                         </li>
                     `;
                 });
 
                 html += "</ul>";
 
-                $("#rightDiv").html(html);
+                $("#rightDiv").html(html).show();
             }
         });
     }
@@ -406,7 +721,7 @@
     // ================================
     //  TRIGGER SEARCH ON INPUT
     // ================================
-    $("#searchProductNumber, #searchName, #searchModel, #searchColor, #searchSize")
+    $("#searchName, #searchModel, #searchColor, #searchSize")
         .on("input", function () {
             sessionStorage.setItem(this.id, this.value);  // save input
             searchTepisi();
@@ -419,9 +734,13 @@
     $(document).on("click", ".add-item", function () {
         let id = $(this).data("id");
 
-        $.post("/InventoryItem/AddProductById", { id: id }, function () {
-            location.reload(); // refresh table
-        });
+        fetch(`/InventoryItem/PrepareProductSelection?id=${encodeURIComponent(id)}`)
+            .then(response => response.json())
+            .then(handleSelectionResponse)
+            .catch(error => {
+                console.error(error);
+                alert("Error preparing product.");
+            });
     });
 
 
@@ -429,7 +748,6 @@
     //  RESTORE INPUT VALUES ON REFRESH
     // ================================
     const fields = [
-        "searchProductNumber",
         "searchName",
         "searchModel",
         "searchColor",
@@ -451,8 +769,7 @@
         if (hasSavedInput) {
             searchTepisi();
         } else {
-            // If no saved inputs, show default message
-            $("#rightDiv").html("<p>@Inventar.Resources.Resource.NoResultsFound</p>");
+            $("#rightDiv").hide().empty();
         }
     });
 
@@ -467,16 +784,73 @@
             sessionStorage.removeItem(f);
         });
 
-        $("#rightDiv").html("<p>@Inventar.Resources.Resource.NoResultsFound</p>");
+        $("#rightDiv").hide().empty();
+    });
+
+    $("#poMjeriLength").on("input", function () {
+        updatePoMjeriPreview();
+    });
+
+    $("#submitPoMjeriSelection").on("click", function () {
+        if (!currentPoMjeriSelection || !updatePoMjeriPreview()) {
+            return;
+        }
+
+        const payload = {
+            productId: Number(document.getElementById("poMjeriProductId").value),
+            customWidth: Number(document.getElementById("poMjeriWidth").value),
+            customLength: Number(document.getElementById("poMjeriLength").value)
+        };
+
+        fetch("/InventoryItem/AddPoMjeriScannedProduct", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    closePoMjeriModal();
+                    playSuccessBeep();
+                    setTimeout(() => {
+                        window.location.href = `/InventoryItem/QRCodeScanning`;
+                    }, 80);
+                    return;
+                }
+
+    document.getElementById("poMjeriValidation").textContent = result.message || "@Inventar.Resources.Resource.FailedToAddProduct.";
+            })
+            .catch(error => {
+                console.error(error);
+    document.getElementById("poMjeriValidation").textContent = "@Inventar.Resources.Resource.FailedToAddProduct.";
+            });
+    });
+
+    $("#closePoMjeriModal, .po-mjeri-modal__backdrop").on("click", function () {
+        closePoMjeriModal();
+    });
+
+    $("#openProductPickerModal").on("click", function () {
+        openProductPickerModal();
+    });
+
+    $("#openCreateProductModal").on("click", function () {
+        openCreateProductModal();
+    });
+
+    $("#closeProductPickerModal, #productPickerModalBackdrop").on("click", function () {
+        closeProductPickerModal();
+    });
+
+    $("#closeCreateProductModal, #createProductModalBackdrop").on("click", function () {
+        closeCreateProductModal();
     });
 
 </script>
 
 <style>
-    .update-quantity{
-        margin-bottom: 0.2rem;
-        width: 2rem;
-    }
     td, th{
         text-align:center;
     }
@@ -485,14 +859,6 @@
         pointer-events: none;
         color: gray;
         text-decoration: none;
-    }
-
-    #rightDiv {
-        max-height: 520px;
-        overflow-y: auto;
-        border: 1px solid #ccc;
-        padding: 5px;
-        border-radius: 4px;
     }
 
     div.settings {
@@ -506,7 +872,123 @@
             text-align: right;
         }
 
-            div.settings label:after {
-                content: ":";
-            }
+        div.settings label:after {
+            content: ":";
+        }
+
+    .po-mjeri-modal[hidden] {
+        display: none !important;
+    }
+
+    .po-mjeri-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+    }
+
+    .po-mjeri-modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+    }
+
+    .po-mjeri-modal__panel {
+        position: relative;
+        z-index: 1;
+        max-width: 520px;
+        margin: 6vh auto 0;
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.25rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    }
+
+    .po-mjeri-modal__close {
+        position: absolute;
+        top: 0.6rem;
+        right: 0.8rem;
+        border: 0;
+        background: transparent;
+        font-size: 1.8rem;
+        line-height: 1;
+    }
+
+    .po-mjeri-modal__meta {
+        display: grid;
+        gap: 0.45rem;
+        margin-bottom: 1rem;
+    }
+
+    .po-mjeri-modal__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+        text-align: left;
+    }
+
+    .po-mjeri-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .quantity-stepper--locked {
+        justify-content: center;
+    }
+
+    .direct-sale-form {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .direct-sale-form__row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .direct-sale-form__row--wide {
+        width: 100%;
+    }
+
+    .direct-sale-form__row--split {
+        flex-wrap: wrap;
+    }
+
+    .direct-sale-form__pair {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 240px;
+    }
+
+    .direct-sale-form__label {
+        min-width: 110px;
+        margin: 0;
+        text-align: left;
+    }
+
+    .direct-sale-form__input {
+        flex: 1 1 auto;
+    }
+
+    .direct-sale-form__types {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+    }
+
+    .direct-sale-form__type {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .product-picker-modal__manual--standalone {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+    }
 </style>

@@ -1,0 +1,17 @@
+﻿@{
+    var currentAction = (ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty).ToLowerInvariant();
+}
+
+<nav class="account-nav" aria-label="Navigacija naloga">
+    <a class="@(currentAction == "index" ? "is-active" : null)" asp-controller="Account" asp-action="Index">Pregled</a>
+    <a class="@(currentAction == "profile" ? "is-active" : null)" asp-controller="Account" asp-action="Profile">Profil</a>
+    <a class="@((currentAction == "orders" || currentAction == "orderdetails") ? "is-active" : null)" asp-controller="Account" asp-action="Orders">Narudžbine</a>
+    <form asp-controller="Account" asp-action="Logout" method="post" class="account-nav__logout-form">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="account-nav__logout-button" style="border: 1px solid;" title="Odjavi se" aria-label="Odjavi se">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M16 17v-2h-5v-6h5V7l5 5-5 5Zm-2 3H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3h-2V6H6v12h8v-3h2v3a2 2 0 0 1-2 2Z" />
+            </svg>
+        </button>
+    </form>
+</nav>

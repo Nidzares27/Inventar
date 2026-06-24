@@ -22,6 +22,10 @@ namespace Inventar.Models
         [StringLength(160)]
         public string? AltText { get; set; }
 
+        [Required]
+        [StringLength(20)]
+        public string MediaType { get; set; } = "image";
+
         public bool IsPrimary { get; set; }
         public int SortOrder { get; set; }
         public bool Disabled { get; set; }

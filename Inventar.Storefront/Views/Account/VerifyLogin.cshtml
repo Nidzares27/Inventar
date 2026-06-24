@@ -1,0 +1,38 @@
+@model Inventar.Storefront.ViewModels.Account.AccountLoginVerificationViewModel
+@{
+    ViewData["Title"] = "Potvrda prijave";
+}
+
+<section class="page-head">
+    <span class="eyebrow">Potvrda prijave</span>
+    <h1>Unesite kod iz emaila</h1>
+    <p>Kod smo poslali na <strong>@Model.MaskedEmail</strong>.</p>
+</section>
+
+<section class="account-auth-card">
+    <form asp-controller="Account" asp-action="VerifyLogin" method="post" class="checkout-form">
+        <div asp-validation-summary="ModelOnly" class="flash flash--error"></div>
+
+        <div class="field">
+            <label asp-for="Code"></label>
+            <input asp-for="Code" inputmode="numeric" autocomplete="one-time-code" />
+            <span asp-validation-for="Code" class="field__error"></span>
+        </div>
+
+        @if (Model.RememberMe)
+        {
+            <p class="account-helper-text">Ovaj uredjaj će ostati prijavljen radi bržeg pristupa nalogu.</p>
+        }
+
+        <button type="submit" class="button button--full">Potvrdi prijavu</button>
+    </form>
+
+    <form asp-controller="Account" asp-action="ResendLoginCode" method="post" class="account-resend-form">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="button button--ghost button--full">Pošalji novi kod</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

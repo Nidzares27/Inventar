@@ -1,0 +1,214 @@
+@using System.Globalization
+@using System.Text.Json
+@model Inventar.ViewModels.InventoryReports.InventoryErrorReportPageViewModel
+@{
+    ViewData["Title"] = "Izvjestaj po greskama";
+    var initialGrandTotalM2 = Model.Groups.Sum(group => group.TotalM2);
+    var initialGrandTotalQuantity = Model.Groups.Sum(group => group.TotalQuantity);
+
+    var groupsJson = JsonSerializer.Serialize(
+        Model.Groups.Select(group => new
+        {
+            productName = group.ProductName,
+            totalM2 = group.TotalM2,
+            totalQuantity = group.TotalQuantity
+        }));
+}
+
+<div class="inventory-report-page">
+    <section class="inventory-report-card">
+        <div class="inventory-report-card__header">
+            <h2 class="inventory-report-card__title">@Inventar.Resources.Resource.ReportByErrors</h2>
+        </div>
+
+        @if (Model.Groups.Count == 0)
+        {
+            <div class="alert alert-success mb-0">@Inventar.Resources.Resource.NoProductsWithQuantityLessThanZero_</div>
+        }
+        else
+        {
+            <div class="inventory-error-report-list">
+                @foreach (var group in Model.Groups)
+                {
+                    <section class="inventory-error-report-group"
+                             data-group-name="@group.ProductName"
+                             data-section-row-count="@(group.Items.Count + 3)">
+                        <div class="table-responsive">
+                            <table class="table table-bordered inventory-report-table inventory-error-report-table">
+                                <thead>
+                                    <tr>
+                                        <th colspan="7" class="inventory-error-report-table__title">
+                                            <label class="inventory-report-name-option justify-content-center">
+                                                <input type="checkbox"
+                                                       class="form-check-input inventory-error-check"
+                                                       data-product-name="@group.ProductName"
+                                                       checked />
+                                                <span>@group.ProductName</span>
+                                            </label>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th>@Inventar.Resources.Resource.ProductNumber</th>
+                                        <th>Model</th>
+                                        <th>@Inventar.Resources.Resource.Color</th>
+                                        <th>@Inventar.Resources.Resource.Size</th>
+                                        <th>m2</th>
+                                        <th>@Inventar.Resources.Resource.Quantity</th>
+                                        <th>@Inventar.Resources.Resource.M2Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in group.Items)
+                                    {
+                                        <tr>
+                                            <td>@item.ProductNumber</td>
+                                            <td>@item.Model</td>
+                                            <td>@item.Color</td>
+                                            <td>@item.SizeLabel</td>
+                                            <td>@item.M2.ToString("0.00", CultureInfo.InvariantCulture)</td>
+                                            <td>@item.Quantity</td>
+                                            <td>@item.M2Total.ToString("0.00", CultureInfo.InvariantCulture)</td>
+                                        </tr>
+                                    }
+                                    <tr class="inventory-report-row inventory-report-row--total">
+                                        <td colspan="5"><strong>@Inventar.Resources.Resource.Total</strong></td>
+                                        <td><strong>@group.TotalQuantity</strong></td>
+                                        <td><strong>@group.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                }
+            </div>
+
+            <div class="inventory-report-load-more">
+                <button type="button" id="loadMoreErrorRows" class="btn btn-outline-primary">@Inventar.Resources.Resource.LoadAnother300Rows</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered inventory-report-table inventory-error-report-table mb-0">
+                    <tbody>
+                        <tr class="inventory-report-row inventory-report-row--grand-total">
+                            <td colspan="5"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
+                            <td id="errorGrandTotalQuantity"><strong>@initialGrandTotalQuantity</strong></td>
+                            <td id="errorGrandTotalM2"><strong>@initialGrandTotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="inventory-report-actions">
+                <button type="button" id="printErrorPdf" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+                <button type="button" id="createErrorExcel" class="btn btn-success">Excel</button>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    @if (Model.Groups.Count > 0)
+    {
+        <script>
+            (function () {
+                const reportGroups = @Html.Raw(groupsJson);
+                const groupsByName = Object.fromEntries(reportGroups.map(group => [group.productName.toLowerCase(), group]));
+                const errorGrandTotalQuantity = document.getElementById('errorGrandTotalQuantity');
+                const errorGrandTotalM2 = document.getElementById('errorGrandTotalM2');
+                const sectionLoader = window.InventarSectionLoadMore.init({
+                    sectionSelector: '.inventory-error-report-group',
+                    loadMoreButtonId: 'loadMoreErrorRows',
+                    pageSize: 300
+                });
+
+                function getSelectedProductNames() {
+                    return Array.from(document.querySelectorAll('.inventory-error-check:checked'))
+                        .map(input => input.getAttribute('data-product-name'))
+                        .filter(Boolean);
+                }
+
+                function formatNumber(value) {
+                    return Number(value ?? 0).toFixed(2);
+                }
+
+                function updateGrandTotals() {
+                    const totals = getSelectedProductNames().reduce((aggregate, productName) => {
+                        const group = groupsByName[productName.toLowerCase()];
+                        if (!group) {
+                            return aggregate;
+                        }
+
+                        aggregate.totalQuantity += Number(group.totalQuantity ?? 0);
+                        aggregate.totalM2 += Number(group.totalM2 ?? 0);
+                        return aggregate;
+                    }, { totalQuantity: 0, totalM2: 0 });
+
+                    errorGrandTotalQuantity.innerHTML = `<strong>${totals.totalQuantity}</strong>`;
+                    errorGrandTotalM2.innerHTML = `<strong>${formatNumber(totals.totalM2)}</strong>`;
+                }
+
+                async function downloadReport(url, payload, fileName) {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const text = await response.text();
+                        throw new Error(text || 'Export failed.');
+                    }
+
+                    const blob = await response.blob();
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = fileName;
+                    link.click();
+                    window.URL.revokeObjectURL(blobUrl);
+                }
+
+                document.querySelectorAll('.inventory-error-check').forEach(checkbox => {
+                    checkbox.addEventListener('change', updateGrandTotals);
+                });
+
+                document.getElementById('printErrorPdf').addEventListener('click', async function () {
+                    const selectedNames = getSelectedProductNames();
+                    if (selectedNames.length === 0) {
+                        alert('Odaberite bar jedan ProductName za PDF.');
+                        return;
+                    }
+
+                    try {
+                        await downloadReport('@Url.Action("ExportErrorReportPdf", "InventoryReports")', {
+                            heading: 'Izvjestaj po greskama',
+                            productNames: selectedNames
+                        }, 'Izvjestaj_po_greskama.pdf');
+                    } catch (error) {
+                        alert(error.message);
+                    }
+                });
+
+                document.getElementById('createErrorExcel').addEventListener('click', async function () {
+                    const selectedNames = getSelectedProductNames();
+                    if (selectedNames.length === 0) {
+                        alert('Odaberite bar jedan ProductName za Excel.');
+                        return;
+                    }
+
+                    try {
+                        await downloadReport('@Url.Action("ExportErrorReportExcel", "InventoryReports")', {
+                            heading: 'Izvjestaj po greskama',
+                            productNames: selectedNames
+                        }, 'Izvjestaj_po_greskama.xlsx');
+                    } catch (error) {
+                        alert(error.message);
+                    }
+                });
+
+                updateGrandTotals();
+                sectionLoader.refresh(true);
+            })();
+        </script>
+    }
+}

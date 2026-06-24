@@ -22,9 +22,8 @@ namespace Inventar.Models
         [StringLength(50)]
         public string CustomerLastName { get; set; } = null!;
 
-        [Required]
         [StringLength(254)]
-        public string CustomerEmail { get; set; } = null!;
+        public string? CustomerEmail { get; set; }
 
         [StringLength(30)]
         public string? CustomerPhone { get; set; }

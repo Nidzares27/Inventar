@@ -1,29 +1,52 @@
-﻿namespace Inventar.Utils
+namespace Inventar.Utils
 {
-    public class CloudinaryHelper
+    public static class CloudinaryHelper
     {
-        public static string GetPublicIdFromUrlFromFolder(string url)
+        public static bool IsCloudinaryUrl(string? url)
         {
+            return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                && uri.Host.Contains("cloudinary.com", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool TryGetPublicIdFromUrlFromFolder(string? url, out string publicId)
+        {
+            publicId = string.Empty;
+
+            if (!IsCloudinaryUrl(url))
+            {
+                return false;
+            }
+
             try
             {
-                var uri = new Uri(url);
+                var uri = new Uri(url!);
                 var segments = uri.Segments;
 
-                if (segments.Length >= 3)
+                if (segments.Length < 3)
                 {
-                    var publicIdWithExtension = string.Join("", segments.Skip(segments.Length - 2));  // Skip the version segment
-                    var publicId = System.IO.Path.GetFileNameWithoutExtension(publicIdWithExtension);
-                    var exstension = System.IO.Path.GetExtension(publicIdWithExtension);
-                    var publicIdWithFolderName = publicIdWithExtension.Remove((publicIdWithExtension.Length - exstension.Length), exstension.Length);
-                    return publicIdWithFolderName;
+                    return false;
                 }
+
+                var publicIdWithExtension = string.Join("", segments.Skip(segments.Length - 2));
+                var extension = System.IO.Path.GetExtension(publicIdWithExtension);
+                publicId = publicIdWithExtension.Remove(publicIdWithExtension.Length - extension.Length, extension.Length);
+                return !string.IsNullOrWhiteSpace(publicId);
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception("Invalid URL format", ex);
+                publicId = string.Empty;
+                return false;
+            }
+        }
+
+        public static string GetPublicIdFromUrlFromFolder(string url)
+        {
+            if (TryGetPublicIdFromUrlFromFolder(url, out var publicId))
+            {
+                return publicId;
             }
 
-            return null;
+            throw new Exception("Invalid Cloudinary URL format.");
         }
     }
 }

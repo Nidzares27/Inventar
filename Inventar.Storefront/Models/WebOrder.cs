@@ -5,6 +5,7 @@ namespace Inventar.Storefront.Models;
 public class WebOrder
 {
     public int Id { get; set; }
+    public int? StorefrontCustomerId { get; set; }
 
     [Required]
     [StringLength(30)]
@@ -22,9 +23,8 @@ public class WebOrder
     [StringLength(50)]
     public string CustomerLastName { get; set; } = string.Empty;
 
-    [Required]
     [StringLength(254)]
-    public string CustomerEmail { get; set; } = string.Empty;
+    public string? CustomerEmail { get; set; }
 
     [StringLength(30)]
     public string? CustomerPhone { get; set; }
@@ -90,6 +90,7 @@ public class WebOrder
     public string? InternalNote { get; set; }
     public byte[]? RowVersion { get; set; }
 
+    public StorefrontCustomer? StorefrontCustomer { get; set; }
     public ICollection<WebOrderItem> Items { get; set; } = new List<WebOrderItem>();
     public ICollection<WebOrderStatusHistory> StatusHistory { get; set; } = new List<WebOrderStatusHistory>();
     public ICollection<InventoryReservation> Reservations { get; set; } = new List<InventoryReservation>();

@@ -744,4 +744,295 @@
   <data name="YourPasswordHasBeenResetSuccessfully" xml:space="preserve">
     <value>Your password has been reset successfully</value>
   </data>
+  <data name="BroaderCategory" xml:space="preserve">
+    <value>Broader Category</value>
+  </data>
+  <data name="NarrowerCategory" xml:space="preserve">
+    <value>Narrower Category</value>
+  </data>
+  <data name="CopyDescAndShortDesc" xml:space="preserve">
+    <value>Copy Description and Short Description to products with the same Name + Model</value>
+  </data>
+  <data name="ReuseCloudinaryImages" xml:space="preserve">
+    <value>Reuse this image for products with the same Name + Model</value>
+  </data>
+  <data name="SyncImages" xml:space="preserve">
+    <value>Sync missing images with newly created group products</value>
+  </data>
+  <data name="CreateNewTable" xml:space="preserve">
+    <value>Create new table</value>
+  </data>
+  <data name="AddColorToNewTable" xml:space="preserve">
+    <value>Add color to a new table</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="ReportByName" xml:space="preserve">
+    <value>Report by Name</value>
+  </data>
+  <data name="CheckAll" xml:space="preserve">
+    <value>Check all</value>
+  </data>
+  <data name="UncheckAll" xml:space="preserve">
+    <value>Uncheck all</value>
+  </data>
+  <data name="OverallTotal" xml:space="preserve">
+    <value>Overall total</value>
+  </data>
+  <data name="AddProductNameToNewTable" xml:space="preserve">
+    <value>Add product name to a new table</value>
+  </data>
+  <data name="AddSizeToNewTable" xml:space="preserve">
+    <value>Add size to a new table</value>
+  </data>
+  <data name="AddProductNumberToNewTable" xml:space="preserve">
+    <value>Add Product number to a new table</value>
+  </data>
+  <data name="ReportByM2" xml:space="preserve">
+    <value>Report by m2</value>
+  </data>
+  <data name="ReportPerUnit" xml:space="preserve">
+    <value>Report per unit</value>
+  </data>
+  <data name="ReportBySize" xml:space="preserve">
+    <value>Report by size</value>
+  </data>
+  <data name="ReportByColor" xml:space="preserve">
+    <value>Report by color</value>
+  </data>
+  <data name="ReportByErrors" xml:space="preserve">
+    <value>Report by errors</value>
+  </data>
+  <data name="ReportByProductNumber" xml:space="preserve">
+    <value>Report by product number</value>
+  </data>
+  <data name="NewTable" xml:space="preserve">
+    <value>New table</value>
+  </data>
+  <data name="DeleteNewTable" xml:space="preserve">
+    <value>Delete New Table</value>
+  </data>
+  <data name="PerMeasure" xml:space="preserve">
+    <value>per measure</value>
+  </data>
+  <data name="PerMeasureProduct" xml:space="preserve">
+    <value>per measure product</value>
+  </data>
+  <data name="NoProductsWithQuantityLessThanZero." xml:space="preserve">
+    <value>There are no products with a quantity less than zero.</value>
+  </data>
+  <data name="DiscountedPrice" xml:space="preserve">
+    <value>Discounted price</value>
+  </data>
+  <data name="TheNewTableIsEmpty" xml:space="preserve">
+    <value>The new table is empty.</value>
+  </data>
+  <data name="LoadAnother300Rows" xml:space="preserve">
+    <value>Load another 300 rows</value>
+  </data>
+  <data name="LoadAnother30Rows" xml:space="preserve">
+    <value>Load another 30 rows</value>
+  </data>
+  <data name="NoImagesUploadedForThisProduct." xml:space="preserve">
+    <value>No images uploaded for this product.</value>
+  </data>
+  <data name="CopyDescriptionAndShortDescriptionToIdenticalPoMjeriProducts" xml:space="preserve">
+    <value>Copy description and short description to identical per measure products</value>
+  </data>
+  <data name="ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="CompletedOrdersOnly" xml:space="preserve">
+    <value>Completed orders only</value>
+  </data>
+  <data name="OriginalSize" xml:space="preserve">
+    <value>Original size</value>
+  </data>
+  <data name="RemainingSize" xml:space="preserve">
+    <value>Remaining size</value>
+  </data>
+  <data name="AddProduct" xml:space="preserve">
+    <value>Add Product</value>
+  </data>
+  <data name="MaxAvailableQuantity" xml:space="preserve">
+    <value>Max available quantity</value>
+  </data>
+  <data name="WebCustomer" xml:space="preserve">
+    <value>Web customers</value>
+  </data>
+  <data name="Orders" xml:space="preserve">
+    <value>Orders</value>
+  </data>
+  <data name="ItemsOrdered" xml:space="preserve">
+    <value>Items Ordered</value>
+  </data>
+  <data name="TotalMoneySpent" xml:space="preserve">
+    <value>Total Money Spent</value>
+  </data>
+  <data name="ViewOrders" xml:space="preserve">
+    <value>View Orders</value>
+  </data>
+  <data name="ThereAreNoCompletedWebOrdersToDisplay" xml:space="preserve">
+    <value>There are no completed web orders to display</value>
+  </data>
+  <data name="TheEnteredWidthCannotBeGreaterThanTheRemainingWidth" xml:space="preserve">
+    <value>The entered width cannot be greater than the remaining width</value>
+  </data>
+  <data name="TheEnteredLengthCannotBeGreaterThanTheRemainingLength" xml:space="preserve">
+    <value>The entered length cannot be greater than the remaining length</value>
+  </data>
+  <data name="TheLengthCannotBeLessThanTheWidth" xml:space="preserve">
+    <value>The length cannot be less than the width</value>
+  </data>
+  <data name="ThereIsNoLengthAvailableForTheDimensionEntered" xml:space="preserve">
+    <value>There is no length available for the dimension entered</value>
+  </data>
+  <data name="FailedToAddProduct" xml:space="preserve">
+    <value>Failed to add product</value>
+  </data>
+  <data name="EditItems" xml:space="preserve">
+    <value>Edit items</value>
+  </data>
+  <data name="ConfirmChanges" xml:space="preserve">
+    <value>Confirm changes</value>
+  </data>
+  <data name="ItemsRemainInDraftModeUntilYouClickConfirm" xml:space="preserve">
+    <value>Items remain in draft mode until you click confirm</value>
+  </data>
+  <data name="QuantitiesAndCustomDimensionsAreRevalidatedBeforeSaving" xml:space="preserve">
+    <value>Quantities and custom dimensions are revalidated before saving</value>
+  </data>
+  <data name="ItemsCanOnlyBeEditedForActiveOrders" xml:space="preserve">
+    <value>Items can only be edited for active orders</value>
+  </data>
+  <data name="PerMeasureAllocations" xml:space="preserve">
+    <value>Per measure allocations</value>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="Cut" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="ThereAreNoActiveReservationsForThisItem" xml:space="preserve">
+    <value>There are no active reservations for this item</value>
+  </data>
+  <data name="CustomerGoal" xml:space="preserve">
+    <value>Customer goal</value>
+  </data>
+  <data name="ManuallyAllocateHowManyPiecesYouTakeFromEachAvailableInstance" xml:space="preserve">
+    <value>Manually allocate how many pieces you take from each available instance</value>
+  </data>
+  <data name="TheSumMustBeExact" xml:space="preserve">
+    <value>The sum must be exact</value>
+  </data>
+  <data name="ThereAreCurrentlyNoOtherValidInstancesForThisPerMeasureAllocation" xml:space="preserve">
+    <value>There are currently no other valid instances for this per measure allocation</value>
+  </data>
+  <data name="Instance" xml:space="preserve">
+    <value>Instance</value>
+  </data>
+  <data name="MaxPieces" xml:space="preserve">
+    <value>Max. pieces</value>
+  </data>
+  <data name="Currently" xml:space="preserve">
+    <value>Currently</value>
+  </data>
+  <data name="NewQuantity" xml:space="preserve">
+    <value>New quantity</value>
+  </data>
+  <data name="ApplyAllocation" xml:space="preserve">
+    <value>Apply allocation</value>
+  </data>
+  <data name="NoInventoryReservationsRecordedForThisOrderYet" xml:space="preserve">
+    <value>No inventory reservations recorded for this order yet</value>
+  </data>
+  <data name="NoStatusHistoryEntriesYet" xml:space="preserve">
+    <value>No status history entries yet</value>
+  </data>
+  <data name="AddProductToOrder" xml:space="preserve">
+    <value>Add product to order</value>
+  </data>
+  <data name="AddPerMeasureProduct" xml:space="preserve">
+    <value>Add per measure product</value>
+  </data>
+  <data name="TotalItems" xml:space="preserve">
+    <value>Total items</value>
+  </data>
+  <data name="TotalOrderAmount" xml:space="preserve">
+    <value>Total order amount</value>
+  </data>
+  <data name="AnOrderMustHaveAtLeastOneItem" xml:space="preserve">
+    <value>An order must have at least one item</value>
+  </data>
+  <data name="AddNewProductOrCancelTheChanges" xml:space="preserve">
+    <value>Add a new product or cancel the changes</value>
+  </data>
+  <data name="DeleteItem" xml:space="preserve">
+    <value>Delete item</value>
+  </data>
+  <data name="ItIsPossibleToOrderMaximumOf" xml:space="preserve">
+    <value>It is possible to order a maximum of</value>
+  </data>
+  <data name="pieces" xml:space="preserve">
+    <value>pieces</value>
+  </data>
+  <data name="PMquantityUpdateFailed" xml:space="preserve">
+    <value>PM quantity update failed</value>
+  </data>
+  <data name="PMamountCheckFailed" xml:space="preserve">
+    <value>PM amount check failed</value>
+  </data>
+  <data name="TryAgain" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="ProductSearchFailed" xml:space="preserve">
+    <value>Product search failed</value>
+  </data>
+  <data name="PiecesForGivenProduct" xml:space="preserve">
+    <value>pieces for a given product</value>
+  </data>
+  <data name="TheProductHasBeenAddedToTheDraftChanges" xml:space="preserve">
+    <value>The product has been added to the draft changes</value>
+  </data>
+  <data name="PMproductVerificationFailed" xml:space="preserve">
+    <value>PM product verification failed</value>
+  </data>
+  <data name="FirstEnterTheCorrectDimensions" xml:space="preserve">
+    <value>First enter the correct dimensions</value>
+  </data>
+  <data name="FailedToUpdateItems" xml:space="preserve">
+    <value>Failed to update items</value>
+  </data>
+  <data name="TheAllocationIsReadyToSave" xml:space="preserve">
+    <value>The allocation is ready to save</value>
+  </data>
+  <data name="ItIsNecessaryToAdd" xml:space="preserve">
+    <value>It is necessary to add</value>
+  </data>
+  <data name="more" xml:space="preserve">
+    <value>more</value>
+  </data>
+  <data name="ItIsNecessaryToReduceBy" xml:space="preserve">
+    <value>It is necessary to reduce by</value>
+  </data>
+  <data name="QRCodesGrouped" xml:space="preserve">
+    <value>QR Codes Grouped</value>
+  </data>
+  <data name="CreateProductForSelling" xml:space="preserve">
+    <value>Create product for selling</value>
+  </data>
+  <data name="TemporaryProduct" xml:space="preserve">
+    <value>Temporary product</value>
+  </data>
+  <data name="FixedQuantity" xml:space="preserve">
+    <value>Fixed quantity</value>
+  </data>
+  <data name="ReplaceProduct" xml:space="preserve">
+    <value>Replace product</value>
+  </data>
+  <data name="PerUnit" xml:space="preserve">
+    <value>Per unit</value>
+  </data>
 </root>

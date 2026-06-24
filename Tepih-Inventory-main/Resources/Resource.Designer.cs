@@ -79,6 +79,24 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string Add {
+            get {
+                return ResourceManager.GetString("Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add color to a new table.
+        /// </summary>
+        public static string AddColorToNewTable {
+            get {
+                return ResourceManager.GetString("AddColorToNewTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add Debt.
         /// </summary>
         public static string AddDebt {
@@ -97,11 +115,74 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add a new product or cancel the changes.
+        /// </summary>
+        public static string AddNewProductOrCancelTheChanges {
+            get {
+                return ResourceManager.GetString("AddNewProductOrCancelTheChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add Payment.
         /// </summary>
         public static string AddPayment {
             get {
                 return ResourceManager.GetString("AddPayment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add per measure product.
+        /// </summary>
+        public static string AddPerMeasureProduct {
+            get {
+                return ResourceManager.GetString("AddPerMeasureProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add Product.
+        /// </summary>
+        public static string AddProduct {
+            get {
+                return ResourceManager.GetString("AddProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add product name to a new table.
+        /// </summary>
+        public static string AddProductNameToNewTable {
+            get {
+                return ResourceManager.GetString("AddProductNameToNewTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add Product number to a new table.
+        /// </summary>
+        public static string AddProductNumberToNewTable {
+            get {
+                return ResourceManager.GetString("AddProductNumberToNewTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add product to order.
+        /// </summary>
+        public static string AddProductToOrder {
+            get {
+                return ResourceManager.GetString("AddProductToOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add size to a new table.
+        /// </summary>
+        public static string AddSizeToNewTable {
+            get {
+                return ResourceManager.GetString("AddSizeToNewTable", resourceCulture);
             }
         }
         
@@ -142,6 +223,24 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An order must have at least one item.
+        /// </summary>
+        public static string AnOrderMustHaveAtLeastOneItem {
+            get {
+                return ResourceManager.GetString("AnOrderMustHaveAtLeastOneItem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apply allocation.
+        /// </summary>
+        public static string ApplyAllocation {
+            get {
+                return ResourceManager.GetString("ApplyAllocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Available.
         /// </summary>
         public static string Available {
@@ -156,6 +255,15 @@ namespace Inventar.Resources {
         public static string BackToList {
             get {
                 return ResourceManager.GetString("BackToList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Broader Category.
+        /// </summary>
+        public static string BroaderCategory {
+            get {
+                return ResourceManager.GetString("BroaderCategory", resourceCulture);
             }
         }
         
@@ -259,11 +367,29 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Check all.
+        /// </summary>
+        public static string CheckAll {
+            get {
+                return ResourceManager.GetString("CheckAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Clear Cart.
         /// </summary>
         public static string ClearCart {
             get {
                 return ResourceManager.GetString("ClearCart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clear filters.
+        /// </summary>
+        public static string ClearFilters {
+            get {
+                return ResourceManager.GetString("ClearFilters", resourceCulture);
             }
         }
         
@@ -295,6 +421,24 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Completed orders only.
+        /// </summary>
+        public static string CompletedOrdersOnly {
+            get {
+                return ResourceManager.GetString("CompletedOrdersOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confirm changes.
+        /// </summary>
+        public static string ConfirmChanges {
+            get {
+                return ResourceManager.GetString("ConfirmChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Confirm Password.
         /// </summary>
         public static string ConfirmPassword {
@@ -309,6 +453,24 @@ namespace Inventar.Resources {
         public static string ConfirmPurchase {
             get {
                 return ResourceManager.GetString("ConfirmPurchase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy Description and Short Description to products with the same Name + Model.
+        /// </summary>
+        public static string CopyDescAndShortDesc {
+            get {
+                return ResourceManager.GetString("CopyDescAndShortDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy description and short description to identical per measure products.
+        /// </summary>
+        public static string CopyDescriptionAndShortDescriptionToIdenticalPoMjeriProducts {
+            get {
+                return ResourceManager.GetString("CopyDescriptionAndShortDescriptionToIdenticalPoMjeriProducts", resourceCulture);
             }
         }
         
@@ -331,6 +493,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Create new table.
+        /// </summary>
+        public static string CreateNewTable {
+            get {
+                return ResourceManager.GetString("CreateNewTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Create Product.
         /// </summary>
         public static string CreateProduct {
@@ -340,11 +511,29 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Create product for selling.
+        /// </summary>
+        public static string CreateProductForSelling {
+            get {
+                return ResourceManager.GetString("CreateProductForSelling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creating Product.
         /// </summary>
         public static string CreatingProduct {
             get {
                 return ResourceManager.GetString("CreatingProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Currently.
+        /// </summary>
+        public static string Currently {
+            get {
+                return ResourceManager.GetString("Currently", resourceCulture);
             }
         }
         
@@ -363,6 +552,24 @@ namespace Inventar.Resources {
         public static string CustomerFullName {
             get {
                 return ResourceManager.GetString("CustomerFullName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Customer goal.
+        /// </summary>
+        public static string CustomerGoal {
+            get {
+                return ResourceManager.GetString("CustomerGoal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cut.
+        /// </summary>
+        public static string Cut {
+            get {
+                return ResourceManager.GetString("Cut", resourceCulture);
             }
         }
         
@@ -466,6 +673,24 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete item.
+        /// </summary>
+        public static string DeleteItem {
+            get {
+                return ResourceManager.GetString("DeleteItem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete New Table.
+        /// </summary>
+        public static string DeleteNewTable {
+            get {
+                return ResourceManager.GetString("DeleteNewTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete Payment.
         /// </summary>
         public static string DeletePayment {
@@ -565,6 +790,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Discounted price.
+        /// </summary>
+        public static string DiscountedPrice {
+            get {
+                return ResourceManager.GetString("DiscountedPrice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Download.
         /// </summary>
         public static string Download {
@@ -597,6 +831,15 @@ namespace Inventar.Resources {
         public static string EditDebt {
             get {
                 return ResourceManager.GetString("EditDebt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit items.
+        /// </summary>
+        public static string EditItems {
+            get {
+                return ResourceManager.GetString("EditItems", resourceCulture);
             }
         }
         
@@ -655,6 +898,24 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to add product.
+        /// </summary>
+        public static string FailedToAddProduct {
+            get {
+                return ResourceManager.GetString("FailedToAddProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to update items.
+        /// </summary>
+        public static string FailedToUpdateItems {
+            get {
+                return ResourceManager.GetString("FailedToUpdateItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filter.
         /// </summary>
         public static string Filter {
@@ -664,11 +925,29 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to First enter the correct dimensions.
+        /// </summary>
+        public static string FirstEnterTheCorrectDimensions {
+            get {
+                return ResourceManager.GetString("FirstEnterTheCorrectDimensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to First Name.
         /// </summary>
         public static string FirstName {
             get {
                 return ResourceManager.GetString("FirstName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed quantity.
+        /// </summary>
+        public static string FixedQuantity {
+            get {
+                return ResourceManager.GetString("FixedQuantity", resourceCulture);
             }
         }
         
@@ -736,6 +1015,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Instance.
+        /// </summary>
+        public static string Instance {
+            get {
+                return ResourceManager.GetString("Instance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Internal Note.
         /// </summary>
         public static string InternalNote {
@@ -799,6 +1087,60 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Items can only be edited for active orders.
+        /// </summary>
+        public static string ItemsCanOnlyBeEditedForActiveOrders {
+            get {
+                return ResourceManager.GetString("ItemsCanOnlyBeEditedForActiveOrders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Items Ordered.
+        /// </summary>
+        public static string ItemsOrdered {
+            get {
+                return ResourceManager.GetString("ItemsOrdered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Items remain in draft mode until you click confirm.
+        /// </summary>
+        public static string ItemsRemainInDraftModeUntilYouClickConfirm {
+            get {
+                return ResourceManager.GetString("ItemsRemainInDraftModeUntilYouClickConfirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to It is necessary to add.
+        /// </summary>
+        public static string ItIsNecessaryToAdd {
+            get {
+                return ResourceManager.GetString("ItIsNecessaryToAdd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to It is necessary to reduce by.
+        /// </summary>
+        public static string ItIsNecessaryToReduceBy {
+            get {
+                return ResourceManager.GetString("ItIsNecessaryToReduceBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to It is possible to order a maximum of.
+        /// </summary>
+        public static string ItIsPossibleToOrderMaximumOf {
+            get {
+                return ResourceManager.GetString("ItIsPossibleToOrderMaximumOf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Last Name.
         /// </summary>
         public static string LastName {
@@ -822,6 +1164,24 @@ namespace Inventar.Resources {
         public static string Length {
             get {
                 return ResourceManager.GetString("Length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Load another 300 rows.
+        /// </summary>
+        public static string LoadAnother300Rows {
+            get {
+                return ResourceManager.GetString("LoadAnother300Rows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Load another 30 rows.
+        /// </summary>
+        public static string LoadAnother30Rows {
+            get {
+                return ResourceManager.GetString("LoadAnother30Rows", resourceCulture);
             }
         }
         
@@ -889,11 +1249,47 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Manually allocate how many pieces you take from each available instance.
+        /// </summary>
+        public static string ManuallyAllocateHowManyPiecesYouTakeFromEachAvailableInstance {
+            get {
+                return ResourceManager.GetString("ManuallyAllocateHowManyPiecesYouTakeFromEachAvailableInstance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Manually Enter Id.
         /// </summary>
         public static string ManuallyEnterId {
             get {
                 return ResourceManager.GetString("ManuallyEnterId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max available quantity.
+        /// </summary>
+        public static string MaxAvailableQuantity {
+            get {
+                return ResourceManager.GetString("MaxAvailableQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max. pieces.
+        /// </summary>
+        public static string MaxPieces {
+            get {
+                return ResourceManager.GetString("MaxPieces", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to more.
+        /// </summary>
+        public static string more {
+            get {
+                return ResourceManager.GetString("more", resourceCulture);
             }
         }
         
@@ -907,11 +1303,38 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Narrower Category.
+        /// </summary>
+        public static string NarrowerCategory {
+            get {
+                return ResourceManager.GetString("NarrowerCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New Password.
         /// </summary>
         public static string NewPassword {
             get {
                 return ResourceManager.GetString("NewPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New quantity.
+        /// </summary>
+        public static string NewQuantity {
+            get {
+                return ResourceManager.GetString("NewQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New table.
+        /// </summary>
+        public static string NewTable {
+            get {
+                return ResourceManager.GetString("NewTable", resourceCulture);
             }
         }
         
@@ -925,6 +1348,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No images uploaded for this product..
+        /// </summary>
+        public static string NoImagesUploadedForThisProduct_ {
+            get {
+                return ResourceManager.GetString("NoImagesUploadedForThisProduct.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No images uploaded yet..
         /// </summary>
         public static string NoImagesUploadedYet {
@@ -934,11 +1366,38 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No inventory reservations recorded for this order yet.
+        /// </summary>
+        public static string NoInventoryReservationsRecordedForThisOrderYet {
+            get {
+                return ResourceManager.GetString("NoInventoryReservationsRecordedForThisOrderYet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no products with a quantity less than zero..
+        /// </summary>
+        public static string NoProductsWithQuantityLessThanZero_ {
+            get {
+                return ResourceManager.GetString("NoProductsWithQuantityLessThanZero.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No results found!.
         /// </summary>
         public static string NoResultsFound {
             get {
                 return ResourceManager.GetString("NoResultsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No status history entries yet.
+        /// </summary>
+        public static string NoStatusHistoryEntriesYet {
+            get {
+                return ResourceManager.GetString("NoStatusHistoryEntriesYet", resourceCulture);
             }
         }
         
@@ -997,6 +1456,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Orders.
+        /// </summary>
+        public static string Orders {
+            get {
+                return ResourceManager.GetString("Orders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Order Status.
         /// </summary>
         public static string OrderStatus {
@@ -1011,6 +1479,24 @@ namespace Inventar.Resources {
         public static string OrderSummary {
             get {
                 return ResourceManager.GetString("OrderSummary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original size.
+        /// </summary>
+        public static string OriginalSize {
+            get {
+                return ResourceManager.GetString("OriginalSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overall total.
+        /// </summary>
+        public static string OverallTotal {
+            get {
+                return ResourceManager.GetString("OverallTotal", resourceCulture);
             }
         }
         
@@ -1132,6 +1618,33 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to per measure.
+        /// </summary>
+        public static string PerMeasure {
+            get {
+                return ResourceManager.GetString("PerMeasure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Per measure allocations.
+        /// </summary>
+        public static string PerMeasureAllocations {
+            get {
+                return ResourceManager.GetString("PerMeasureAllocations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to per measure product.
+        /// </summary>
+        public static string PerMeasureProduct {
+            get {
+                return ResourceManager.GetString("PerMeasureProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Per Products.
         /// </summary>
         public static string PerProducts {
@@ -1159,11 +1672,38 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Per unit.
+        /// </summary>
+        public static string PerUnit {
+            get {
+                return ResourceManager.GetString("PerUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Phone.
         /// </summary>
         public static string Phone {
             get {
                 return ResourceManager.GetString("Phone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to pieces.
+        /// </summary>
+        public static string pieces {
+            get {
+                return ResourceManager.GetString("pieces", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to pieces for a given product.
+        /// </summary>
+        public static string PiecesForGivenProduct {
+            get {
+                return ResourceManager.GetString("PiecesForGivenProduct", resourceCulture);
             }
         }
         
@@ -1182,6 +1722,33 @@ namespace Inventar.Resources {
         public static string PleaseCheckYourEmailToResetYourPassword {
             get {
                 return ResourceManager.GetString("PleaseCheckYourEmailToResetYourPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PM amount check failed.
+        /// </summary>
+        public static string PMamountCheckFailed {
+            get {
+                return ResourceManager.GetString("PMamountCheckFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PM product verification failed.
+        /// </summary>
+        public static string PMproductVerificationFailed {
+            get {
+                return ResourceManager.GetString("PMproductVerificationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PM quantity update failed.
+        /// </summary>
+        public static string PMquantityUpdateFailed {
+            get {
+                return ResourceManager.GetString("PMquantityUpdateFailed", resourceCulture);
             }
         }
         
@@ -1267,6 +1834,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product search failed.
+        /// </summary>
+        public static string ProductSearchFailed {
+            get {
+                return ResourceManager.GetString("ProductSearchFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Published.
         /// </summary>
         public static string Published {
@@ -1290,6 +1866,24 @@ namespace Inventar.Resources {
         public static string QRCodes {
             get {
                 return ResourceManager.GetString("QRCodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to QR Codes Grouped.
+        /// </summary>
+        public static string QRCodesGrouped {
+            get {
+                return ResourceManager.GetString("QRCodesGrouped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantities and custom dimensions are revalidated before saving.
+        /// </summary>
+        public static string QuantitiesAndCustomDimensionsAreRevalidatedBeforeSaving {
+            get {
+                return ResourceManager.GetString("QuantitiesAndCustomDimensionsAreRevalidatedBeforeSaving", resourceCulture);
             }
         }
         
@@ -1321,6 +1915,87 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remaining size.
+        /// </summary>
+        public static string RemainingSize {
+            get {
+                return ResourceManager.GetString("RemainingSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replace product.
+        /// </summary>
+        public static string ReplaceProduct {
+            get {
+                return ResourceManager.GetString("ReplaceProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report by color.
+        /// </summary>
+        public static string ReportByColor {
+            get {
+                return ResourceManager.GetString("ReportByColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report by errors.
+        /// </summary>
+        public static string ReportByErrors {
+            get {
+                return ResourceManager.GetString("ReportByErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report by m2.
+        /// </summary>
+        public static string ReportByM2 {
+            get {
+                return ResourceManager.GetString("ReportByM2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report by Name.
+        /// </summary>
+        public static string ReportByName {
+            get {
+                return ResourceManager.GetString("ReportByName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report by product number.
+        /// </summary>
+        public static string ReportByProductNumber {
+            get {
+                return ResourceManager.GetString("ReportByProductNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report by size.
+        /// </summary>
+        public static string ReportBySize {
+            get {
+                return ResourceManager.GetString("ReportBySize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report per unit.
+        /// </summary>
+        public static string ReportPerUnit {
+            get {
+                return ResourceManager.GetString("ReportPerUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reservations.
         /// </summary>
         public static string Reservations {
@@ -1344,6 +2019,15 @@ namespace Inventar.Resources {
         public static string ResetPassword {
             get {
                 return ResourceManager.GetString("ResetPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reuse this image for products with the same Name + Model.
+        /// </summary>
+        public static string ReuseCloudinaryImages {
+            get {
+                return ResourceManager.GetString("ReuseCloudinaryImages", resourceCulture);
             }
         }
         
@@ -1528,6 +2212,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Source.
+        /// </summary>
+        public static string Source {
+            get {
+                return ResourceManager.GetString("Source", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Start Date.
         /// </summary>
         public static string StartDate {
@@ -1569,6 +2262,123 @@ namespace Inventar.Resources {
         public static string Submit {
             get {
                 return ResourceManager.GetString("Submit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sync missing images with newly created group products.
+        /// </summary>
+        public static string SyncImages {
+            get {
+                return ResourceManager.GetString("SyncImages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Temporary product.
+        /// </summary>
+        public static string TemporaryProduct {
+            get {
+                return ResourceManager.GetString("TemporaryProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The allocation is ready to save.
+        /// </summary>
+        public static string TheAllocationIsReadyToSave {
+            get {
+                return ResourceManager.GetString("TheAllocationIsReadyToSave", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The entered length cannot be greater than the remaining length.
+        /// </summary>
+        public static string TheEnteredLengthCannotBeGreaterThanTheRemainingLength {
+            get {
+                return ResourceManager.GetString("TheEnteredLengthCannotBeGreaterThanTheRemainingLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The entered width cannot be greater than the remaining width.
+        /// </summary>
+        public static string TheEnteredWidthCannotBeGreaterThanTheRemainingWidth {
+            get {
+                return ResourceManager.GetString("TheEnteredWidthCannotBeGreaterThanTheRemainingWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The length cannot be less than the width.
+        /// </summary>
+        public static string TheLengthCannotBeLessThanTheWidth {
+            get {
+                return ResourceManager.GetString("TheLengthCannotBeLessThanTheWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The new table is empty..
+        /// </summary>
+        public static string TheNewTableIsEmpty {
+            get {
+                return ResourceManager.GetString("TheNewTableIsEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The product has been added to the draft changes.
+        /// </summary>
+        public static string TheProductHasBeenAddedToTheDraftChanges {
+            get {
+                return ResourceManager.GetString("TheProductHasBeenAddedToTheDraftChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are currently no other valid instances for this per measure allocation.
+        /// </summary>
+        public static string ThereAreCurrentlyNoOtherValidInstancesForThisPerMeasureAllocation {
+            get {
+                return ResourceManager.GetString("ThereAreCurrentlyNoOtherValidInstancesForThisPerMeasureAllocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no active reservations for this item.
+        /// </summary>
+        public static string ThereAreNoActiveReservationsForThisItem {
+            get {
+                return ResourceManager.GetString("ThereAreNoActiveReservationsForThisItem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no completed web orders to display.
+        /// </summary>
+        public static string ThereAreNoCompletedWebOrdersToDisplay {
+            get {
+                return ResourceManager.GetString("ThereAreNoCompletedWebOrdersToDisplay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is no length available for the dimension entered.
+        /// </summary>
+        public static string ThereIsNoLengthAvailableForTheDimensionEntered {
+            get {
+                return ResourceManager.GetString("ThereIsNoLengthAvailableForTheDimensionEntered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The sum must be exact.
+        /// </summary>
+        public static string TheSumMustBeExact {
+            get {
+                return ResourceManager.GetString("TheSumMustBeExact", resourceCulture);
             }
         }
         
@@ -1618,6 +2428,33 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total items.
+        /// </summary>
+        public static string TotalItems {
+            get {
+                return ResourceManager.GetString("TotalItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Money Spent.
+        /// </summary>
+        public static string TotalMoneySpent {
+            get {
+                return ResourceManager.GetString("TotalMoneySpent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total order amount.
+        /// </summary>
+        public static string TotalOrderAmount {
+            get {
+                return ResourceManager.GetString("TotalOrderAmount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Total Price.
         /// </summary>
         public static string TotalPrice {
@@ -1645,11 +2482,29 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Try again.
+        /// </summary>
+        public static string TryAgain {
+            get {
+                return ResourceManager.GetString("TryAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Type.
         /// </summary>
         public static string Type {
             get {
                 return ResourceManager.GetString("Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uncheck all.
+        /// </summary>
+        public static string UncheckAll {
+            get {
+                return ResourceManager.GetString("UncheckAll", resourceCulture);
             }
         }
         
@@ -1686,6 +2541,15 @@ namespace Inventar.Resources {
         public static string UploadProductPhotos {
             get {
                 return ResourceManager.GetString("UploadProductPhotos", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View Orders.
+        /// </summary>
+        public static string ViewOrders {
+            get {
+                return ResourceManager.GetString("ViewOrders", resourceCulture);
             }
         }
         
@@ -1731,6 +2595,15 @@ namespace Inventar.Resources {
         public static string Waiting {
             get {
                 return ResourceManager.GetString("Waiting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Web customers.
+        /// </summary>
+        public static string WebCustomer {
+            get {
+                return ResourceManager.GetString("WebCustomer", resourceCulture);
             }
         }
         

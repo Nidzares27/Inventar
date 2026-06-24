@@ -1,10 +1,12 @@
 ﻿using Inventar.Data;
 using Inventar.Models;
 using Inventar.Services;
+using Inventar.Utils;
 using Inventar.ViewModels.Login_Register;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Globalization;
@@ -30,7 +32,7 @@ namespace Inventar.Controllers
             _emailSender = emailSender;
             _sessionService = sessionService;
         }
-        [Authorize]
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> AllAccounts()
         {
             try
@@ -65,34 +67,36 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(LoginViewModel LoginViewModel)
         {
             if (!ModelState.IsValid) return View(LoginViewModel);
 
             try
             {
+                const string genericLoginErrorMessage = "Invalid login attempt. Please try again.";
                 var user = await _userManager.FindByEmailAsync(LoginViewModel.EmailAddress);
 
                 if (user != null)
                 {
-                    var passwordCheck = await _userManager.CheckPasswordAsync(user, LoginViewModel.Password);
-                    if (passwordCheck)
+                    var result = await _signInManager.PasswordSignInAsync(user, LoginViewModel.Password, false, true);
+                    if (result.Succeeded)
                     {
-                        var result = await _signInManager.PasswordSignInAsync(user, LoginViewModel.Password, false, false);
-                        if (result.Succeeded)
-                        {
-                            ViewBag.FullName = $"{user.FirstName} {user.LastName}";
-                            return RedirectToAction("Index", "InventoryItem");
-                        }
+                        ViewBag.FullName = $"{user.FirstName} {user.LastName}";
+                        return RedirectToAction("Index", "InventoryItem");
                     }
 
-                    TempData["Error"] = "Wrong password. Please try again";
-                    _logger.LogWarning("User entered an incorrect password!");
-                    return View(LoginViewModel);
+                    if (result.IsLockedOut)
+                    {
+                        TempData["Error"] = "This account is temporarily locked. Please try again later.";
+                        _logger.LogWarning("User account locked out after repeated failed sign-in attempts for email {Email}.", LoginViewModel.EmailAddress);
+                        return View(LoginViewModel);
+                    }
                 }
 
-                TempData["Error"] = "Wrong email address. Please try again";
-                _logger.LogWarning("Colud not find an user with this email: {Email}", LoginViewModel.EmailAddress);
+                TempData["Error"] = genericLoginErrorMessage;
+                _logger.LogWarning("Failed login attempt for email {Email}.", LoginViewModel.EmailAddress);
                 return View(LoginViewModel);
             }
             catch (Exception ex)
@@ -102,7 +106,7 @@ namespace Inventar.Controllers
                 return View(LoginViewModel);
             }
         }
-        [Authorize]
+        [Authorize(Roles = "admin,superadmin")]
         public IActionResult Register()
         {
             ViewData["ActivePage"] = "Register";
@@ -111,9 +115,21 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel registerViewModel)
         {
             if (!ModelState.IsValid) return View(registerViewModel);
+
+            var allowedRoles = User.IsInRole("superadmin")
+                ? new[] { "user", "employee", "admin", "superadmin" }
+                : new[] { "user", "employee", "admin" };
+
+            if (!allowedRoles.Contains(registerViewModel.UserRole, StringComparer.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(registerViewModel.UserRole), "Selected role is not allowed.");
+                return View(registerViewModel);
+            }
 
             try
             {
@@ -131,7 +147,7 @@ namespace Inventar.Controllers
                     FirstName = registerViewModel.FirstName,
                     LastName = registerViewModel.LastName,
                     Email = registerViewModel.EmailAddress,
-                    UserName = registerViewModel.FirstName + registerViewModel.LastName
+                    UserName = registerViewModel.EmailAddress
                 };
 
                 var newUserResponse = await _userManager.CreateAsync(newUser, registerViewModel.Password);
@@ -162,6 +178,9 @@ namespace Inventar.Controllers
             }
         }
 
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             try
@@ -179,12 +198,15 @@ namespace Inventar.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult ForgotPassword()
         {
             return View();
         }
 
         [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
@@ -211,6 +233,7 @@ namespace Inventar.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult ResetPassword(string token, string userId)
         {
             if (token == null || userId == null)
@@ -221,6 +244,8 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)
@@ -257,6 +282,8 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(string email, string newPassword)
         {
             try
@@ -266,6 +293,14 @@ namespace Inventar.Controllers
                 {
                     _logger.LogWarning("Tried to change a password but something went wrong trying to find an user by email: {Email}", email);
                     return NotFound("Couldn't find an user with provided email!");
+                }
+
+                var roles = await _userManager.GetRolesAsync(user);
+                if (roles.Contains("superadmin", StringComparer.OrdinalIgnoreCase) && !User.IsInRole("superadmin"))
+                {
+                    _logger.LogWarning("Non-superadmin user attempted to reset the password of a superadmin account: {Email}", email);
+                    TempData["ErrorMessage"] = "You are not allowed to reset this account password.";
+                    return RedirectToAction(nameof(AllAccounts));
                 }
 
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -294,6 +329,7 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUser(string email)
         {
@@ -304,6 +340,14 @@ namespace Inventar.Controllers
                 {
                     TempData["ErrorMessage"] = "User not found.";
                     _logger.LogWarning("Tried to delete an user, but something went wrong trying to find an user by email: {Email}", email);
+                    return RedirectToAction("AllAccounts");
+                }
+
+                var roles = await _userManager.GetRolesAsync(user);
+                if (roles.Contains("superadmin", StringComparer.OrdinalIgnoreCase) && !User.IsInRole("superadmin"))
+                {
+                    _logger.LogWarning("Non-superadmin user attempted to delete a superadmin account: {Email}", email);
+                    TempData["ErrorMessage"] = "You are not allowed to delete this account.";
                     return RedirectToAction("AllAccounts");
                 }
 
@@ -336,41 +380,60 @@ namespace Inventar.Controllers
             //return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public IActionResult ChangeLanguage (string lang)
+        public IActionResult ChangeLanguage(string? lang)
         {
             try
             {
-                if (!string.IsNullOrEmpty(lang))
+                var cultureName = LocalizationSettings.GetSupportedCultureOrDefault(lang);
+
+                if (!LocalizationSettings.TryGetSupportedCulture(lang, out _))
                 {
-                    var culture = CultureInfo.CreateSpecificCulture(lang);
-                    Thread.CurrentThread.CurrentCulture = culture;
-                    Thread.CurrentThread.CurrentUICulture = culture;
-                }
-                else
-                {
-                    var defaultCulture = CultureInfo.CreateSpecificCulture("en");
-                    Thread.CurrentThread.CurrentCulture = defaultCulture;
-                    Thread.CurrentThread.CurrentUICulture = defaultCulture;
+                    _logger.LogWarning("Unsupported culture change requested: {Lang}", lang);
                 }
 
-                Response.Cookies.Append("Language", lang ?? "en");
+                CultureInfo.CurrentCulture = LocalizationSettings.CreateCultureInfo(cultureName);
+                CultureInfo.CurrentUICulture = LocalizationSettings.CreateCultureInfo(cultureName);
 
-                var referer = Request.GetTypedHeaders().Referer?.ToString();
-                if (!string.IsNullOrEmpty(referer))
+                var cookieOptions = new CookieOptions
                 {
-                    // URL-encode manually to be safe
-                    var encodedUrl = Uri.EscapeUriString(referer);
-                    return Redirect(encodedUrl);
-                }
-                return Redirect("/");
-                //return Redirect(!string.IsNullOrEmpty(referer) ? referer : "/");
+                    Expires = DateTimeOffset.UtcNow.AddYears(1),
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Lax
+                };
+
+                Response.Cookies.Append(
+                    CookieRequestCultureProvider.DefaultCookieName,
+                    CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(cultureName)),
+                    cookieOptions);
+
+                Response.Cookies.Append("Language", cultureName, cookieOptions);
+
+                return Redirect(GetSafeReturnUrl());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error occurred while changing language to {Lang}", lang);
                 TempData["ErrorMessage"] = "Could not change language due to an unexpected error.";
             }
-            return Redirect(Request.GetTypedHeaders().Referer.ToString());
+
+            return Redirect(GetSafeReturnUrl());
+        }
+
+        private string GetSafeReturnUrl()
+        {
+            var referer = Request.GetTypedHeaders().Referer;
+            if (referer is not null &&
+                Uri.TryCreate($"{Request.Scheme}://{Request.Host}", UriKind.Absolute, out var currentRequestUri) &&
+                string.Equals(referer.Host, currentRequestUri.Host, StringComparison.OrdinalIgnoreCase))
+            {
+                var localUrl = referer.PathAndQuery + referer.Fragment;
+                if (Url.IsLocalUrl(localUrl))
+                {
+                    return localUrl;
+                }
+            }
+
+            return Url.Action("Index", "Home") ?? "/";
         }
 
         [HttpGet]

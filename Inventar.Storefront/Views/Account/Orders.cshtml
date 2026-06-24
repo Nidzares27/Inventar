@@ -1,0 +1,48 @@
+﻿@model Inventar.Storefront.ViewModels.Account.AccountOrdersViewModel
+@{
+    ViewData["Title"] = "Narudžbine";
+}
+
+<section class="page-head">
+    <span class="eyebrow">Narudžbine</span>
+    <h1>Istorija kupovine</h1>
+</section>
+
+<partial name="_AccountNav" />
+
+<section class="content-card">
+    @if (Model.Orders.Count == 0)
+    {
+        <p>Još nemate nijednu narudžbinu.</p>
+    }
+    else
+    {
+        <div class="account-order-table">
+            @foreach (var order in Model.Orders)
+            {
+                <a class="account-order-card" asp-controller="Account" asp-action="OrderDetails" asp-route-orderNumber="@order.OrderNumber">
+                    <div>
+                        <strong>@order.OrderNumber</strong>
+                        <p>@order.CreatedUtc.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</p>
+                    </div>
+                    <div>
+                        <span>Status: @order.Status</span>
+                    </div>
+                    <div class="account-order-card__summary">
+                        @if (order.PreviewImageUrls.Count > 0)
+                        {
+                            <div class="account-order-card__previews" aria-hidden="true">
+                                @foreach (var imageUrl in order.PreviewImageUrls)
+                                {
+                                    <img src="@imageUrl" alt="" />
+                                }
+                            </div>
+                        }
+                        <span>@order.TotalItems artikala</span>
+                        <strong>@order.GrandTotal.ToString("0.00") &#8364;</strong>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</section>

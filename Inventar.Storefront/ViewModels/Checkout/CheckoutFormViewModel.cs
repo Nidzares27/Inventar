@@ -14,8 +14,9 @@ public class CheckoutFormViewModel
     [StringLength(50)]
     public string LastName { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Email je obavezan.")]
     [EmailAddress(ErrorMessage = "Unesite ispravnu email adresu.")]
-    [Display(Name = "Email (opciono)")]
+    [Display(Name = "Email")]
     [StringLength(254)]
     public string Email { get; set; } = string.Empty;
 
@@ -47,6 +48,6 @@ public class CheckoutFormViewModel
     [StringLength(100)]
     public string Country { get; set; } = "Crna Gora";
 
-    [Display(Name = "Napomena uz narudžbu")]
+    [Display(Name = "Napomena uz narudžbinu (opciono)")]
     public string? CustomerNote { get; set; }
 }

@@ -1,12 +1,19 @@
 @model Inventar.Storefront.ViewModels.Checkout.OrderConfirmationViewModel
 @{
-    ViewData["Title"] = "Narudžba kreirana";
+    ViewData["Title"] = "Narudzbina kreirana";
 }
 
 <section class="confirmation">
-    <span class="eyebrow">Narudžba uspješna</span>
+    <span class="eyebrow">Narudžbina uspješna</span>
     <h1>Hvala, @Model.CustomerFirstName.</h1>
-    <p>Vaša narudžba je evidentirana pod brojem <strong>@Model.OrderNumber</strong>. Tim sada ima rezervisano stanje i može nastaviti internu obradu iz admin aplikacije.</p>
+    <p>Vasa narudžbina je evidentirana pod brojem <strong>@Model.OrderNumber</strong>.</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ConfirmationEmailStatusMessage))
+    {
+        <div class="@(Model.ConfirmationEmailSent ? "flash flash--success" : "flash flash--error")">
+            @Model.ConfirmationEmailStatusMessage
+        </div>
+    }
 
     <div class="confirmation__panel">
         <div>
@@ -15,16 +22,35 @@
         </div>
         <div>
             <span>Iznos</span>
-            <strong>@Model.GrandTotal.ToString("0.00") €</strong>
+            <strong>@Model.GrandTotal.ToString("0.00") &#8364;</strong>
         </div>
         <div>
-            <span>Način plaćanja</span>
+            <span>Način placanja</span>
             <strong>Pouzeće</strong>
+        </div>
+    </div>
+
+    <div class="confirmation__panel">
+        <div>
+            <span>Email</span>
+            <strong>@Model.CustomerEmail</strong>
+        </div>
+        <div>
+            <span>Dostava</span>
+            <strong>@Model.ShippingTotal.ToString("0.00") &#8364;</strong>
+        </div>
+        <div>
+            <span>Adresa</span>
+            <strong>@Model.ShippingAddressLine1, @Model.ShippingCity</strong>
         </div>
     </div>
 
     <div class="hero__actions">
         <a class="button" asp-controller="Catalog" asp-action="Index">Nastavi kupovinu</a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="button button--secondary" asp-controller="Account" asp-action="Orders">Moje narudžbine</a>
+        }
         <a class="button button--ghost" asp-controller="Home" asp-action="Index">Nazad na početnu</a>
     </div>
 </section>

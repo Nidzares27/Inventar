@@ -37,6 +37,10 @@ namespace Inventar.Controllers
     [Authorize]
     public class InventoryItemController : Controller
     {
+        private const string DirectSaleTypePerUnit = "perunit";
+        private const string DirectSaleTypePerM2 = "perm2";
+        private const string DirectSaleTypePerMeasure = "permeasure";
+
         private readonly ITepihRepository _tepihRepository;
         private readonly ApplicationDbContext _context;
         private readonly IPhotoService _photoService;
@@ -61,6 +65,7 @@ namespace Inventar.Controllers
             try
             {
                 var tepisi = await _tepihRepository.GetAllUndisabledAsync();
+                TextEncodingHelper.DecodeProductsForDisplay(tepisi ?? Enumerable.Empty<Tepih>());
 
                 return View(tepisi ?? new List<Tepih>());
             }
@@ -71,6 +76,101 @@ namespace Inventar.Controllers
             }
         }
 
+        public async Task<IActionResult> QRCodesGrouped()
+        {
+            try
+            {
+                var tepisi = await _context.Tepisi
+                    .AsNoTracking()
+                    .Where(product => !product.Disabled && !product.CreatedForDirectSale)
+                    .ToListAsync();
+
+                var groupedRows = tepisi
+                    .GroupBy(product => new
+                    {
+                        ProductNumber = product.ProductNumber ?? string.Empty,
+                        Name = product.Name ?? string.Empty,
+                        Model = product.Model ?? string.Empty,
+                        Color = product.Color ?? string.Empty
+                    })
+                    .Select(group => new GroupedQrCodeRowViewModel
+                    {
+                        RawProductNumber = group.Key.ProductNumber,
+                        RawName = group.Key.Name,
+                        RawModel = group.Key.Model,
+                        RawColor = group.Key.Color,
+                        ProductNumber = TextEncodingHelper.Decode(group.Key.ProductNumber) ?? string.Empty,
+                        Name = TextEncodingHelper.Decode(group.Key.Name) ?? string.Empty,
+                        Model = TextEncodingHelper.Decode(group.Key.Model) ?? string.Empty,
+                        Color = TextEncodingHelper.Decode(group.Key.Color) ?? string.Empty,
+                        TotalQuantity = group.Sum(item => item.Quantity),
+                        IsPoMjeriGroup = group.All(item => item.PoMjeri)
+                    })
+                    .OrderBy(group => group.ProductNumber)
+                    .ThenBy(group => group.Name)
+                    .ThenBy(group => group.Model)
+                    .ThenBy(group => group.Color)
+                    .ToList();
+
+                return View(new GroupedQrCodesViewModel
+                {
+                    Groups = groupedRows
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading grouped QR codes inventory view.");
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        public async Task<IActionResult> QRCodesGroupedDetails(string productNumber, string name, string model, string color)
+        {
+            if (string.IsNullOrWhiteSpace(productNumber) ||
+                string.IsNullOrWhiteSpace(name) ||
+                string.IsNullOrWhiteSpace(model) ||
+                string.IsNullOrWhiteSpace(color))
+            {
+                return BadRequest("Group parameters are required.");
+            }
+
+            var products = await _context.Tepisi
+                .AsNoTracking()
+                .Where(product =>
+                    !product.Disabled &&
+                    !product.CreatedForDirectSale &&
+                    product.ProductNumber == productNumber &&
+                    product.Name == name &&
+                    product.Model == model &&
+                    product.Color == color)
+                .OrderByDescending(product => product.Id)
+                .ToListAsync();
+
+            if (products.Count == 0)
+            {
+                _logger.LogWarning(
+                    "Grouped QR code details not found for group {ProductNumber}/{Name}/{Model}/{Color}.",
+                    productNumber,
+                    name,
+                    model,
+                    color);
+                return NotFound("No products were found for the selected group.");
+            }
+
+            TextEncodingHelper.DecodeProductsForDisplay(products);
+
+            var firstProduct = products[0];
+            return View(new GroupedQrCodeDetailsViewModel
+            {
+                ProductNumber = firstProduct.ProductNumber ?? string.Empty,
+                Name = firstProduct.Name ?? string.Empty,
+                Model = firstProduct.Model ?? string.Empty,
+                Color = firstProduct.Color ?? string.Empty,
+                Products = products
+            });
+        }
+
+        [Authorize(Roles = "admin,superadmin,employee")]
         public async Task<IActionResult> Details(int id)
         {
             Tepih tepih = await _context.Tepisi
@@ -84,20 +184,36 @@ namespace Inventar.Controllers
                 return NotFound("No product was found with this ID!");
             }
 
+            TextEncodingHelper.DecodeProductForDisplay(tepih);
+
             return View(tepih);
         }
 
         [HttpGet]
+        [Authorize(Roles = "admin,superadmin")]
         public IActionResult Create()
         {
-            return View();
+            return View(new Tepih
+            {
+                IsPublished = false
+            });
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> Create(Tepih tepih)
         {
             if (ModelState.IsValid)
             {
+                NormalizeProductTextFields(tepih);
+                tepih.IsPublished = false;
+                tepih.BroaderCategory = ProductCategoryHelper.Normalize(tepih.BroaderCategory);
+                tepih.NarrowerCategory = ProductCategoryHelper.Normalize(tepih.NarrowerCategory);
+                if (tepih.PoMjeri)
+                {
+                    tepih.PerM2 = true;
+                }
+
                 if (tepih.PerM2 && (tepih.Width == null || tepih.Length == null))
                 {
                     TempData["MissingLengthWidth"] = "Proizvod koji se prodaje po m² mora imati Dužinu i Širinu!";
@@ -108,26 +224,46 @@ namespace Inventar.Controllers
                     TempData["MissingLengthWidth"] = "Proizvod koji se NE prodaje po m² može se kreirati bez Dužine i Širine ILI sa Dužinom i Širinom. (Nije dozvoljeno unijeti samo širinu ili samo dužinu)!";
                     return View(tepih);
                 }
+                if (tepih.PoMjeri && tepih.Quantity < 1)
+                {
+                    TempData["MissingLengthWidth"] = "Po mjeri proizvod mora imati količinu najmanje 1.";
+                    return View(tepih);
+                }
 
                 var time = DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss");
 
                 try
                 {
-                    var qrCodeImageUrl = await GenerateQRCode($"{tepih.Name.ToUpper().Trim()}/{tepih.Model.ToUpper().Trim()}/{tepih.ProductNumber.ToUpper().Trim()}/{tepih.Width}/{tepih.Length}/{tepih.Color.ToUpper().Trim()}/{tepih.PerM2}");/*/{ tepih.Price}*/
-                    //var qrCodeImageUrl = await GenerateQRCode($"{tepih.Name.ToUpper().Trim()}/{tepih.Model.ToUpper().Trim()}/{tepih.Width}/{tepih.Length}/{tepih.Color.ToUpper().Trim()}");
+                    NormalizeProductIdentity(tepih);
 
-                    var url = "";
-                    if (qrCodeImageUrl is OkObjectResult okResult)
+                    if (tepih.PoMjeri)
                     {
-                        var value = okResult.Value as dynamic;
-                        url = value?.url;
+                        var createdProducts = await CreatePoMjeriProductsAsync(tepih, time);
+                        if (createdProducts.Count == 0)
+                        {
+                            return StatusCode(500, "Po mjeri proizvodi nisu kreirani.");
+                        }
+
+                        TempData["CreateSuccessMessage"] = $"Uspješno kreirano {createdProducts.Count} po mjeri proizvoda.";
+                        TempData["CreateQrPdfUrl"] = Url.Action(
+                            "GenerateCloudinaryImagePdfBatch",
+                            "Pdf",
+                            new { ids = string.Join(",", createdProducts.Select(product => product.Id)) });
+
+                        return RedirectToAction(nameof(Create));
                     }
 
+                    var qrCodeUrl = await GenerateQrCodeUrlAsync(BuildQrCodeData(tepih));
+
                     var istiProizvod = await _context.Tepisi
-                        .Where(c => c.Name == tepih.Name.ToUpper().Trim() && c.Model == tepih.Model.ToUpper().Trim() &&
-                                    c.ProductNumber == tepih.ProductNumber.ToUpper().Trim() &&
-                                    c.Length == tepih.Length && c.Width == tepih.Width &&
-                                    c.Color == tepih.Color.ToUpper().Trim() && c.PerM2 == tepih.PerM2 &&
+                        .Where(c => c.Name == tepih.Name &&
+                                    c.Model == tepih.Model &&
+                                    c.ProductNumber == tepih.ProductNumber &&
+                                    c.Length == tepih.Length &&
+                                    c.Width == tepih.Width &&
+                                    c.Color == tepih.Color &&
+                                    c.PerM2 == tepih.PerM2 &&
+                                    !c.PoMjeri &&
                                     c.Disabled == false)
                         .ToListAsync();
 
@@ -135,6 +271,15 @@ namespace Inventar.Controllers
                     {
                         istiProizvod[0].Quantity += tepih.Quantity;
                         istiProizvod[0].Price = tepih.Price;
+                        if (ProductCategoryHelper.ShouldUpgradePlaceholder(istiProizvod[0].BroaderCategory, tepih.BroaderCategory))
+                        {
+                            istiProizvod[0].BroaderCategory = tepih.BroaderCategory;
+                        }
+
+                        if (ProductCategoryHelper.ShouldUpgradePlaceholder(istiProizvod[0].NarrowerCategory, tepih.NarrowerCategory))
+                        {
+                            istiProizvod[0].NarrowerCategory = tepih.NarrowerCategory;
+                        }
                         istiProizvod[0].OnlinePrice ??= istiProizvod[0].Price;
                         if (string.IsNullOrWhiteSpace(istiProizvod[0].Slug))
                         {
@@ -142,23 +287,22 @@ namespace Inventar.Controllers
                         }
                         _tepihRepository.Update(istiProizvod[0]);
                         tepih.Id = istiProizvod[0].Id;
+                        TempData["CreateSuccessMessage"] = "Postojeći proizvod je pronađen i uspješno ažuriran.";
                     }
                     else
                     {
-                        tepih.Name = tepih.Name.ToUpper().Trim();
-                        tepih.Model = tepih.Model.ToUpper().Trim();
-                        tepih.ProductNumber = tepih.ProductNumber.ToUpper().Trim();
-                        tepih.Color = tepih.Color.ToUpper().Trim();
-                        tepih.QRCodeUrl = url;
+                        tepih.QRCodeUrl = qrCodeUrl;
                         tepih.DateTime = time;
                         tepih.Disabled = false;
                         tepih.OnlinePrice ??= tepih.Price;
-                        _tepihRepository.Add(tepih);
                         tepih.Slug = ProductSlugHelper.BuildDefaultSlug(tepih);
+                        _tepihRepository.Add(tepih);
+                        TempData["CreateSuccessMessage"] = "Proizvod je uspješno kreiran.";
                     }
 
                     await _context.SaveChangesAsync();
-                    return RedirectToAction("GenerateCloudinaryImagePdf", "Pdf", new { id = tepih.Id });
+                    TempData["CreateQrPdfUrl"] = Url.Action("GenerateCloudinaryImagePdf", "Pdf", new { id = tepih.Id });
+                    return RedirectToAction(nameof(Create));
                 }
                 catch(Exception ex)
                 {
@@ -170,6 +314,7 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> GenerateQRCode(string data)
         {
             if (string.IsNullOrWhiteSpace(data))
@@ -180,58 +325,8 @@ namespace Inventar.Controllers
 
             try
             {
-                // Step 1: Generate the QR code using ZXing.Net
-                var qrCodeWriter = new BarcodeWriterPixelData
-                {
-                    Format = BarcodeFormat.QR_CODE,
-                    Options = new QrCodeEncodingOptions
-                    {
-                        Height = 250,
-                        Width = 250,
-                        Margin = 1
-                    }
-                };
-
-                var pixelData = qrCodeWriter.Write(data);
-
-                using (var bitmap = new Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
-                {
-                    var bitmapData = bitmap.LockBits(
-                        new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
-                        System.Drawing.Imaging.ImageLockMode.WriteOnly,
-                        bitmap.PixelFormat);
-
-                    try
-                    {
-                        System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
-                    }
-                    finally
-                    {
-                        bitmap.UnlockBits(bitmapData);
-                    }
-
-                    using (var stream = new MemoryStream())
-                    {
-                        bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-                        stream.Position = 0;
-
-                        var fileName = $"{Guid.NewGuid()}.png";
-                        var uploadResult = await _photoService.UploadToCloudinary(fileName, stream, "TepisiQRCodes");
-
-                        if (uploadResult == null || uploadResult.SecureUrl == null)
-                        {
-                            _logger.LogError("QR code upload failed: no response from image service.");
-                            return StatusCode(500, "QR code upload failed: no response from image service.");
-                        }
-
-                        if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
-                        {
-                            return Ok(new { url = uploadResult.SecureUrl.ToString() });
-                        }
-                        _logger.LogError("QR code upload to Cloudinary failed.");
-                        return StatusCode((int)uploadResult.StatusCode, "QR code upload to Cloudinary failed.");
-                    }
-                }
+                var qrCodeUrl = await GenerateQrCodeUrlAsync(data);
+                return Ok(new { url = qrCodeUrl });
             }
             catch (Exception ex)
             {
@@ -240,8 +335,218 @@ namespace Inventar.Controllers
             }
         }
 
+        private async Task<string> GenerateQrCodeUrlAsync(string data)
+        {
+            var qrCodeWriter = new BarcodeWriterPixelData
+            {
+                Format = BarcodeFormat.QR_CODE,
+                Options = new QrCodeEncodingOptions
+                {
+                    Height = 250,
+                    Width = 250,
+                    Margin = 1
+                }
+            };
+
+            var pixelData = qrCodeWriter.Write(data);
+
+            using var bitmap = new Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            var bitmapData = bitmap.LockBits(
+                new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
+                System.Drawing.Imaging.ImageLockMode.WriteOnly,
+                bitmap.PixelFormat);
+
+            try
+            {
+                System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
+            }
+            finally
+            {
+                bitmap.UnlockBits(bitmapData);
+            }
+
+            using var stream = new MemoryStream();
+            bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+            var qrCodeBytes = stream.ToArray();
+            var fileName = $"{Guid.NewGuid():N}.png";
+
+            try
+            {
+                using var uploadStream = new MemoryStream(qrCodeBytes);
+                var uploadResult = await _photoService.UploadToCloudinary(fileName, uploadStream, "TepisiQRCodes");
+
+                if (uploadResult?.SecureUrl != null && uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return uploadResult.SecureUrl.ToString();
+                }
+
+                _logger.LogWarning(
+                    "QR code upload returned an unexpected response for file {FileName}. Status: {StatusCode}, SecureUrl present: {HasSecureUrl}. Falling back to local storage.",
+                    fileName,
+                    uploadResult?.StatusCode,
+                    uploadResult?.SecureUrl != null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "QR code upload failed for file {FileName}. Falling back to local storage.", fileName);
+            }
+
+            return await SaveQrCodeLocallyAsync(fileName, qrCodeBytes);
+        }
+
+        private async Task<string> SaveQrCodeLocallyAsync(string fileName, byte[] qrCodeBytes)
+        {
+            if (string.IsNullOrWhiteSpace(_env.WebRootPath))
+            {
+                throw new InvalidOperationException("QR code save failed: web root path is not configured.");
+            }
+
+            var directoryPath = QrCodeStorageHelper.EnsureLocalDirectory(_env.WebRootPath);
+            var filePath = System.IO.Path.Combine(directoryPath, fileName);
+            await System.IO.File.WriteAllBytesAsync(filePath, qrCodeBytes);
+            return QrCodeStorageHelper.BuildLocalUrl(fileName);
+        }
+
+        private static void NormalizeProductIdentity(Tepih tepih)
+        {
+            tepih.Name = (TextEncodingHelper.NormalizeInput(tepih.Name) ?? string.Empty).ToUpperInvariant();
+            tepih.Model = (TextEncodingHelper.NormalizeInput(tepih.Model) ?? string.Empty).ToUpperInvariant();
+            tepih.ProductNumber = (TextEncodingHelper.NormalizeInput(tepih.ProductNumber) ?? string.Empty).ToUpperInvariant();
+            tepih.Color = (TextEncodingHelper.NormalizeInput(tepih.Color) ?? string.Empty).ToUpperInvariant();
+        }
+
+        private static string BuildQrCodeData(Tepih tepih)
+        {
+            var baseData = $"{tepih.Name}/{tepih.Model}/{tepih.ProductNumber}/{tepih.Width}/{tepih.Length}/{tepih.Color}/{tepih.PerM2}";
+
+            return tepih.PoMjeri && !string.IsNullOrWhiteSpace(tepih.UnID)
+                ? $"{baseData}/{tepih.UnID}"
+                : baseData;
+        }
+
+        private static string BuildPoMjeriSlug(Tepih tepih)
+        {
+            var baseSlug = ProductSlugHelper.BuildDefaultSlug(tepih);
+            return string.IsNullOrWhiteSpace(tepih.UnID)
+                ? baseSlug
+                : $"{baseSlug}-{tepih.UnID.ToLowerInvariant()}";
+        }
+
+        private async Task<string> GenerateUniqueUnIdAsync(ISet<string> reservedCodes)
+        {
+            for (var attempt = 0; attempt < 100; attempt++)
+            {
+                var code = PoMjeriHelper.GenerateCandidateUnId();
+                if (reservedCodes.Contains(code))
+                {
+                    continue;
+                }
+
+                var exists = await _context.Tepisi.AnyAsync(product => product.UnID == code);
+                if (exists)
+                {
+                    continue;
+                }
+
+                reservedCodes.Add(code);
+                return code;
+            }
+
+            throw new InvalidOperationException("Unable to generate a unique code for po mjeri product.");
+        }
+
+        private async Task<List<Tepih>> CreatePoMjeriProductsAsync(Tepih template, string createdAt)
+        {
+            var quantityToCreate = Math.Max(template.Quantity, 0);
+            var reservedCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            var imageSource = await _context.Tepisi
+                .Include(product => product.ProductImages)
+                .Where(product =>
+                    !product.Disabled &&
+                    product.PoMjeri &&
+                    product.Name == template.Name &&
+                    product.Model == template.Model &&
+                    product.ProductNumber == template.ProductNumber &&
+                    product.Width == template.Width &&
+                    product.Length == template.Length &&
+                    product.Color == template.Color)
+                .OrderBy(product => product.Id)
+                .FirstOrDefaultAsync(product => product.ProductImages.Any(image => !image.Disabled));
+
+            var createdProducts = new List<Tepih>(quantityToCreate);
+
+            for (var index = 0; index < quantityToCreate; index++)
+            {
+                var unId = await GenerateUniqueUnIdAsync(reservedCodes);
+                var product = new Tepih
+                {
+                    Name = template.Name,
+                    ProductNumber = template.ProductNumber,
+                    Model = template.Model,
+                    BroaderCategory = template.BroaderCategory,
+                    NarrowerCategory = template.NarrowerCategory,
+                    DateTime = createdAt,
+                    Quantity = 1,
+                    Length = template.Length,
+                    Width = template.Width,
+                    Color = template.Color,
+                    Price = template.Price,
+                    OnlinePrice = template.OnlinePrice ?? template.Price,
+                    PerM2 = true,
+                    PoMjeri = true,
+                    UnID = unId,
+                    Description = template.Description,
+                    ShortDescription = template.ShortDescription,
+                    IsPublished = template.IsPublished,
+                    Disabled = false
+                };
+
+                product.QRCodeUrl = await GenerateQrCodeUrlAsync(BuildQrCodeData(product));
+                product.Slug = BuildPoMjeriSlug(product);
+
+                createdProducts.Add(product);
+            }
+
+            _context.Tepisi.AddRange(createdProducts);
+            await _context.SaveChangesAsync();
+
+            if (imageSource != null)
+            {
+                var sourceImages = imageSource.ProductImages
+                    .Where(image => !image.Disabled)
+                    .OrderBy(image => image.SortOrder)
+                    .ToList();
+
+                foreach (var targetProduct in createdProducts)
+                {
+                    foreach (var sourceImage in sourceImages)
+                    {
+                        _context.ProductImages.Add(new ProductImage
+                        {
+                            TepihId = targetProduct.Id,
+                            CloudinaryPublicId = sourceImage.CloudinaryPublicId,
+                            Url = sourceImage.Url,
+                            ThumbnailUrl = sourceImage.ThumbnailUrl,
+                            AltText = sourceImage.AltText,
+                            MediaType = sourceImage.MediaType,
+                            IsPrimary = sourceImage.IsPrimary,
+                            SortOrder = sourceImage.SortOrder,
+                            Disabled = false,
+                            CreatedUtc = DateTime.UtcNow
+                        });
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            return createdProducts;
+        }
+
 
         [HttpGet]
+        [Authorize(Roles = "admin,superadmin,employee")]
         public async Task<IActionResult> QRCodeScanning(int? id)
         {
             List<ScannedProductViewModel> scannedProds = GetScannedProducts();
@@ -250,11 +555,120 @@ namespace Inventar.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "admin,superadmin,employee")]
         public async Task<IActionResult> QRCodeScanning2()
         {
             return View("QRCodeScanning");
         }
 
+        private void AddOrIncrementRegularScannedProduct(List<ScannedProductViewModel> scannedProducts, Tepih item)
+        {
+            var existingLine = scannedProducts.FirstOrDefault(product => !product.PoMjeri && product.Id == item.Id);
+            if (existingLine != null)
+            {
+                existingLine.Quantity += 1;
+                RecalculateScannedProductTotals(existingLine);
+                return;
+            }
+
+            scannedProducts.Add(BuildRegularScannedProduct(item));
+        }
+
+        private async Task<object> BuildPoMjeriPromptResponseAsync(Tepih product)
+        {
+            var remainingLength = await GetRemainingPoMjeriLengthAsync(product);
+            var availableRemainingLength = await GetSessionAwareRemainingLengthAsync(product);
+
+            return new
+            {
+                success = true,
+                requiresCustomSize = true,
+                productId = product.Id,
+                name = TextEncodingHelper.Decode(product.Name),
+                model = TextEncodingHelper.Decode(product.Model),
+                productNumber = TextEncodingHelper.Decode(product.ProductNumber),
+                color = TextEncodingHelper.Decode(product.Color),
+                unId = TextEncodingHelper.Decode(product.UnID),
+                fixedWidth = product.Width,
+                originalWidth = product.Width,
+                originalLength = product.Length,
+                originalSize = PoMjeriHelper.FormatSize(product.Width, product.Length),
+                remainingWidth = product.Width,
+                remainingLength,
+                availableRemainingLength,
+                remainingSize = PoMjeriHelper.FormatRemainingSize(product.Width, remainingLength)
+            };
+        }
+
+        private async Task<Tepih?> FindProductByQrDataAsync(string[] extractData)
+        {
+            if (extractData.Length == 8)
+            {
+                return await _context.Tepisi.FirstOrDefaultAsync(product =>
+                    product.Name == extractData[0].Trim() &&
+                    product.Model == extractData[1].Trim() &&
+                    product.ProductNumber == extractData[2].Trim() &&
+                    product.Width.ToString() == extractData[3].Trim() &&
+                    product.Length.ToString() == extractData[4].Trim() &&
+                    product.Color == extractData[5].Trim() &&
+                    product.PerM2.ToString() == extractData[6].Trim() &&
+                    product.UnID == extractData[7].Trim() &&
+                    product.Disabled != true &&
+                    !product.CreatedForDirectSale);
+            }
+
+            if (extractData.Length == 7)
+            {
+                if (string.IsNullOrEmpty(extractData[3]) && string.IsNullOrEmpty(extractData[4]))
+                {
+                    return await _context.Tepisi.FirstOrDefaultAsync(product =>
+                        product.Name == extractData[0].Trim() &&
+                        product.Model == extractData[1].Trim() &&
+                        product.ProductNumber == extractData[2].Trim() &&
+                        product.Color == extractData[5].Trim() &&
+                        product.PerM2.ToString() == extractData[6].Trim() &&
+                        product.Disabled != true &&
+                        !product.CreatedForDirectSale);
+                }
+
+                return await _context.Tepisi.FirstOrDefaultAsync(product =>
+                    product.Name == extractData[0].Trim() &&
+                    product.Model == extractData[1].Trim() &&
+                    product.ProductNumber == extractData[2].Trim() &&
+                    product.Width.ToString() == extractData[3].Trim() &&
+                    product.Length.ToString() == extractData[4].Trim() &&
+                    product.Color == extractData[5].Trim() &&
+                    product.PerM2.ToString() == extractData[6].Trim() &&
+                    product.Disabled != true &&
+                    !product.CreatedForDirectSale);
+            }
+
+            if (extractData.Length == 5)
+            {
+                if (string.IsNullOrEmpty(extractData[2]) && string.IsNullOrEmpty(extractData[3]))
+                {
+                    return await _context.Tepisi.FirstOrDefaultAsync(product =>
+                        product.Name == extractData[0].Trim() &&
+                        product.Model == extractData[1].Trim() &&
+                        product.Color == extractData[4].Trim() &&
+                        product.Disabled != true &&
+                        !product.CreatedForDirectSale);
+                }
+
+                return await _context.Tepisi.FirstOrDefaultAsync(product =>
+                    product.Name == extractData[0].Trim() &&
+                    product.Model == extractData[1].Trim() &&
+                    product.Width.ToString() == extractData[2].Trim() &&
+                    product.Length.ToString() == extractData[3].Trim() &&
+                    product.Color == extractData[4].Trim() &&
+                    product.Disabled != true &&
+                    !product.CreatedForDirectSale);
+            }
+
+            return null;
+        }
+
+        [Authorize(Roles = "admin,superadmin,employee")]
         public async Task<IActionResult> ProcessQRCode(string data)
         {
             try
@@ -281,133 +695,30 @@ namespace Inventar.Controllers
                 HttpContext.Session.SetString("lastScanTime", DateTime.Now.ToString());
 
                 var extractData = data.Split("/");
-
-                var item = new Tepih();
-                if (extractData.Length == 7)
+                var item = await FindProductByQrDataAsync(extractData);
+                if (item == null)
                 {
-                    if (System.String.IsNullOrEmpty(extractData[3]) && System.String.IsNullOrEmpty(extractData[4]))
-                    {
-                        var itemm = _context.Tepisi.FirstOrDefault(i => i.Name == extractData[0].Trim()
-                        && i.Model == extractData[1].Trim()
-                        && i.ProductNumber == extractData[2].Trim()
-                        && i.Color == extractData[5].Trim()
-                        && i.PerM2.ToString() == extractData[6].Trim()
-                        && i.Disabled != true);
-                        if (itemm == null)
-                        {
-                            _logger.LogWarning("ProcessQRCode: Couldn't find a product with properties matching QR Code data: {data}", data);
-                            return Json(new { success = false, message = "Product not found" });
-                        }
-                        item = itemm;
-                    }
-                    else
-                    {
-                        var itemm = _context.Tepisi.FirstOrDefault(i => i.Name == extractData[0].Trim()
-                        && i.Model == extractData[1].Trim()
-                        && i.ProductNumber == extractData[2].Trim()
-                        && i.Width.ToString() == extractData[3].Trim()
-                        && i.Length.ToString() == extractData[4].Trim()
-                        && i.Color == extractData[5].Trim()
-                        && i.PerM2.ToString() == extractData[6].Trim()
-                        && i.Disabled != true);
-                        if (itemm == null)
-                        {
-                            _logger.LogWarning("ProcessQRCode: Couldn't find a product with properties matching QR Code data: {data}", data);
-                            return Json(new { success = false, message = "Product not found" });
-                        }
-                        item = itemm;
-                    }
-                }
-                else if (extractData.Length == 5)
-                {
-                    if (System.String.IsNullOrEmpty(extractData[2]) && System.String.IsNullOrEmpty(extractData[3]))
-                    {
-                        var itemm = _context.Tepisi.FirstOrDefault(i => i.Name == extractData[0].Trim()
-                        && i.Model == extractData[1].Trim()
-                        && i.Color == extractData[4].Trim()
-                        && i.Disabled != true);
-                        if (itemm == null)
-                        {
-                            _logger.LogWarning("ProcessQRCode: Couldn't find a product with properties matching QR Code data: {data}", data);
-                            return Json(new { success = false, message = "Product not found" });
-                        }
-                        item = itemm;
-                    }
-                    else
-                    {
-                        var itemm = _context.Tepisi.FirstOrDefault(i => i.Name == extractData[0].Trim()
-                        && i.Model == extractData[1].Trim()
-                        && i.Width.ToString() == extractData[2].Trim()
-                        && i.Length.ToString() == extractData[3].Trim()
-                        && i.Color == extractData[4].Trim()
-                        && i.Disabled != true);
-                        if (itemm == null)
-                        {
-                            _logger.LogWarning("ProcessQRCode: Couldn't find a product with properties matching QR Code data: {data}", data);
-                            return Json(new { success = false, message = "Product not found" });
-                        }
-                        item = itemm;
-                    }
-                }
-                else
-                {
-                    _logger.LogWarning("ProcessQRCode: QR Code data doesn't follow required structure: {data}", data);
+                    _logger.LogWarning("ProcessQRCode: Couldn't find a product with properties matching QR Code data: {data}", data);
                     return Json(new { success = false, message = "Product not found" });
                 }
 
-                if (item != null)
+                var scannedProducts = GetScannedProducts();
+
+                bool isPageReload = Request.Headers["Cache-Control"].ToString().Contains("max-age=0");
+                if (isPageReload)
                 {
-                    List<ScannedProductViewModel> scannedProds = GetScannedProducts();
-                    var matchingvalue = scannedProds.FirstOrDefault(i => i.Id == item.Id);
-
-                    bool isPageReload = Request.Headers["Cache-Control"].ToString().Contains("max-age=0");
-                    if (isPageReload)
-                    {
-                        return View("QRCodeScanning", scannedProds);
-                    }
-                    if (matchingvalue != null)
-                    {
-                        matchingvalue.Quantity++;
-                        if (matchingvalue.PerM2)
-                        {
-                            matchingvalue.M2Total = ((decimal)((int)item.Length * (int)item.Width) / 10000) * matchingvalue.Quantity;
-                        }
-                    }
-                    else
-                    {
-                        var tepihVM = new ScannedProductViewModel
-                        {
-                            Id = item.Id,
-                            ProductNumber = item.ProductNumber,
-                            Model = item.Model,
-                            Name = item.Name,
-                            Quantity = 1,
-                            Length = item.Length,
-                            Width = item.Width,
-                            M2PerUnit = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : null,
-                            M2Total = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : null,
-                            Color = item.Color,
-                            Price = item.Price,
-                            PerM2 = item.PerM2,
-                        };
-                        if (!tepihVM.PerM2)
-                        {
-                            tepihVM.PriceTotal = Math.Round((decimal)(tepihVM.Price * tepihVM.Quantity), 2);
-                        }
-                        if (tepihVM.PerM2)
-                        {
-                            tepihVM.PriceTotal = Math.Round((decimal)(tepihVM.Price * tepihVM.M2Total), 2);
-                        }
-
-                        scannedProds.Add(tepihVM);
-                    }
-
-                    HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProds));
-                    return Json(new { success = true });
-
+                    return View("QRCodeScanning", scannedProducts);
                 }
-                _logger.LogError("ProcessQRCode: Something went wrong while proccessing QR Code data: {data}", data);
-                return Json(new { success = false, message = "QR Code not recognized." });
+
+                if (item.PoMjeri)
+                {
+                    return Json(await BuildPoMjeriPromptResponseAsync(item));
+                }
+
+                AddOrIncrementRegularScannedProduct(scannedProducts, item);
+                HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProducts));
+
+                return Json(new { success = true });
             }
             catch(Exception ex)
             {
@@ -416,7 +727,199 @@ namespace Inventar.Controllers
             }
         }
 
+        [HttpGet]
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public async Task<IActionResult> PrepareProductSelection(int id)
+        {
+            try
+            {
+                var item = await _context.Tepisi.FirstOrDefaultAsync(product => product.Id == id && !product.Disabled && !product.CreatedForDirectSale);
+                if (item == null)
+                {
+                    return Json(new { success = false, message = "Product not found" });
+                }
+
+                if (item.PoMjeri)
+                {
+                    return Json(await BuildPoMjeriPromptResponseAsync(item));
+                }
+
+                var scannedProducts = GetScannedProducts();
+                AddOrIncrementRegularScannedProduct(scannedProducts, item);
+                HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProducts));
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "PrepareProductSelection failed for product {ProductId}.", id);
+                return StatusCode(500, "An error occurred while preparing the selected product.");
+            }
+        }
+
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public async Task<IActionResult> CreateDirectSaleProduct([FromBody] CreateDirectSaleProductRequestViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Unesite ispravne podatke za proizvod." });
+            }
+
+            try
+            {
+                var normalizedName = TextEncodingHelper.NormalizeInput(model.Name)?.Trim();
+                if (string.IsNullOrWhiteSpace(normalizedName))
+                {
+                    return Json(new { success = false, message = "Naziv proizvoda je obavezan." });
+                }
+
+                if (!TryParseDirectSaleProductType(model.ProductType, out var perM2, out var poMjeri))
+                {
+                    return Json(new { success = false, message = "Izaberite ispravan tip proizvoda." });
+                }
+
+                var width = model.Width;
+                var length = model.Length;
+
+                if (perM2 || poMjeri)
+                {
+                    if (!width.HasValue || !length.HasValue)
+                    {
+                        return Json(new { success = false, message = "Unesite širinu i dužinu za izabrani tip proizvoda." });
+                    }
+                }
+                else if (width.HasValue != length.HasValue)
+                {
+                    return Json(new { success = false, message = "Za dimenziju unesite i širinu i dužinu." });
+                }
+
+                var product = new Tepih
+                {
+                    Name = TruncateValue(normalizedName, 50),
+                    ProductNumber = "DEF",
+                    Model = "DEF",
+                    Color = "DEF",
+                    BroaderCategory = "DEF",
+                    NarrowerCategory = "DEF",
+                    Quantity = model.Quantity,
+                    Price = Math.Round(model.Price, 4, MidpointRounding.AwayFromZero),
+                    ReservedQuantity = 0,
+                    PerM2 = perM2,
+                    PoMjeri = poMjeri,
+                    IsPublished = false,
+                    Disabled = false,
+                    CreatedForDirectSale = true,
+                    DateTime = null,
+                    QRCodeUrl = null,
+                    Length = length,
+                    Width = width,
+                    UnID = null,
+                    Description = null,
+                    Slug = null,
+                    OnlinePrice = null,
+                    ShortDescription = null,
+                    SeoTitle = null,
+                    SeoDescription = null
+                };
+
+                _context.Tepisi.Add(product);
+                await _context.SaveChangesAsync();
+
+                var scannedProducts = GetScannedProducts();
+                scannedProducts.Add(BuildDirectSaleScannedProduct(product, model.Quantity));
+                HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProducts));
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create a direct-sale placeholder product for QR checkout.");
+                return StatusCode(500, "An error occurred while creating the temporary product.");
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public async Task<IActionResult> AddPoMjeriScannedProduct([FromBody] PoMjeriSelectionRequestViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Unesite ispravne dimenzije." });
+            }
+
+            try
+            {
+                var product = await _context.Tepisi.FirstOrDefaultAsync(item => item.Id == model.ProductId && !item.Disabled);
+                if (product == null)
+                {
+                    return Json(new { success = false, message = "Product not found" });
+                }
+
+                if (!product.PoMjeri || !product.Width.HasValue || !product.Length.HasValue)
+                {
+                    return Json(new { success = false, message = "Izabrani proizvod nije po mjeri." });
+                }
+
+                var remainingLength = await GetSessionAwareRemainingLengthAsync(product);
+                var remainingWidth = product.Width.Value;
+                var fixedWidth = remainingWidth;
+
+                if (model.CustomLength > remainingLength)
+                {
+                    return Json(new { success = false, message = "Unesena dužina ne može biti veća od preostale dužine." });
+                }
+
+                var scannedProduct = await BuildPoMjeriScannedProductAsync(product, fixedWidth, model.CustomLength);
+                var scannedProducts = GetScannedProducts();
+
+                var matchingLine = scannedProducts.FirstOrDefault(item =>
+                    item.PoMjeri &&
+                    item.Id == product.Id &&
+                    item.Width == scannedProduct.Width &&
+                    item.Length == scannedProduct.Length &&
+                    item.ConsumedLengthPerUnit == scannedProduct.ConsumedLengthPerUnit);
+
+                if (matchingLine != null)
+                {
+                    var availableLengthExcludingCurrent = await GetSessionAwareRemainingLengthAsync(product, matchingLine.LineId);
+                    var maxAvailableQuantity = PoMjeriHelper.CalculateMaxAvailableQuantity(
+                        product.Width ?? 0,
+                        availableLengthExcludingCurrent,
+                        matchingLine.Width ?? 0,
+                        matchingLine.Length ?? 0);
+
+                    if (matchingLine.Quantity >= maxAvailableQuantity)
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = $"Moguće je naručiti najviše {maxAvailableQuantity} komada za dati proizvod."
+                        });
+                    }
+
+                    matchingLine.Quantity += 1;
+                    matchingLine.RemainingLength = scannedProduct.RemainingLength;
+                    matchingLine.MaxAvailableQuantity = maxAvailableQuantity;
+                    RecalculateScannedProductTotals(matchingLine);
+                }
+                else
+                {
+                    scannedProducts.Add(scannedProduct);
+                }
+
+                HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProducts));
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AddPoMjeriScannedProduct failed for product {ProductId}.", model.ProductId);
+                return StatusCode(500, "An error occurred while adding po mjeri product.");
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "admin,superadmin,employee")]
         public async Task<IActionResult> Update([FromBody] ScannedProductViewModel modell)
         {
             try
@@ -428,30 +931,29 @@ namespace Inventar.Controllers
                 }
 
                 List<ScannedProductViewModel> scannedProds = GetScannedProducts();
-                var matchingvalue = scannedProds.FirstOrDefault(i => i.Id == modell.Id);
+                var matchingvalue = scannedProds.FirstOrDefault(i => i.LineId == modell.LineId);
                 if (matchingvalue == null) {
-                    _logger.LogError("Update price for scanned product: Product was not found in scanned products: {prodId}. Full model: {model} ", modell.Id, modell);
+                    _logger.LogError("Update price for scanned product: Product line was not found in scanned products: {lineId}. Full model: {model} ", modell.LineId, modell);
                     return Json(new { success = false });
                 }
                 if (matchingvalue != null)
                 {
                     matchingvalue.Price = modell.Price;
                     matchingvalue.Rabat = modell.Rabat;
-                    if (!matchingvalue.PerM2)
+                    matchingvalue.PriceTotal = InventoryPricingHelper.CalculateDiscountedLineTotal(
+                        matchingvalue.PerM2,
+                        matchingvalue.PoMjeri,
+                        matchingvalue.Price,
+                        matchingvalue.Width,
+                        matchingvalue.Length,
+                        matchingvalue.Quantity,
+                        matchingvalue.Rabat);
+
+                    if (matchingvalue.IsDirectSaleProduct)
                     {
-                        matchingvalue.PriceTotal = matchingvalue.Price * matchingvalue.Quantity;
-                    }
-                    if (matchingvalue.PerM2)
-                    {
-                        matchingvalue.PriceTotal = (matchingvalue.Price * (decimal)matchingvalue.M2Total);
+                        matchingvalue.DirectSaleOriginalTotal = matchingvalue.PriceTotal;
                     }
 
-                    if (matchingvalue.Rabat != null)
-                    {
-                        var rbt = (decimal)matchingvalue.Rabat / (decimal)100;
-                        matchingvalue.PriceTotal -= rbt * matchingvalue.PriceTotal;
-                        /*matchingvalue.Price -= rbt * matchingvalue.Price;*/ //OVO VJEROVATNO MORAMO KOMENTARISATI I PROMJENITI PRODAJE
-                    }
                     HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProds));
                 }
 
@@ -464,6 +966,7 @@ namespace Inventar.Controllers
             }
         }
 
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> Delete(int id)
         {
             Tepih tepih = await _tepihRepository.GetByIdAsyncNoTracking(id);
@@ -476,6 +979,7 @@ namespace Inventar.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> DeleteTepih(int id)
         {
             Tepih tepih = await _tepihRepository.GetByIdAsync(id);
@@ -487,11 +991,17 @@ namespace Inventar.Controllers
 
             if (!string.IsNullOrWhiteSpace(tepih.QRCodeUrl))
             {
-                var publicId = CloudinaryHelper.GetPublicIdFromUrlFromFolder(tepih.QRCodeUrl);
-
                 try
                 {
-                    await _photoService.DeletePhotoAsync(publicId);
+                    if (CloudinaryHelper.TryGetPublicIdFromUrlFromFolder(tepih.QRCodeUrl, out var publicId))
+                    {
+                        await _photoService.DeletePhotoAsync(publicId);
+                    }
+                    else if (QrCodeStorageHelper.TryMapLocalUrlToFilePath(_env.WebRootPath, tepih.QRCodeUrl, out var localFilePath) &&
+                             System.IO.File.Exists(localFilePath))
+                    {
+                        System.IO.File.Delete(localFilePath);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -523,6 +1033,7 @@ namespace Inventar.Controllers
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> Edit(int id)
         {
             Tepih tepih = await _context.Tepisi
@@ -534,12 +1045,15 @@ namespace Inventar.Controllers
                 _logger.LogWarning("EditTepih: Tepih with ID {id} not found.", id);
                 return NotFound("Product not found.");
             }
+            TextEncodingHelper.DecodeProductForDisplay(tepih);
             var tepihVM = new EditTepihViewModel
             {
                 Id = tepih.Id,
                 Name = tepih.Name,
                 ProductNumber = tepih.ProductNumber,
                 Model = tepih.Model,
+                BroaderCategory = tepih.BroaderCategory,
+                NarrowerCategory = tepih.NarrowerCategory,
                 DateTime = tepih.DateTime,
                 Quantity = tepih.Quantity,
                 QRCodeUrl = tepih.QRCodeUrl,
@@ -549,6 +1063,9 @@ namespace Inventar.Controllers
                 Price = tepih.Price,
                 OnlinePrice = tepih.OnlinePrice,
                 PerM2 = tepih.PerM2,
+                PoMjeri = tepih.PoMjeri,
+                UnID = tepih.UnID,
+                RemainingSize = tepih.PoMjeri ? PoMjeriHelper.FormatRemainingSize(tepih.Width, await GetRemainingPoMjeriLengthAsync(tepih)) : null,
                 Description = tepih.Description,
                 ShortDescription = tepih.ShortDescription,
                 SeoTitle = tepih.SeoTitle,
@@ -565,8 +1082,10 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> Edit(int id, EditTepihViewModel tepihVM)
         {
+            NormalizeProductTextFields(tepihVM);
             if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "Editovanje tepiha nije uspjelo");
@@ -587,15 +1106,19 @@ namespace Inventar.Controllers
                 Name = tepihVM.Name,
                 ProductNumber = tepihVM.ProductNumber,
                 Model = tepihVM.Model,
+                BroaderCategory = ProductCategoryHelper.Normalize(tepihVM.BroaderCategory),
+                NarrowerCategory = ProductCategoryHelper.Normalize(tepihVM.NarrowerCategory),
                 DateTime = tepihVM.DateTime,
                 Quantity = tepihVM.Quantity,
                 QRCodeUrl = tepihVM.QRCodeUrl,
-                Length = tepihVM.Length,
-                Width = tepihVM.Width,
+                Length = proizvod.Length,
+                Width = proizvod.Width,
                 Color = tepihVM.Color,
                 Price = tepihVM.Price,
                 OnlinePrice = proizvod.OnlinePrice ?? tepihVM.Price,
-                PerM2 = tepihVM.PerM2,
+                PerM2 = proizvod.PoMjeri ? true : tepihVM.PerM2,
+                PoMjeri = proizvod.PoMjeri,
+                UnID = proizvod.UnID,
                 Description = tepihVM.Description,
                 ShortDescription = proizvod.ShortDescription,
                 SeoTitle = proizvod.SeoTitle,
@@ -606,6 +1129,11 @@ namespace Inventar.Controllers
                 RowVersion = proizvod.RowVersion,
                 Disabled = proizvod.Disabled
             };
+
+            if (proizvod.PoMjeri)
+            {
+                tepihEdit.Quantity = proizvod.Quantity;
+            }
 
             try
             {
@@ -621,6 +1149,7 @@ namespace Inventar.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> UploadStorefrontImages(int id, List<IFormFile> files, string? altText)
         {
             var tepih = await _context.Tepisi
@@ -655,10 +1184,20 @@ namespace Inventar.Controllers
                 await file.CopyToAsync(stream);
                 stream.Position = 0;
 
-                var uploadResult = await _photoService.UploadToCloudinary(
-                    file.FileName,
-                    stream,
-                    "StorefrontProducts");
+                CloudinaryDotNet.Actions.ImageUploadResult uploadResult;
+                try
+                {
+                    uploadResult = await _photoService.UploadToCloudinary(
+                        file.FileName,
+                        stream,
+                        "StorefrontProducts");
+                }
+                catch (ApplicationException ex)
+                {
+                    _logger.LogWarning(ex, "Storefront image upload failed for product {ProductId} and file {FileName}.", id, file.FileName);
+                    TempData["StorefrontErrorMessage"] = BuildStorefrontImageUploadErrorMessage(ex);
+                    break;
+                }
 
                 if (uploadResult.SecureUrl == null || string.IsNullOrWhiteSpace(uploadResult.PublicId))
                 {
@@ -673,6 +1212,7 @@ namespace Inventar.Controllers
                     Url = uploadResult.SecureUrl.ToString(),
                     ThumbnailUrl = uploadResult.SecureUrl.ToString(),
                     AltText = string.IsNullOrWhiteSpace(altText) ? tepih.Name : altText.Trim(),
+                    MediaType = "image",
                     IsPrimary = !hasPrimary,
                     SortOrder = nextSortOrder++,
                     Disabled = false,
@@ -699,8 +1239,51 @@ namespace Inventar.Controllers
             return RedirectToAction(nameof(Edit), new { id });
         }
 
+        private static string BuildStorefrontImageUploadErrorMessage(Exception ex)
+        {
+            var detail = ExtractUploadFailureDetail(ex);
+
+            if (ex.Message.Contains("Cloudinary is not configured", StringComparison.OrdinalIgnoreCase) ||
+                ex.InnerException?.Message.Contains("Cloudinary is not configured", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return "Cloudinary nije konfigurisan. Dodajte ispravan ApiSecret prije otpremanja slika proizvoda.";
+            }
+
+            return string.IsNullOrWhiteSpace(detail)
+                ? "Došlo je do greške prilikom otpremanja slika proizvoda."
+                : $"Došlo je do greške prilikom otpremanja slika proizvoda. Detalj: {detail}";
+        }
+
+        private static string? ExtractUploadFailureDetail(Exception ex)
+        {
+            var candidates = new[]
+            {
+                ex.Message,
+                ex.InnerException?.Message,
+                ex.GetBaseException().Message
+            };
+
+            foreach (var candidate in candidates)
+            {
+                if (string.IsNullOrWhiteSpace(candidate))
+                {
+                    continue;
+                }
+
+                if (candidate.Contains("Failed to upload image to Cloudinary.", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                return candidate.Trim();
+            }
+
+            return null;
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> SetPrimaryStorefrontImage(int id, int imageId)
         {
             var images = await _context.ProductImages
@@ -729,6 +1312,7 @@ namespace Inventar.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin,superadmin")]
         public async Task<IActionResult> DeleteStorefrontImage(int id, int imageId)
         {
             var image = await _context.ProductImages
@@ -772,6 +1356,244 @@ namespace Inventar.Controllers
             return Math.Max(tepih.Quantity - tepih.ReservedQuantity, 0);
         }
 
+        private async Task<int> GetRemainingPoMjeriLengthAsync(Tepih product)
+        {
+            if (!product.PoMjeri || !product.Length.HasValue)
+            {
+                return product.Length ?? 0;
+            }
+
+            var sales = await _context.Prodaje
+                .Where(sale => sale.TepihId == product.Id && !sale.Disabled)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return PoMjeriHelper.CalculateRemainingLength(product, sales);
+        }
+
+        private async Task<Dictionary<int, int>> LoadRemainingPoMjeriLengthsAsync(IEnumerable<int> productIds)
+        {
+            var ids = productIds.Distinct().ToList();
+            if (ids.Count == 0)
+            {
+                return new Dictionary<int, int>();
+            }
+
+            var products = await _context.Tepisi
+                .Where(product => ids.Contains(product.Id))
+                .Select(product => new { product.Id, product.PoMjeri, product.Length })
+                .ToListAsync();
+
+            var consumedByProduct = await _context.Prodaje
+                .Where(sale => ids.Contains(sale.TepihId) && !sale.Disabled)
+                .GroupBy(sale => sale.TepihId)
+                .Select(group => new
+                {
+                    TepihId = group.Key,
+                    ConsumedLength = group.Sum(sale => (sale.ConsumedLength ?? sale.CustomLength ?? 0) * sale.Quantity)
+                })
+                .ToDictionaryAsync(item => item.TepihId, item => item.ConsumedLength);
+
+            return products.ToDictionary(
+                product => product.Id,
+                product =>
+                {
+                    if (!product.PoMjeri || !product.Length.HasValue)
+                    {
+                        return product.Length ?? 0;
+                    }
+
+                    consumedByProduct.TryGetValue(product.Id, out var consumedLength);
+                    return Math.Max(product.Length.Value - consumedLength, 0);
+                });
+        }
+
+        private int GetSessionConsumedLength(int productId, string? excludeLineId = null)
+        {
+            return GetScannedProducts()
+                .Where(item => item.PoMjeri && item.Id == productId && item.LineId != excludeLineId)
+                .Sum(item => (item.ConsumedLengthPerUnit ?? 0) * item.Quantity);
+        }
+
+        private async Task<int> GetSessionAwareRemainingLengthAsync(Tepih product, string? excludeLineId = null)
+        {
+            var remainingLength = await GetRemainingPoMjeriLengthAsync(product);
+            var sessionConsumedLength = GetSessionConsumedLength(product.Id, excludeLineId);
+            return Math.Max(remainingLength - sessionConsumedLength, 0);
+        }
+
+        private static void RecalculateScannedProductTotals(ScannedProductViewModel item)
+        {
+            item.M2Total = item.M2PerUnit.HasValue
+                ? Math.Round(item.M2PerUnit.Value * item.Quantity, 2)
+                : null;
+
+            item.PriceTotal = InventoryPricingHelper.CalculateLineTotal(
+                item.PerM2,
+                item.PoMjeri,
+                item.Price,
+                item.Width,
+                item.Length,
+                item.Quantity);
+        }
+
+        private static bool TryParseDirectSaleProductType(string? value, out bool perM2, out bool poMjeri)
+        {
+            switch ((value ?? string.Empty).Trim().ToLowerInvariant())
+            {
+                case DirectSaleTypePerUnit:
+                case "unit":
+                    perM2 = false;
+                    poMjeri = false;
+                    return true;
+                case DirectSaleTypePerM2:
+                case "m2":
+                    perM2 = true;
+                    poMjeri = false;
+                    return true;
+                case DirectSaleTypePerMeasure:
+                case "pomjeri":
+                    perM2 = true;
+                    poMjeri = true;
+                    return true;
+                default:
+                    perM2 = false;
+                    poMjeri = false;
+                    return false;
+            }
+        }
+
+        private static ScannedProductViewModel BuildDirectSaleScannedProduct(
+            Tepih item,
+            int quantity)
+        {
+            var scannedProduct = new ScannedProductViewModel
+            {
+                LineId = Guid.NewGuid().ToString("N"),
+                Id = item.Id,
+                ProductNumber = item.ProductNumber,
+                Model = item.Model,
+                Name = item.Name,
+                Quantity = quantity,
+                Length = item.Length,
+                Width = item.Width,
+                OriginalLength = item.Length,
+                OriginalWidth = item.Width,
+                RemainingLength = item.PoMjeri ? item.Length : null,
+                RemainingWidth = item.PoMjeri ? item.Width : null,
+                ConsumedLengthPerUnit = item.PoMjeri && item.Width.HasValue && item.Length.HasValue
+                    ? PoMjeriHelper.CalculateConsumedLengthPerUnit(item.Width.Value, item.Width.Value, item.Length.Value)
+                    : null,
+                MaxAvailableQuantity = quantity,
+                M2PerUnit = PoMjeriHelper.CalculateM2PerUnit(item.PerM2, item.Width, item.Length),
+                Color = item.Color,
+                Price = item.Price,
+                PerM2 = item.PerM2,
+                PoMjeri = item.PoMjeri,
+                IsDirectSaleProduct = true,
+                UnID = item.UnID
+            };
+
+            RecalculateScannedProductTotals(scannedProduct);
+            scannedProduct.DirectSaleOriginalTotal = scannedProduct.PriceTotal;
+            return scannedProduct;
+        }
+
+        private ScannedProductViewModel BuildRegularScannedProduct(Tepih item)
+        {
+            var scannedProduct = new ScannedProductViewModel
+            {
+                LineId = Guid.NewGuid().ToString("N"),
+                Id = item.Id,
+                ProductNumber = item.ProductNumber,
+                Model = item.Model,
+                Name = item.Name,
+                Quantity = 1,
+                Length = item.Length,
+                Width = item.Width,
+                OriginalLength = item.Length,
+                OriginalWidth = item.Width,
+                M2PerUnit = PoMjeriHelper.CalculateM2PerUnit(item.PerM2, item.Width, item.Length),
+                Color = item.Color,
+                Price = item.Price,
+                PerM2 = item.PerM2,
+                PoMjeri = item.PoMjeri,
+                UnID = item.UnID
+            };
+
+            RecalculateScannedProductTotals(scannedProduct);
+            return scannedProduct;
+        }
+
+        private async Task<ScannedProductViewModel> BuildPoMjeriScannedProductAsync(Tepih product, int customWidth, int customLength)
+        {
+            var remainingLength = await GetRemainingPoMjeriLengthAsync(product);
+            var sessionAwareRemainingLength = await GetSessionAwareRemainingLengthAsync(product);
+            var remainingWidth = product.Width ?? 0;
+            var consumedLengthPerUnit = PoMjeriHelper.CalculateConsumedLengthPerUnit(remainingWidth, customWidth, customLength);
+            var maxAvailableQuantity = PoMjeriHelper.CalculateMaxAvailableQuantity(remainingWidth, sessionAwareRemainingLength, customWidth, customLength);
+
+            if (maxAvailableQuantity < 1)
+            {
+                throw new InvalidOperationException("Nema dovoljno preostale dužine za traženi komad.");
+            }
+
+            var resolvedPrice = await ResolvePoMjeriRateAsync(product, customWidth);
+
+            var scannedProduct = new ScannedProductViewModel
+            {
+                LineId = Guid.NewGuid().ToString("N"),
+                Id = product.Id,
+                ProductNumber = product.ProductNumber,
+                Model = product.Model,
+                Name = product.Name,
+                Quantity = 1,
+                Length = customLength,
+                Width = customWidth,
+                OriginalLength = product.Length,
+                OriginalWidth = product.Width,
+                RemainingLength = remainingLength,
+                RemainingWidth = product.Width,
+                ConsumedLengthPerUnit = consumedLengthPerUnit,
+                MaxAvailableQuantity = maxAvailableQuantity,
+                M2PerUnit = PoMjeriHelper.CalculateM2PerUnit(true, customWidth, customLength),
+                Color = product.Color,
+                Price = resolvedPrice,
+                PerM2 = true,
+                PoMjeri = true,
+                UnID = product.UnID
+            };
+
+            RecalculateScannedProductTotals(scannedProduct);
+            return scannedProduct;
+        }
+
+        private async Task<decimal> ResolvePoMjeriRateAsync(Tepih product, int customWidth)
+        {
+            if (!product.PoMjeri)
+            {
+                return product.Price;
+            }
+
+            var resolvedPrice = await _context.Tepisi
+                .AsNoTracking()
+                .Where(candidate =>
+                    !candidate.Disabled &&
+                    candidate.PoMjeri &&
+                    candidate.Name == product.Name &&
+                    candidate.ProductNumber == product.ProductNumber &&
+                    candidate.Model == product.Model &&
+                    candidate.Color == product.Color &&
+                    candidate.Width.HasValue &&
+                    candidate.Width.Value >= customWidth)
+                .OrderBy(candidate => candidate.Width)
+                .ThenBy(candidate => candidate.Id)
+                .Select(candidate => candidate.Price)
+                .FirstOrDefaultAsync();
+
+            return resolvedPrice > 0 ? resolvedPrice : product.Price;
+        }
+
         private static List<StorefrontProductImageViewModel> MapProductImages(IEnumerable<ProductImage>? productImages)
         {
             return productImages?
@@ -783,6 +1605,7 @@ namespace Inventar.Controllers
                     Url = image.Url,
                     ThumbnailUrl = image.ThumbnailUrl,
                     AltText = image.AltText,
+                    MediaType = image.MediaType,
                     IsPrimary = image.IsPrimary,
                     SortOrder = image.SortOrder
                 })
@@ -842,8 +1665,21 @@ namespace Inventar.Controllers
 
             try
             {
-                return JsonConvert.DeserializeObject<List<ScannedProductViewModel>>(serialized)
-                       ?? new List<ScannedProductViewModel>();
+                var items = JsonConvert.DeserializeObject<List<ScannedProductViewModel>>(serialized)
+                    ?? new List<ScannedProductViewModel>();
+
+                foreach (var item in items)
+                {
+                    item.LineId ??= Guid.NewGuid().ToString("N");
+                    item.OriginalWidth ??= item.Width;
+                    item.OriginalLength ??= item.Length;
+                    if (item.PoMjeri)
+                    {
+                        item.MaxAvailableQuantity = Math.Max(item.MaxAvailableQuantity, item.Quantity);
+                    }
+                }
+
+                return items;
             }
             catch (System.Text.Json.JsonException ex) // provjeriti da li je odgovarajuci prefix
             {
@@ -874,8 +1710,53 @@ namespace Inventar.Controllers
             return value.Length <= maxLength ? value : value[..maxLength];
         }
 
+        private async Task DeleteDirectSaleProductsIfUnusedAsync(
+            IEnumerable<int> productIds,
+            IEnumerable<ScannedProductViewModel>? remainingSessionProducts = null)
+        {
+            var distinctIds = productIds
+                .Distinct()
+                .ToList();
+
+            if (distinctIds.Count == 0)
+            {
+                return;
+            }
+
+            var remainingIds = remainingSessionProducts?
+                .Where(item => item.IsDirectSaleProduct)
+                .Select(item => item.Id)
+                .ToHashSet() ?? new HashSet<int>();
+
+            var candidates = await _context.Tepisi
+                .Where(product => distinctIds.Contains(product.Id) && product.CreatedForDirectSale)
+                .ToListAsync();
+
+            foreach (var candidate in candidates)
+            {
+                if (remainingIds.Contains(candidate.Id))
+                {
+                    continue;
+                }
+
+                var hasSales = await _context.Prodaje
+                    .AnyAsync(sale => sale.TepihId == candidate.Id && !sale.Disabled);
+
+                if (!hasSales)
+                {
+                    _context.Tepisi.Remove(candidate);
+                }
+            }
+
+            if (_context.ChangeTracker.HasChanges())
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+
 
         [HttpGet]
+        [Authorize(Roles = "admin,superadmin,employee")]
         public IActionResult ScannedProductsToBePurchased()
         {
             var scannedProductsOverview = new ScannedProductsOverviewViewModel();
@@ -890,6 +1771,7 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin,employee")]
         public async Task<IActionResult> ScannedProductsToBePurchased(ScannedProductsOverviewViewModel spovm)
         {
             try
@@ -915,6 +1797,17 @@ namespace Inventar.Controllers
                     return RedirectToAction(nameof(ScannedProductsToBePurchased));
                 }
 
+                if (spovm.Products.Any(product =>
+                    product.PoMjeri &&
+                    (!product.Width.HasValue ||
+                     !product.Length.HasValue ||
+                     !product.ConsumedLengthPerUnit.HasValue ||
+                     product.ConsumedLengthPerUnit.Value <= 0)))
+                {
+                    TempData["ErrorMessage"] = "Po mjeri proizvod nema ispravne dimenzije za prodaju.";
+                    return RedirectToAction(nameof(ScannedProductsToBePurchased));
+                }
+
                 var sellerName = BuildSellerName();
                 var customerFullName = TruncateValue(spovm.FullName.ToUpper().Trim(), 50);
                 var plannedPaymentType = TruncateValue(
@@ -922,10 +1815,21 @@ namespace Inventar.Controllers
                     20);
 
                 var requestedQuantities = spovm.Products
+                    .Where(product => !product.PoMjeri)
                     .GroupBy(product => product.Id)
                     .ToDictionary(group => group.Key, group => group.Sum(product => product.Quantity));
 
-                var productIds = requestedQuantities.Keys.ToList();
+                var poMjeriRequests = spovm.Products
+                    .Where(product => product.PoMjeri)
+                    .GroupBy(product => product.Id)
+                    .ToDictionary(
+                        group => group.Key,
+                        group => group.Sum(product => (product.ConsumedLengthPerUnit ?? 0) * product.Quantity));
+
+                var productIds = requestedQuantities.Keys
+                    .Union(poMjeriRequests.Keys)
+                    .Distinct()
+                    .ToList();
                 var productsById = await _context.Tepisi
                     .Where(product => productIds.Contains(product.Id))
                     .ToDictionaryAsync(product => product.Id);
@@ -945,43 +1849,65 @@ namespace Inventar.Controllers
                     }
                 }
 
-                await using (var transaction = await _context.Database.BeginTransactionAsync())
+                foreach (var poMjeriRequest in poMjeriRequests)
                 {
-                    foreach (var scannedProduct in spovm.Products)
+                    if (!productsById.TryGetValue(poMjeriRequest.Key, out var product) || product.Disabled)
                     {
-                        _context.Prodaje.Add(new Prodaja
-                        {
-                            TepihId = scannedProduct.Id,
-                            Quantity = scannedProduct.Quantity,
-                            CustomerFullName = customerFullName,
-                            VrijemeProdaje = spovm.PurchaseTime,
-                            Price = scannedProduct.Price,
-                            Rabat = scannedProduct.Rabat,
-                            PlannedPaymentType = plannedPaymentType,
-                            Prodavac = TruncateValue(sellerName, 50),
-                            Disabled = false
-                        });
+                        TempData["ErrorMessage"] = $"Proizvod sa ID {poMjeriRequest.Key} nije pronađen.";
+                        return RedirectToAction(nameof(ScannedProductsToBePurchased));
                     }
 
-                    foreach (var requestedProduct in requestedQuantities)
+                    if (product.CreatedForDirectSale)
                     {
-                        productsById[requestedProduct.Key].Quantity -= requestedProduct.Value;
+                        continue;
                     }
 
-                    var customerExists = await _context.Kupci
-                        .AnyAsync(customer => customer.CustomerFullName == customerFullName);
-
-                    if (!customerExists)
+                    var remainingLength = await GetRemainingPoMjeriLengthAsync(product);
+                    if (poMjeriRequest.Value > remainingLength)
                     {
-                        _context.Kupci.Add(new Kupac
-                        {
-                            CustomerFullName = customerFullName
-                        });
+                        TempData["ErrorMessage"] = $"Nema dovoljno preostale dužine za proizvod {product.Name} ({product.ProductNumber}). Dostupno: {remainingLength} cm.";
+                        return RedirectToAction(nameof(ScannedProductsToBePurchased));
                     }
-
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
                 }
+
+                foreach (var scannedProduct in spovm.Products)
+                {
+                    _context.Prodaje.Add(new Prodaja
+                    {
+                        TepihId = scannedProduct.Id,
+                        Quantity = scannedProduct.Quantity,
+                        CustomerFullName = customerFullName,
+                        VrijemeProdaje = spovm.PurchaseTime,
+                        Price = scannedProduct.Price,
+                        Rabat = scannedProduct.Rabat,
+                        CustomWidth = scannedProduct.PoMjeri ? scannedProduct.Width : null,
+                        CustomLength = scannedProduct.PoMjeri ? scannedProduct.Length : null,
+                        ConsumedLength = scannedProduct.PoMjeri ? scannedProduct.ConsumedLengthPerUnit : null,
+                        DirectSaleOriginalTotal = scannedProduct.IsDirectSaleProduct ? scannedProduct.DirectSaleOriginalTotal : null,
+                        PlannedPaymentType = plannedPaymentType,
+                        Prodavac = TruncateValue(sellerName, 50),
+                        Disabled = false
+                    });
+                }
+
+                foreach (var requestedProduct in requestedQuantities)
+                {
+                    productsById[requestedProduct.Key].Quantity -= requestedProduct.Value;
+                }
+
+                var customerExists = await _context.Kupci
+                    .AnyAsync(customer => customer.CustomerFullName == customerFullName);
+
+                if (!customerExists)
+                {
+                    _context.Kupci.Add(new Kupac
+                    {
+                        CustomerFullName = customerFullName
+                    });
+                }
+
+                // A single SaveChanges call already runs in an EF-managed transaction.
+                await _context.SaveChangesAsync();
 
                 _sessionService.ClearScannedProducts(HttpContext.Session);
 
@@ -1189,16 +2115,21 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
-        public IActionResult DeleteScannedProduct(int id)
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public async Task<IActionResult> DeleteScannedProduct(string lineId)
         {
             try
             {
                 var scannedProds = GetScannedProducts();
 
-                var item = scannedProds.FirstOrDefault(i => i.Id == id);
+                var item = scannedProds.FirstOrDefault(i => i.LineId == lineId);
                 if (item != null)
                 {
                     scannedProds.Remove(item);
+                    if (item.IsDirectSaleProduct)
+                    {
+                        await DeleteDirectSaleProductsIfUnusedAsync(new[] { item.Id }, scannedProds);
+                    }
                     HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProds));
                 }
 
@@ -1206,27 +2137,65 @@ namespace Inventar.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while deleting scanned product with ID: {Id}", id);
+                _logger.LogError(ex, "Error while deleting scanned product line {LineId}", lineId);
                 return StatusCode(500, "An error occurred while removing the product.");
             }
         }
 
         [HttpPost]
-        public IActionResult UpdateQuantity(int id, string action)
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public async Task<IActionResult> UpdateQuantity(string lineId, string action)
         {
             try
             {
                 var scannedProds = GetScannedProducts();
-                var item = scannedProds.FirstOrDefault(i => i.Id == id);
+                var item = scannedProds.FirstOrDefault(i => i.LineId == lineId);
 
                 if (item == null)
                 {
-                    _logger.LogWarning("UpdateQuantity: No scanned product found with ID {Id}");
+                    _logger.LogWarning("UpdateQuantity: No scanned product found with line ID {LineId}", lineId);
                     return NotFound("Product couldn't be found!");
+                }
+
+                if (item.IsDirectSaleProduct)
+                {
+                    return Json(new
+                    {
+                        qty = item.Quantity,
+                        m2Total = item.M2Total,
+                        priceTotal = item.PriceTotal,
+                        message = "Količina za proizvod kreiran za direktnu prodaju je fiksna."
+                    });
                 }
 
                 if (action == "increase")
                 {
+                    if (item.PoMjeri)
+                    {
+                        var product = await _context.Tepisi.FirstOrDefaultAsync(p => p.Id == item.Id && !p.Disabled);
+                        if (product == null)
+                        {
+                            return NotFound("Product couldn't be found!");
+                        }
+
+                        var availableLength = await GetSessionAwareRemainingLengthAsync(product, item.LineId);
+                        item.MaxAvailableQuantity = PoMjeriHelper.CalculateMaxAvailableQuantity(
+                            product.Width ?? 0,
+                            availableLength,
+                            item.Width ?? 0,
+                            item.Length ?? 0);
+
+                        if (item.Quantity >= item.MaxAvailableQuantity)
+                        {
+                            return Json(new
+                            {
+                                qty = item.Quantity,
+                                m2Total = item.M2Total,
+                                message = $"Moguće je naručiti najviše {item.MaxAvailableQuantity} komada za dati proizvod."
+                            });
+                        }
+                    }
+
                     item.Quantity += 1;
                 }
                 else if (action == "decrease" && item.Quantity > 1)
@@ -1234,15 +2203,7 @@ namespace Inventar.Controllers
                     item.Quantity -= 1;
                 }
 
-                if (item.PerM2)
-                {
-                    item.M2Total = item.Quantity * item.M2PerUnit;
-                    item.PriceTotal = item.Price * (decimal)item.M2Total;
-                }
-                else
-                {
-                    item.PriceTotal = item.Price * item.Quantity;
-                }
+                RecalculateScannedProductTotals(item);
 
                 HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProds));
 
@@ -1250,13 +2211,15 @@ namespace Inventar.Controllers
                 {
                     qty = item.Quantity,
                     m2Total = item.M2Total,
+                    priceTotal = item.PriceTotal,
+                    maxQty = item.MaxAvailableQuantity
                 };
 
                 return Json(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while updating quantity for scanned product ID: {Id}", id);
+                _logger.LogError(ex, "Error while updating quantity for scanned product line {LineId}", lineId);
                 return StatusCode(500, "An error occurred while updating the quantity.");
             }
         }
@@ -1309,58 +2272,27 @@ namespace Inventar.Controllers
                     .SetPadding(1);
         }
 
+        [Authorize(Roles = "admin,superadmin,employee")]
         public IActionResult ManuallyAddProduct(int id)
         {
             try
             {
                 var item = _context.Tepisi.FirstOrDefault(i => i.Id == id);
-                if (item == null || item.Disabled == true)
+                if (item == null || item.Disabled == true || item.CreatedForDirectSale)
                 {
                     TempData["ProductNotFound"] = "Product not found!";
                     _logger.LogWarning("ManuallyAddProduct: product with id {ProductId} was not found!", id);
                     return RedirectToAction("QRCodeScanning");
                 }
 
+                if (item.PoMjeri)
+                {
+                    TempData["ProductNotFound"] = "Za po mjeri proizvod prvo unesite željene dimenzije.";
+                    return RedirectToAction("QRCodeScanning");
+                }
+
                 List<ScannedProductViewModel> scannedProds = GetScannedProducts();
-                var matchingvalue = scannedProds.FirstOrDefault(i => i.Id == item.Id);
-
-                if (matchingvalue != null)
-                {
-                    matchingvalue.Quantity++;
-                    if (matchingvalue.PerM2)
-                    {
-                        matchingvalue.M2Total = ((decimal)((int)item.Length * (int)item.Width) / 10000) * matchingvalue.Quantity;
-                    }
-                }
-                else
-                {
-                    var tepihVM = new ScannedProductViewModel
-                    {
-                        Id = item.Id,
-                        ProductNumber = item.ProductNumber,
-                        Model = item.Model,
-                        Name = item.Name,
-                        Quantity = 1,
-                        Length = item.Length,
-                        Width = item.Width,
-                        M2PerUnit = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : null,
-                        M2Total = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : null,
-                        Color = item.Color,
-                        Price = item.Price,
-                        PerM2 = item.PerM2,
-                    };
-
-                    if (!tepihVM.PerM2)
-                    {
-                        tepihVM.PriceTotal = Math.Round((decimal)(tepihVM.Price * tepihVM.Quantity), 2);
-                    }
-                    else
-                    {
-                        tepihVM.PriceTotal = Math.Round((decimal)(tepihVM.Price * tepihVM.M2Total), 2);
-                    }
-
-                    scannedProds.Add(tepihVM);
-                }
+                AddOrIncrementRegularScannedProduct(scannedProds, item);
 
                 HttpContext.Session.SetString("scannedProducts", JsonConvert.SerializeObject(scannedProds));
                 return RedirectToAction("QRCodeScanning", "InventoryItem");
@@ -1374,11 +2306,22 @@ namespace Inventar.Controllers
 
 
         [HttpPost]
-        public IActionResult ClearSession()
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public async Task<IActionResult> ClearSession()
         {
             try
             {
-                //HttpContext.Session.Remove("scannedProducts");
+                var scannedProducts = GetScannedProducts();
+                var directSaleIds = scannedProducts
+                    .Where(item => item.IsDirectSaleProduct)
+                    .Select(item => item.Id)
+                    .ToList();
+
+                if (directSaleIds.Count > 0)
+                {
+                    await DeleteDirectSaleProductsIfUnusedAsync(directSaleIds);
+                }
+
                 _sessionService.ClearScannedProducts(HttpContext.Session);
                 return Ok();
             }
@@ -1389,7 +2332,8 @@ namespace Inventar.Controllers
             }
         }
 
-        public IActionResult SearchTepisi(
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public async Task<IActionResult> SearchTepisi(
             string productNumber,
             string name,
             string model,
@@ -1444,7 +2388,7 @@ namespace Inventar.Controllers
             }
 
             var results = query
-                .Where(t => !t.Disabled)
+                .Where(t => !t.Disabled && !t.CreatedForDirectSale)
                 .Take(30)
                 .Select(t => new
                 {
@@ -1454,21 +2398,74 @@ namespace Inventar.Controllers
                     model = t.Model,
                     color = t.Color,
                     width = t.Width,
-                    length = t.Length
+                    length = t.Length,
+                    poMjeri = t.PoMjeri,
+                    unId = t.UnID
                 })
                 .ToList();
 
-            return Json(results);
+            var remainingLengths = await LoadRemainingPoMjeriLengthsAsync(results.Where(result => result.poMjeri).Select(result => result.id));
+
+            var payload = results.Select(result => new
+            {
+                result.id,
+                productNumber = TextEncodingHelper.Decode(result.productNumber),
+                name = TextEncodingHelper.Decode(result.name),
+                model = TextEncodingHelper.Decode(result.model),
+                color = TextEncodingHelper.Decode(result.color),
+                result.width,
+                result.length,
+                result.poMjeri,
+                unId = TextEncodingHelper.Decode(result.unId),
+                remainingWidth = result.poMjeri ? result.width : null,
+                remainingLength = result.poMjeri && remainingLengths.TryGetValue(result.id, out var remainingLength) ? remainingLength : (int?)null
+            });
+
+            return Json(payload);
         }
 
 
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin,employee")]
         public IActionResult AddProductById(int id)
         {
             return ManuallyAddProduct(id);
         }
 
+        private static void NormalizeProductTextFields(Tepih tepih)
+        {
+            tepih.Name = TextEncodingHelper.NormalizeInput(tepih.Name) ?? string.Empty;
+            tepih.ProductNumber = TextEncodingHelper.NormalizeInput(tepih.ProductNumber) ?? string.Empty;
+            tepih.Model = TextEncodingHelper.NormalizeInput(tepih.Model) ?? string.Empty;
+            tepih.BroaderCategory = TextEncodingHelper.NormalizeInput(tepih.BroaderCategory);
+            tepih.NarrowerCategory = TextEncodingHelper.NormalizeInput(tepih.NarrowerCategory);
+            tepih.Color = TextEncodingHelper.NormalizeInput(tepih.Color) ?? string.Empty;
+            tepih.Description = TextEncodingHelper.NormalizeInput(tepih.Description);
+            tepih.ShortDescription = TextEncodingHelper.NormalizeInput(tepih.ShortDescription);
+            tepih.SeoTitle = TextEncodingHelper.NormalizeInput(tepih.SeoTitle);
+            tepih.SeoDescription = TextEncodingHelper.NormalizeInput(tepih.SeoDescription);
+            tepih.Slug = TextEncodingHelper.NormalizeInput(tepih.Slug);
+            tepih.UnID = TextEncodingHelper.NormalizeInput(tepih.UnID);
+        }
+
+        private static void NormalizeProductTextFields(EditTepihViewModel tepih)
+        {
+            tepih.Name = TextEncodingHelper.NormalizeInput(tepih.Name) ?? string.Empty;
+            tepih.ProductNumber = TextEncodingHelper.NormalizeInput(tepih.ProductNumber) ?? string.Empty;
+            tepih.Model = TextEncodingHelper.NormalizeInput(tepih.Model) ?? string.Empty;
+            tepih.BroaderCategory = TextEncodingHelper.NormalizeInput(tepih.BroaderCategory);
+            tepih.NarrowerCategory = TextEncodingHelper.NormalizeInput(tepih.NarrowerCategory);
+            tepih.Color = TextEncodingHelper.NormalizeInput(tepih.Color) ?? string.Empty;
+            tepih.Description = TextEncodingHelper.NormalizeInput(tepih.Description);
+            tepih.ShortDescription = TextEncodingHelper.NormalizeInput(tepih.ShortDescription);
+            tepih.SeoTitle = TextEncodingHelper.NormalizeInput(tepih.SeoTitle);
+            tepih.SeoDescription = TextEncodingHelper.NormalizeInput(tepih.SeoDescription);
+            tepih.Slug = TextEncodingHelper.NormalizeInput(tepih.Slug);
+            tepih.UnID = TextEncodingHelper.NormalizeInput(tepih.UnID);
+        }
+
         [HttpPost]
+        [Authorize(Roles = "admin,superadmin,employee")]
         public IActionResult ExportScannedProductsToExcel([FromBody] ScannedProductsOverviewViewModel spovm)
         {
             if (spovm == null || spovm.Products == null || !spovm.Products.Any())

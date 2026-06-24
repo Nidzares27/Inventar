@@ -1,0 +1,31 @@
+@model Inventar.Storefront.ViewModels.Home.HomeIndexViewModel
+@{
+    ViewData["Title"] = "Akcije";
+}
+
+<section class="section">
+    <div class="section__header">
+        <div>
+            <h2>Akcije</h2>
+        </div>
+        <a class="section__link" asp-controller="Home" asp-action="Promotions">Prikaži sve</a>
+    </div>
+
+    @if (Model.FeaturedProducts.Count == 0)
+    {
+        <div class="empty-state">
+            <h3>Trenutno nema proizvoda na akciji.</h3>
+            <p>Pogledajte kompletnu ponudu ili svratite ponovo uskoro.</p>
+            <a class="button" asp-controller="Catalog" asp-action="Index">Pogledaj proizvode</a>
+        </div>
+    }
+    else
+    {
+        <div class="product-grid">
+            @foreach (var product in Model.FeaturedProducts)
+            {
+                <partial name="_ProductCard" model="product" />
+            }
+        </div>
+    }
+</section>

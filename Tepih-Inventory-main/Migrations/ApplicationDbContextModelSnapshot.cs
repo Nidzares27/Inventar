@@ -17,7 +17,7 @@ namespace Inventar.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -129,10 +129,19 @@ namespace Inventar.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ConsumedLengthPerUnit")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedUtc")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("CutLength")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CutWidth")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ExpiresUtc")
                         .HasColumnType("datetime2");
@@ -158,7 +167,12 @@ namespace Inventar.Migrations
                     b.Property<int>("WebOrderId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("WebOrderItemId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WebOrderItemId");
 
                     b.HasIndex("TepihId", "Status");
 
@@ -227,10 +241,22 @@ namespace Inventar.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ConsumedLength")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CustomLength")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CustomWidth")
+                        .HasColumnType("int");
+
                     b.Property<string>("CustomerFullName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("DirectSaleOriginalTotal")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("Disabled")
                         .HasColumnType("bit");
@@ -241,7 +267,7 @@ namespace Inventar.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Prodavac")
                         .IsRequired()
@@ -295,6 +321,13 @@ namespace Inventar.Migrations
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("bit");
 
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("image");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
@@ -327,10 +360,18 @@ namespace Inventar.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("BroaderCategory")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Color")
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
+
+                    b.Property<bool>("CreatedForDirectSale")
+                        .HasColumnType("bit");
 
                     b.Property<string>("DateTime")
                         .HasColumnType("nvarchar(max)");
@@ -357,10 +398,18 @@ namespace Inventar.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("NarrowerCategory")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<decimal?>("OnlinePrice")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("PerM2")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PoMjeri")
                         .HasColumnType("bit");
 
                     b.Property<decimal>("Price")
@@ -401,6 +450,10 @@ namespace Inventar.Migrations
                         .HasMaxLength(160)
                         .HasColumnType("nvarchar(160)");
 
+                    b.Property<string>("UnID")
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
                     b.Property<int?>("Width")
                         .HasColumnType("int");
 
@@ -409,6 +462,10 @@ namespace Inventar.Migrations
                     b.HasIndex("Slug")
                         .IsUnique()
                         .HasFilter("[Slug] IS NOT NULL");
+
+                    b.HasIndex("UnID")
+                        .IsUnique()
+                        .HasFilter("[UnID] IS NOT NULL");
 
                     b.ToTable("Tepisi");
                 });
@@ -458,7 +515,6 @@ namespace Inventar.Migrations
                         .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("CustomerEmail")
-                        .IsRequired()
                         .HasMaxLength(254)
                         .HasColumnType("nvarchar(254)");
 
@@ -586,6 +642,9 @@ namespace Inventar.Migrations
                         .HasColumnType("nvarchar(30)");
 
                     b.Property<bool>("PerM2")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PoMjeri")
                         .HasColumnType("bit");
 
                     b.Property<string>("PrimaryImageUrl")
@@ -809,9 +868,16 @@ namespace Inventar.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Inventar.Models.WebOrderItem", "WebOrderItem")
+                        .WithMany("Reservations")
+                        .HasForeignKey("WebOrderItemId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Tepih");
 
                     b.Navigation("WebOrder");
+
+                    b.Navigation("WebOrderItem");
                 });
 
             modelBuilder.Entity("Inventar.Models.Prodaja", b =>
@@ -935,6 +1001,11 @@ namespace Inventar.Migrations
                     b.Navigation("Reservations");
 
                     b.Navigation("StatusHistory");
+                });
+
+            modelBuilder.Entity("Inventar.Models.WebOrderItem", b =>
+                {
+                    b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618
         }

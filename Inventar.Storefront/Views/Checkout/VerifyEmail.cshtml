@@ -1,0 +1,40 @@
+@model Inventar.Storefront.ViewModels.Checkout.CheckoutVerificationViewModel
+@{
+    ViewData["Title"] = "Potvrda emaila";
+}
+
+<section class="confirmation confirmation--compact">
+    <span class="eyebrow">Potvrda emaila</span>
+    <h1>Unesite verifikacioni kod</h1>
+    <p>
+        Poslali smo 6-cifreni kod na <strong>@Model.MaskedEmail</strong>.
+        @if (Model.ExpiresInMinutes > 0)
+        {
+            <span>Kod važi još @Model.ExpiresInMinutes min.</span>
+        }
+    </p>
+
+    <form asp-controller="Checkout" asp-action="VerifyEmail" method="post" class="checkout-form checkout-form--verification">
+        <div asp-validation-summary="ModelOnly" class="flash flash--error"></div>
+
+        <div class="field">
+            <label asp-for="Code"></label>
+            <input asp-for="Code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+            <span asp-validation-for="Code" class="field__error"></span>
+        </div>
+
+        <button type="submit" class="button button--full">Potvrdi email i završi narudžbinu</button>
+    </form>
+
+    <div class="hero__actions">
+        <form asp-controller="Checkout" asp-action="ResendVerificationCode" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="button button--ghost">Pošalji novi kod</button>
+        </form>
+        <a class="button button--ghost" asp-controller="Checkout" asp-action="Index">Nazad na podatke za dostavu</a>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

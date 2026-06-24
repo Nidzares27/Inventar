@@ -14,5 +14,6 @@ namespace Inventar.ViewModels.Shared
         public decimal TotalPrice { get; set; }
         public int TotalQuantity { get; set; }
         public int CustomerId { get; set; }
+        public bool IsDirectSaleGroup { get; set; }
     }
 }

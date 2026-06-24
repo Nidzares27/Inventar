@@ -26,6 +26,7 @@ namespace Inventar.Models
         public int? Length { get; set; }
         public int? Width { get; set; }
         public bool PerM2 { get; set; }
+        public bool PoMjeri { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal LineTotal { get; set; }
@@ -35,5 +36,6 @@ namespace Inventar.Models
 
         public virtual WebOrder WebOrder { get; set; } = null!;
         public virtual Tepih Tepih { get; set; } = null!;
+        public virtual ICollection<InventoryReservation> Reservations { get; set; } = new List<InventoryReservation>();
     }
 }

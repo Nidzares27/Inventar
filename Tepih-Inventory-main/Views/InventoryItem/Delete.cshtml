@@ -65,7 +65,7 @@
         </tr>
         <tr>
             <th>@Inventar.Resources.Resource.Price</th>
-            <td>@Html.DisplayFor(model => model.Price)</td>
+            <td>@Model.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) €</td>
         </tr>
         <tr>
             <th>@Inventar.Resources.Resource.PerM2</th>

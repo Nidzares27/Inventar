@@ -27,12 +27,7 @@ namespace Inventar.Services
                 {
                     using var scope = _scopeFactory.CreateScope();
                     var orderProcessingService = scope.ServiceProvider.GetRequiredService<IWebOrderProcessingService>();
-                    var expiredReservations = await orderProcessingService.ExpireReservationsAsync(stoppingToken);
-
-                    if (expiredReservations > 0)
-                    {
-                        _logger.LogInformation("Expired {Count} active storefront reservations.", expiredReservations);
-                    }
+                    await orderProcessingService.ExpireReservationsAsync(stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {

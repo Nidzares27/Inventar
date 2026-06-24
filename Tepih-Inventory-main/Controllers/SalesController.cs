@@ -18,10 +18,11 @@ using iText.Layout.Properties;
 using Microsoft.Extensions.Logging;
 using static iText.Kernel.Font.PdfFontFactory;
 using iText.Layout;
+using Inventar.Utils;
 
 namespace Inventar.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "admin,superadmin")]
     public class SalesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -37,40 +38,278 @@ namespace Inventar.Controllers
             this._logger = logger;
         }
 
+        private static int? GetSaleWidth(Tepih product, Prodaja sale)
+        {
+            return PoMjeriHelper.GetEffectiveWidth(product, sale);
+        }
+
+        private static int? GetSaleLength(Tepih product, Prodaja sale)
+        {
+            return PoMjeriHelper.GetEffectiveLength(product, sale);
+        }
+
+        private static decimal? GetSaleM2PerUnit(Tepih product, Prodaja sale)
+        {
+            return PoMjeriHelper.CalculateM2PerUnit(product.PerM2, GetSaleWidth(product, sale), GetSaleLength(product, sale));
+        }
+
+        private static decimal? GetSaleM2Total(Tepih product, Prodaja sale)
+        {
+            return PoMjeriHelper.CalculateM2Total(product.PerM2, GetSaleWidth(product, sale), GetSaleLength(product, sale), sale.Quantity);
+        }
+
+        private static decimal ApplyDiscount(decimal amount, int? rabat)
+        {
+            if (!rabat.HasValue || rabat.Value <= 0)
+            {
+                return amount;
+            }
+
+            return amount - ((decimal)rabat.Value / 100m * amount);
+        }
+
+        private static decimal GetSaleTotalPrice(Tepih product, Prodaja sale)
+        {
+            return InventoryPricingHelper.CalculateDiscountedLineTotal(
+                product.PerM2,
+                product.PoMjeri,
+                sale.Price,
+                GetSaleWidth(product, sale),
+                GetSaleLength(product, sale),
+                sale.Quantity,
+                sale.Rabat);
+        }
+
+        private static decimal GetSaleTotalPrice(bool perM2, bool poMjeri, decimal price, int? width, int? length, int quantity, int? rabat)
+        {
+            return InventoryPricingHelper.CalculateDiscountedLineTotal(
+                perM2,
+                poMjeri,
+                price,
+                width,
+                length,
+                quantity,
+                rabat);
+        }
+
+        private static string FormatSize(int? width, int? length)
+        {
+            return width.HasValue && length.HasValue
+                ? $"{width.Value}X{length.Value}"
+                : string.Empty;
+        }
+
+        private static int CalculateAvailableQuantity(Tepih product)
+        {
+            return Math.Max(product.Quantity - product.ReservedQuantity, 0);
+        }
+
+        private async Task<int> GetRemainingPoMjeriLengthAsync(Tepih product)
+        {
+            if (!product.PoMjeri || !product.Length.HasValue)
+            {
+                return product.Length ?? 0;
+            }
+
+            var sales = await _context.Prodaje
+                .Where(sale => sale.TepihId == product.Id && !sale.Disabled)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return PoMjeriHelper.CalculateRemainingLength(product, sales);
+        }
+
+        private static decimal ResolveDirectSaleTargetTotal(Prodaja sale, Tepih currentProduct)
+        {
+            return sale.DirectSaleOriginalTotal ?? GetSaleTotalPrice(currentProduct, sale);
+        }
+
+        private static decimal CalculateReplacementPrice(
+            decimal targetTotal,
+            bool perM2,
+            bool poMjeri,
+            int? width,
+            int? length,
+            int quantity,
+            int? rabat)
+        {
+            var factor = InventoryPricingHelper.CalculateDiscountedLineTotal(
+                perM2,
+                poMjeri,
+                1m,
+                width,
+                length,
+                quantity,
+                rabat);
+
+            if (factor <= 0m)
+            {
+                return 0m;
+            }
+
+            return Math.Round(targetTotal / factor, 4, MidpointRounding.AwayFromZero);
+        }
+
+        private async Task<object> BuildPoMjeriReplacementPromptAsync(Tepih product)
+        {
+            var remainingLength = await GetRemainingPoMjeriLengthAsync(product);
+
+            return new
+            {
+                success = true,
+                requiresCustomSize = true,
+                productId = product.Id,
+                name = TextEncodingHelper.Decode(product.Name),
+                model = TextEncodingHelper.Decode(product.Model),
+                productNumber = TextEncodingHelper.Decode(product.ProductNumber),
+                color = TextEncodingHelper.Decode(product.Color),
+                unId = TextEncodingHelper.Decode(product.UnID),
+                fixedWidth = product.Width,
+                originalWidth = product.Width,
+                originalLength = product.Length,
+                originalSize = PoMjeriHelper.FormatSize(product.Width, product.Length),
+                remainingWidth = product.Width,
+                remainingLength,
+                availableRemainingLength = remainingLength,
+                remainingSize = PoMjeriHelper.FormatRemainingSize(product.Width, remainingLength)
+            };
+        }
+
+        private async Task RemoveDirectSaleProductIfUnusedAsync(int productId)
+        {
+            var product = await _context.Tepisi
+                .FirstOrDefaultAsync(item => item.Id == productId && item.CreatedForDirectSale);
+
+            if (product == null)
+            {
+                return;
+            }
+
+            var hasSales = await _context.Prodaje
+                .AnyAsync(sale => sale.TepihId == productId && !sale.Disabled);
+
+            if (!hasSales)
+            {
+                _context.Tepisi.Remove(product);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task<(bool Success, string Message)> ApplyDirectSaleReplacementAsync(
+            Prodaja sale,
+            Tepih placeholderProduct,
+            Tepih replacementProduct,
+            int? customWidth = null,
+            int? customLength = null)
+        {
+            if (!placeholderProduct.CreatedForDirectSale)
+            {
+                return (false, "Zamjena je dozvoljena samo za proizvod kreiran za direktnu prodaju.");
+            }
+
+            if (replacementProduct.Disabled || replacementProduct.CreatedForDirectSale)
+            {
+                return (false, "Izabrani proizvod nije dostupan za zamjenu.");
+            }
+
+            int? effectiveWidth = replacementProduct.Width;
+            int? effectiveLength = replacementProduct.Length;
+            int? consumedLength = null;
+
+            if (replacementProduct.PoMjeri)
+            {
+                if (!replacementProduct.Width.HasValue || !replacementProduct.Length.HasValue || !customLength.HasValue)
+                {
+                    return (false, "Za po mjeri proizvod unesite ispravne dimenzije.");
+                }
+
+                var remainingWidth = replacementProduct.Width.Value;
+                var remainingLength = await GetRemainingPoMjeriLengthAsync(replacementProduct);
+                var fixedWidth = remainingWidth;
+
+                if (customLength.Value > remainingLength)
+                {
+                    return (false, "Unesena dužina ne može biti veća od preostale dužine.");
+                }
+
+                var maxAvailableQuantity = PoMjeriHelper.CalculateMaxAvailableQuantity(
+                    remainingWidth,
+                    remainingLength,
+                    fixedWidth,
+                    customLength.Value);
+
+                if (maxAvailableQuantity < sale.Quantity)
+                {
+                    return (false, $"Moguće je naručiti najviše {maxAvailableQuantity} komada za dati proizvod.");
+                }
+
+                effectiveWidth = fixedWidth;
+                effectiveLength = customLength.Value;
+                consumedLength = PoMjeriHelper.CalculateConsumedLengthPerUnit(remainingWidth, fixedWidth, customLength.Value);
+            }
+            else if (CalculateAvailableQuantity(replacementProduct) < sale.Quantity)
+            {
+                return (false, $"Nema dovoljno raspoložive količine za proizvod {replacementProduct.Name} ({replacementProduct.ProductNumber}).");
+            }
+
+            var targetTotal = ResolveDirectSaleTargetTotal(sale, placeholderProduct);
+            var replacementPrice = CalculateReplacementPrice(
+                targetTotal,
+                replacementProduct.PerM2,
+                replacementProduct.PoMjeri,
+                effectiveWidth,
+                effectiveLength,
+                sale.Quantity,
+                sale.Rabat);
+
+            sale.TepihId = replacementProduct.Id;
+            sale.Price = replacementPrice;
+            sale.CustomWidth = replacementProduct.PoMjeri ? effectiveWidth : null;
+            sale.CustomLength = replacementProduct.PoMjeri ? effectiveLength : null;
+            sale.ConsumedLength = replacementProduct.PoMjeri ? consumedLength : null;
+            sale.DirectSaleOriginalTotal = targetTotal;
+
+            if (!replacementProduct.PoMjeri)
+            {
+                replacementProduct.Quantity -= sale.Quantity;
+            }
+
+            await _context.SaveChangesAsync();
+            await RemoveDirectSaleProductIfUnusedAsync(placeholderProduct.Id);
+            return (true, string.Empty);
+        }
+
         public async Task<IActionResult> Index()
         {
             try
             {
-                var prodaje = await _salesRepository.GetAll();
-                var proizvodi = await _tepihRepository.GetAll();
+                var sales = await _context.Prodaje
+                    .Include(sale => sale.Tepih)
+                    .Where(sale => sale.Disabled != true && sale.Tepih.Disabled != true)
+                    .AsNoTracking()
+                    .ToListAsync();
 
-                var query = await (from prodaja in _context.Prodaje
-                                   join proizvod in _context.Tepisi on prodaja.TepihId equals proizvod.Id
-                                   where prodaja.Disabled != true
-                                   group new { prodaja, proizvod } by new
-                                   {
-                                       prodaja.CustomerFullName,
-                                       prodaja.VrijemeProdaje,
-                                       prodaja.Prodavac,
-                                       prodaja.PlannedPaymentType
-                                   } into gr
-                                   select new SummaryViewModel
-                                   {
-                                       CustomerFullName = gr.Key.CustomerFullName,
-                                       VrijemeProdaje = gr.Key.VrijemeProdaje,
-                                       Prodavac = gr.Key.Prodavac,
-                                       PlannedPaymentType = gr.Key.PlannedPaymentType,
-                                       TotalQuantity = gr.Sum(g => g.prodaja.Quantity),
-                                       M2Total = gr.Sum(g => g.proizvod.PerM2
-                                           ? ((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity
-                                           : 0),
-                                       TotalPrice = gr.Sum(g => g.proizvod.PerM2
-                                           ? g.prodaja.Rabat != null || g.prodaja.Rabat >0 ? (g.prodaja.Price * (((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity)) - (((decimal)g.prodaja.Rabat / 100)*(g.prodaja.Price * (((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity))) : g.prodaja.Price * (((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity)
-                                           : g.prodaja.Rabat != null || g.prodaja.Rabat > 0 ? (g.prodaja.Price * g.prodaja.Quantity) - (((decimal)g.prodaja.Rabat / 100)*(g.prodaja.Price * g.prodaja.Quantity)) : g.prodaja.Price * g.prodaja.Quantity)
-                                       //TotalPrice = gr.Sum(g => g.proizvod.PerM2
-                                       //    ? g.prodaja.Price * (((decimal)(g.proizvod.Length * g.proizvod.Width) / 10000) * g.prodaja.Quantity)
-                                       //    : g.prodaja.Price * g.prodaja.Quantity)
-                                   }).ToListAsync();
+                var query = sales
+                    .GroupBy(sale => new
+                    {
+                        sale.CustomerFullName,
+                        sale.VrijemeProdaje,
+                        sale.Prodavac,
+                        sale.PlannedPaymentType
+                    })
+                    .Select(group => new SummaryViewModel
+                    {
+                        CustomerFullName = group.Key.CustomerFullName,
+                        VrijemeProdaje = group.Key.VrijemeProdaje,
+                        Prodavac = group.Key.Prodavac,
+                        PlannedPaymentType = group.Key.PlannedPaymentType,
+                        TotalQuantity = group.Sum(entry => entry.Quantity),
+                        M2Total = group.Sum(entry => GetSaleM2Total(entry.Tepih, entry) ?? 0m),
+                        TotalPrice = group.Sum(entry => GetSaleTotalPrice(entry.Tepih, entry)),
+                        IsDirectSaleGroup = group.Any(entry => entry.Tepih.CreatedForDirectSale)
+                    })
+                    .OrderByDescending(item => item.VrijemeProdaje)
+                    .ToList();
 
                 var referer = $"{Request.Scheme}://{Request.Host}{Request.Path}";
                 ViewBag.ReturnFromDetails = referer;
@@ -89,31 +328,34 @@ namespace Inventar.Controllers
         {
             try
             {
-                IEnumerable<Prodaja> prodaje = await _salesRepository.GetAll();
-                IEnumerable<Tepih> proizvodi = await _tepihRepository.GetAll();
+                var sales = await _context.Prodaje
+                    .Include(sale => sale.Tepih)
+                    .Where(sale => sale.Disabled != true && sale.Tepih.Disabled != true)
+                    .AsNoTracking()
+                    .ToListAsync();
 
-                var query = (from prodaja in prodaje
-                             join proizvod in proizvodi on prodaja.TepihId equals proizvod.Id
-                             where proizvod.Disabled != true && prodaja.Disabled != true
-                             select new ProdajaViewModel
-                             {
-                                 Id = prodaja.Id,
-                                 TepihId = prodaja.TepihId,
-                                 Name = proizvod.Name,
-                                 ProductNumber = proizvod.ProductNumber,
-                                 Model = proizvod.Model,
-                                 Length = proizvod.Length,
-                                 Width = proizvod.Width,
-                                 Color = proizvod.Color,
-                                 Price = prodaja.Price,
-                                 PerM2 = proizvod.PerM2,
-                                 Quantity = prodaja.Quantity,
-                                 CustomerFullName = prodaja.CustomerFullName,
-                                 VrijemeProdaje = prodaja.VrijemeProdaje,
-                                 M2PerUnit = proizvod.PerM2 ? (decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000 : null,
-                                 M2Total = proizvod.PerM2 ? ((decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000) * prodaja.Quantity : null,
-                                 Rabat = prodaja.Rabat
-                             });
+                var query = sales.Select(prodaja => new ProdajaViewModel
+                {
+                    Id = prodaja.Id,
+                    TepihId = prodaja.TepihId,
+                    Name = prodaja.Tepih.Name,
+                    ProductNumber = prodaja.Tepih.ProductNumber,
+                    Model = prodaja.Tepih.Model,
+                    Length = GetSaleLength(prodaja.Tepih, prodaja),
+                    Width = GetSaleWidth(prodaja.Tepih, prodaja),
+                    Color = prodaja.Tepih.Color,
+                    Price = prodaja.Price,
+                    PerM2 = prodaja.Tepih.PerM2,
+                    PoMjeri = prodaja.Tepih.PoMjeri,
+                    Quantity = prodaja.Quantity,
+                    CustomerFullName = prodaja.CustomerFullName,
+                    VrijemeProdaje = prodaja.VrijemeProdaje,
+                    M2PerUnit = GetSaleM2PerUnit(prodaja.Tepih, prodaja),
+                    M2Total = GetSaleM2Total(prodaja.Tepih, prodaja),
+                    Rabat = prodaja.Rabat,
+                    PriceTotal = GetSaleTotalPrice(prodaja.Tepih, prodaja),
+                    IsDirectSaleProduct = prodaja.Tepih.CreatedForDirectSale
+                });
                 var referer = Request.Scheme.ToString() + "://" + Request.Host.Value.ToString() + Request.Path.Value.ToString() + Request.QueryString.Value.ToString();
                 ViewBag.ReturnUrl = referer;
                 return View(query);
@@ -130,31 +372,34 @@ namespace Inventar.Controllers
         {
             try
             {
-                var prodaje = await _salesRepository.GetAll();
-                var proizvodi = await _tepihRepository.GetAll();
+                var sales = await _context.Prodaje
+                    .Include(sale => sale.Tepih)
+                    .Where(sale => sale.CustomerFullName == customer && sale.VrijemeProdaje == saleTime)
+                    .AsNoTracking()
+                    .ToListAsync();
 
-                var query = (from prodaja in prodaje
-                             join proizvod in proizvodi on prodaja.TepihId equals proizvod.Id
-                             where prodaja.CustomerFullName == customer && prodaja.VrijemeProdaje == saleTime
-                             select new SaleDetailsViewModel
-                             {
-                                 Id = prodaja.Id,
-                                 TepihId = prodaja.TepihId,
-                                 Name = proizvod.Name,
-                                 ProductNumber = proizvod.ProductNumber,
-                                 Model = proizvod.Model,
-                                 Length = proizvod.Length,
-                                 Width = proizvod.Width,
-                                 Color = proizvod.Color,
-                                 Price = prodaja.Price,
-                                 PerM2 = proizvod.PerM2,
-                                 Quantity = prodaja.Quantity,
-                                 M2PerUnit = proizvod.PerM2 ? (decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000 : null,
-                                 M2Total = proizvod.PerM2 ? ((decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000) * prodaja.Quantity : null,
-                                 Disabled = proizvod.Disabled,
-                                 Seller = prodaja.Prodavac,
-                                 Rabat = prodaja.Rabat
-                             }).ToList();
+                var query = sales.Select(prodaja => new SaleDetailsViewModel
+                {
+                    Id = prodaja.Id,
+                    TepihId = prodaja.TepihId,
+                    Name = prodaja.Tepih.Name,
+                    ProductNumber = prodaja.Tepih.ProductNumber,
+                    Model = prodaja.Tepih.Model,
+                    Length = GetSaleLength(prodaja.Tepih, prodaja),
+                    Width = GetSaleWidth(prodaja.Tepih, prodaja),
+                    Color = prodaja.Tepih.Color,
+                    Price = prodaja.Price,
+                    PerM2 = prodaja.Tepih.PerM2,
+                    PoMjeri = prodaja.Tepih.PoMjeri,
+                    Quantity = prodaja.Quantity,
+                    M2PerUnit = GetSaleM2PerUnit(prodaja.Tepih, prodaja),
+                    M2Total = GetSaleM2Total(prodaja.Tepih, prodaja),
+                    Disabled = prodaja.Tepih.Disabled,
+                    Seller = prodaja.Prodavac,
+                    Rabat = prodaja.Rabat,
+                    PriceTotal = GetSaleTotalPrice(prodaja.Tepih, prodaja),
+                    IsDirectSaleProduct = prodaja.Tepih.CreatedForDirectSale
+                }).ToList();
 
                 ViewBag.CustomerFullName = customer;
                 ViewBag.SaleTime = saleTime.ToString("dd-MM-yyyy HH:mm:ss");
@@ -217,10 +462,17 @@ namespace Inventar.Controllers
                     return NotFound("Product not found for this sale!!!");
                 }
 
-                proizvod.Quantity += prodaja.Quantity;
-                _tepihRepository.Update(proizvod);
+                if (!proizvod.PoMjeri && !proizvod.CreatedForDirectSale)
+                {
+                    proizvod.Quantity += prodaja.Quantity;
+                    _tepihRepository.Update(proizvod);
+                }
 
                 _salesRepository.Delete(prodaja);
+                if (proizvod.CreatedForDirectSale)
+                {
+                    await RemoveDirectSaleProductIfUnusedAsync(proizvod.Id);
+                }
 
                 // Safe string parsing
                 var splited = returnFromDetails?.Split("/") ?? Array.Empty<string>();
@@ -270,18 +522,29 @@ namespace Inventar.Controllers
 
                 var prodajaVM = new EditProdajaViewModel
                 {
+                    Id = prodaja.Id,
                     TepihId = prodaja.TepihId,
                     CustomerFullName = prodaja.CustomerFullName,
                     Quantity = prodaja.Quantity,
                     VrijemeProdaje = prodaja.VrijemeProdaje,
                     Price = prodaja.Price,
+                    DirectSaleOriginalTotal = prodaja.DirectSaleOriginalTotal,
+                    TotalPrice = GetSaleTotalPrice(proizvod, prodaja),
                     PerM2 = proizvod.PerM2,
-                    M2Total = proizvod.PerM2 ? ((decimal)((int)proizvod.Length * (int)proizvod.Width) / 10000) * prodaja.Quantity : null,
-                    Length = proizvod.Length,
-                    Width = proizvod.Width,
+                    PoMjeri = proizvod.PoMjeri,
+                    IsDirectSaleProduct = proizvod.CreatedForDirectSale,
+                    M2Total = GetSaleM2Total(proizvod, prodaja),
+                    Length = GetSaleLength(proizvod, prodaja),
+                    Width = GetSaleWidth(proizvod, prodaja),
+                    OriginalLength = proizvod.Length,
+                    OriginalWidth = proizvod.Width,
+                    ConsumedLength = prodaja.ConsumedLength,
                     Prodavac = prodaja.Prodavac,
                     PlannedPaymentType = prodaja.PlannedPaymentType,
-                    Rabat = prodaja.Rabat
+                    Rabat = prodaja.Rabat,
+                    ProductName = proizvod.Name,
+                    ProductModel = proizvod.Model,
+                    ProductColor = proizvod.Color
                 };
                 ViewBag.ReturnUrl = returnUrl;
                 ViewBag.ReturnFromDetails = returnFromDetails;
@@ -302,7 +565,23 @@ namespace Inventar.Controllers
         {
             if (!ModelState.IsValid)
             {
+                var validationErrors = ModelState
+                    .Where(entry => entry.Value?.Errors.Count > 0)
+                    .Select(entry => new
+                    {
+                        Field = entry.Key,
+                        Errors = entry.Value!.Errors.Select(error => error.ErrorMessage).ToArray()
+                    })
+                    .ToList();
+
+                _logger.LogWarning(
+                    "Sales Controller - Edit post: validation failed for sale {SaleId}. Errors: {@ValidationErrors}",
+                    id,
+                    validationErrors);
+
                 ModelState.AddModelError("", "Editovanje prodaje nije uspjelo");
+                ViewBag.ReturnUrl = returnUrl;
+                ViewBag.ReturnFromDetails = returnFromDetails;
                 return View("Edit", prodajaVM);
             }
             try
@@ -329,46 +608,151 @@ namespace Inventar.Controllers
                     VrijemeProdaje = prodajaVM.VrijemeProdaje,
                     Quantity = prodajaVM.Quantity,
                     Price = prodajaVM.Price,
+                    DirectSaleOriginalTotal = prodaja.DirectSaleOriginalTotal,
                     Prodavac = prodajaVM.Prodavac,
                     PlannedPaymentType = prodajaVM.PlannedPaymentType,
-                    Rabat = prodajaVM.Rabat
+                    Rabat = prodajaVM.Rabat,
+                    CustomWidth = prodaja.CustomWidth,
+                    CustomLength = prodaja.CustomLength,
+                    ConsumedLength = prodaja.ConsumedLength,
+                    Disabled = prodaja.Disabled
                 };
 
                 _salesRepository.Update(prodajaEdit);
 
                 // Adjust product stock if quantity changed
-                if (prodajaVM.Quantity > prodaja.Quantity)
+                if (!proizvod.PoMjeri && !proizvod.CreatedForDirectSale && prodajaVM.Quantity > prodaja.Quantity)
                 {
                     proizvod.Quantity -= prodajaVM.Quantity - prodaja.Quantity;
                 }
-                else if (prodajaVM.Quantity < prodaja.Quantity)
+                else if (!proizvod.PoMjeri && !proizvod.CreatedForDirectSale && prodajaVM.Quantity < prodaja.Quantity)
                 {
                     proizvod.Quantity += prodaja.Quantity - prodajaVM.Quantity;
                 }
                 _tepihRepository.Update(proizvod);
 
-                // Safe redirection logic
-                var splitedReturnFromDetails = returnFromDetails?.Split("/") ?? Array.Empty<string>();
-                if (splitedReturnFromDetails.Last() == "AllSales")
-                {
-                    return RedirectToAction("AllSales", "Sales");
-                }
-                if (splitedReturnFromDetails[splitedReturnFromDetails.Count() - 2] == "ShowBuys")
-                {
-                    return RedirectToAction("ShowBuys", "Buyer", new { id = splitedReturnFromDetails.Last() });
-                }
+                TempData["SuccessMessage"] = "Prodaja je uspjesno izmijenjena.";
 
-                return RedirectToAction("Details", new
+                return RedirectToAction(nameof(Edit), new
                 {
-                    customer = prodajaVM.CustomerFullName,
-                    saleTime = prodajaVM.VrijemeProdaje,
+                    id,
+                    returnUrl = returnUrl,
                     returnFromDetails = returnFromDetails
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Sales Controller - Edit post: Error editing sale with an ID: {id}", id);
+                ViewBag.ReturnUrl = returnUrl;
+                ViewBag.ReturnFromDetails = returnFromDetails;
                 return View("Edit", prodajaVM);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PrepareReplacementSelection(int saleId, int productId)
+        {
+            try
+            {
+                var sale = await _context.Prodaje
+                    .Include(item => item.Tepih)
+                    .FirstOrDefaultAsync(item => item.Id == saleId && !item.Disabled);
+
+                if (sale == null)
+                {
+                    return Json(new { success = false, message = "Prodaja nije pronađena." });
+                }
+
+                if (!sale.Tepih.CreatedForDirectSale)
+                {
+                    return Json(new { success = false, message = "Zamjena je dostupna samo za proizvod kreiran za direktnu prodaju." });
+                }
+
+                var replacementProduct = await _context.Tepisi
+                    .FirstOrDefaultAsync(product => product.Id == productId && !product.Disabled && !product.CreatedForDirectSale);
+
+                if (replacementProduct == null)
+                {
+                    return Json(new { success = false, message = "Proizvod nije pronađen." });
+                }
+
+                if (replacementProduct.PoMjeri)
+                {
+                    return Json(await BuildPoMjeriReplacementPromptAsync(replacementProduct));
+                }
+
+                var result = await ApplyDirectSaleReplacementAsync(sale, sale.Tepih, replacementProduct);
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "Proizvod je uspjesno zamijenjen.";
+                }
+                return Json(new
+                {
+                    success = result.Success,
+                    message = result.Success ? "Proizvod je uspješno zamijenjen." : result.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Sales Controller - PrepareReplacementSelection failed for sale {SaleId} and product {ProductId}", saleId, productId);
+                return StatusCode(500, "An error occurred while replacing the product.");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ReplacePlaceholderProduct([FromBody] ReplaceSaleProductRequestViewModel model)
+        {
+            if (!ModelState.IsValid || !model.CustomLength.HasValue)
+            {
+                return Json(new { success = false, message = "Unesite ispravne dimenzije." });
+            }
+
+            try
+            {
+                var sale = await _context.Prodaje
+                    .Include(item => item.Tepih)
+                    .FirstOrDefaultAsync(item => item.Id == model.SaleId && !item.Disabled);
+
+                if (sale == null)
+                {
+                    return Json(new { success = false, message = "Prodaja nije pronađena." });
+                }
+
+                if (!sale.Tepih.CreatedForDirectSale)
+                {
+                    return Json(new { success = false, message = "Zamjena je dostupna samo za proizvod kreiran za direktnu prodaju." });
+                }
+
+                var replacementProduct = await _context.Tepisi
+                    .FirstOrDefaultAsync(product => product.Id == model.ProductId && !product.Disabled && !product.CreatedForDirectSale);
+
+                if (replacementProduct == null)
+                {
+                    return Json(new { success = false, message = "Proizvod nije pronađen." });
+                }
+
+                var result = await ApplyDirectSaleReplacementAsync(
+                    sale,
+                    sale.Tepih,
+                    replacementProduct,
+                    model.CustomWidth,
+                    model.CustomLength);
+
+                if (result.Success)
+                {
+                    TempData["SuccessMessage"] = "Proizvod je uspjesno zamijenjen.";
+                }
+
+                return Json(new
+                {
+                    success = result.Success,
+                    message = result.Success ? "Proizvod je uspješno zamijenjen." : result.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Sales Controller - ReplacePlaceholderProduct failed for sale {SaleId} and product {ProductId}", model.SaleId, model.ProductId);
+                return StatusCode(500, "An error occurred while replacing the product.");
             }
         }
 
@@ -394,75 +778,87 @@ namespace Inventar.Controllers
             }
             try
             {
+                var sales = await (from sale in _context.Prodaje
+                                   join product in _context.Tepisi on sale.TepihId equals product.Id
+                                   where (string.IsNullOrEmpty(customerFullName) || sale.CustomerFullName == customerFullName)
+                                         && (!startDate.HasValue || sale.VrijemeProdaje >= startDate.Value)
+                                         && (!endDate.HasValue || sale.VrijemeProdaje <= endDateModified)
+                                         && product.Disabled != true
+                                         && sale.Disabled != true
+                                   select new
+                                   {
+                                       ProductId = product.Id,
+                                       product.Name,
+                                       product.Model,
+                                       product.ProductNumber,
+                                       product.Color,
+                                       product.PerM2,
+                                       product.PoMjeri,
+                                       Length = sale.CustomLength ?? product.Length,
+                                       Width = sale.CustomWidth ?? product.Width,
+                                       sale.Quantity,
+                                       sale.Price,
+                                       sale.Rabat
+                                   }).ToListAsync();
+
                 if (grouped)
                 {
-                    salesReport = await (from sale in _context.Prodaje
-                                         join product in _context.Tepisi on sale.TepihId equals product.Id
-                                         where (string.IsNullOrEmpty(customerFullName) || sale.CustomerFullName == customerFullName)
-                                               && (!startDate.HasValue || sale.VrijemeProdaje >= startDate.Value)
-                                               && (!endDate.HasValue || sale.VrijemeProdaje <= endDateModified)
-                                               && product.Disabled != true
-                                               && sale.Disabled != true
-                                         group new { sale, product } by new
-                                         {
-                                             product.Name,
-                                             product.Length,
-                                             product.Width,
-                                             product.ProductNumber,
-                                         } into groupedSales
-                                         select new SalesReportViewModel
-                                         {
-                                             Name = groupedSales.Key.Name,
-                                             Length = groupedSales.Key.Length,
-                                             Width = groupedSales.Key.Width,
-                                             Size = groupedSales.Key.Width != null && groupedSales.Key.Length != null ? $"{groupedSales.Key.Width}X{groupedSales.Key.Length}" : "",
-                                             ProductNumber = groupedSales.Key.ProductNumber,
-                                             Price = groupedSales.First().sale.Price,
-                                             TotalQuantity = groupedSales.Sum(g => g.sale.Quantity),
-                                             TotalPrice = groupedSales.Sum(g => g.product.PerM2
-                                             ? g.sale.Rabat != null || g.sale.Rabat > 0 ? (g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)) - (((decimal)g.sale.Rabat / 100) * ((g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)))) : g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)
-                                             : g.sale.Rabat != null || g.sale.Rabat > 0 ? (g.sale.Price * g.sale.Quantity) - (((decimal)g.sale.Rabat / 100) * (g.sale.Price * g.sale.Quantity)) : g.sale.Price * g.sale.Quantity),
-                                             PerM2 = groupedSales.First().product.PerM2
-                                         }).ToListAsync();
+                    salesReport = sales
+                        .GroupBy(sale => new
+                        {
+                            sale.Name,
+                            sale.Length,
+                            sale.Width,
+                            sale.ProductNumber,
+                            sale.PerM2,
+                            sale.PoMjeri
+                        })
+                        .Select(groupedSales => new SalesReportViewModel
+                        {
+                            Name = groupedSales.Key.Name,
+                            Length = groupedSales.Key.Length,
+                            Width = groupedSales.Key.Width,
+                            Size = FormatSize(groupedSales.Key.Width, groupedSales.Key.Length),
+                            ProductNumber = groupedSales.Key.ProductNumber,
+                            Price = groupedSales.First().Price,
+                            TotalQuantity = groupedSales.Sum(g => g.Quantity),
+                            TotalPrice = groupedSales.Sum(g => GetSaleTotalPrice(g.PerM2, g.PoMjeri, g.Price, g.Width, g.Length, g.Quantity, g.Rabat)),
+                            PerM2 = groupedSales.Key.PerM2,
+                            PoMjeri = groupedSales.Key.PoMjeri
+                        })
+                        .ToList();
                 }
                 else
                 {
-                    salesReport = await (from sale in _context.Prodaje
-                                         join product in _context.Tepisi on sale.TepihId equals product.Id
-                                         where (string.IsNullOrEmpty(customerFullName) || sale.CustomerFullName == customerFullName)
-                                               && (!startDate.HasValue || sale.VrijemeProdaje >= startDate.Value)
-                                               && (!endDate.HasValue || sale.VrijemeProdaje <= endDateModified)
-                                               && product.Disabled != true
-                                               && sale.Disabled != true
-                                         group new { sale, product } by new
-                                         {
-                                             product.Id,
-                                             product.Name,
-                                             product.Model,
-                                             product.Length,
-                                             product.Width,
-                                             product.Color,
-                                             product.PerM2,
-                                             product.ProductNumber,
-                                         } into groupedd
-                                         select new SalesReportViewModel
-                                         {
-                                             ProductId = groupedd.Key.Id,
-                                             Name = groupedd.Key.Name,
-                                             Model = groupedd.Key.Model,
-                                             ProductNumber = groupedd.Key.ProductNumber,
-                                             Length = groupedd.Key.Length,
-                                             Width = groupedd.Key.Width,
-                                             Size = groupedd.Key.Width != null && groupedd.Key.Length != null ? $"{groupedd.Key.Width}X{groupedd.Key.Length}" : "",
-                                             Color = groupedd.Key.Color,
-                                             TotalQuantity = groupedd.Sum(g => g.sale.Quantity),
-                                             TotalPrice = groupedd.Sum(g => g.product.PerM2
-                                                 ? g.sale.Rabat != null || g.sale.Rabat > 0 ? (g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)) - (((decimal)g.sale.Rabat / 100)*((g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)))) : g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)
-                                                 : g.sale.Rabat != null || g.sale.Rabat > 0 ? (g.sale.Price * g.sale.Quantity) - (((decimal)g.sale.Rabat / 100) * (g.sale.Price * g.sale.Quantity)) : g.sale.Price * g.sale.Quantity),
-                                             //? g.sale.Price * (((decimal)((int)g.product.Length * (int)g.product.Width) / 10000) * g.sale.Quantity)
-                                             //: g.sale.Price * g.sale.Quantity),
-                                             PerM2 = groupedd.Key.PerM2
-                                         }).ToListAsync();
+                    salesReport = sales
+                        .GroupBy(sale => new
+                        {
+                            sale.ProductId,
+                            sale.Name,
+                            sale.Model,
+                            sale.ProductNumber,
+                            sale.Length,
+                            sale.Width,
+                            sale.Color,
+                            sale.PerM2,
+                            sale.PoMjeri
+                        })
+                        .Select(groupedd => new SalesReportViewModel
+                        {
+                            ProductId = groupedd.Key.ProductId,
+                            Name = groupedd.Key.Name,
+                            Model = groupedd.Key.Model,
+                            ProductNumber = groupedd.Key.ProductNumber,
+                            Length = groupedd.Key.Length,
+                            Width = groupedd.Key.Width,
+                            Size = FormatSize(groupedd.Key.Width, groupedd.Key.Length),
+                            Color = groupedd.Key.Color,
+                            TotalQuantity = groupedd.Sum(g => g.Quantity),
+                            TotalPrice = groupedd.Sum(g => GetSaleTotalPrice(g.PerM2, g.PoMjeri, g.Price, g.Width, g.Length, g.Quantity, g.Rabat)),
+                            PerM2 = groupedd.Key.PerM2,
+                            PoMjeri = groupedd.Key.PoMjeri
+                        })
+                        .ToList();
                 }
 
                 var vm = new PerProductViewModel
@@ -495,6 +891,8 @@ namespace Inventar.Controllers
             string name,
             string model,
             string size,
+            int? length,
+            int? width,
             decimal? m2PerProduct,
             string color,
             string? buyer,
@@ -516,6 +914,13 @@ namespace Inventar.Controllers
                                                            p.VrijemeProdaje.Date <= endDate.Value.Date);
                 }
 
+                if (length.HasValue && width.HasValue)
+                {
+                    entriesQuery = entriesQuery.Where(p =>
+                        (p.CustomLength ?? p.Tepih.Length) == length &&
+                        (p.CustomWidth ?? p.Tepih.Width) == width);
+                }
+
                 var entries = entriesQuery.Select(p => new SalesEntryViewModel
                 {
                     VrijemeProdaje = p.VrijemeProdaje,
@@ -525,13 +930,21 @@ namespace Inventar.Controllers
                     Name = name,
                     Model = model,
                     Color = color,
-                    Length = p.Tepih.Length,
-                    Width = p.Tepih.Width,
+                    Length = p.CustomLength ?? p.Tepih.Length,
+                    Width = p.CustomWidth ?? p.Tepih.Width,
                     Price = p.Price,
                     Quantity = p.Quantity,
                     PerM2 = p.Tepih.PerM2,
+                    PoMjeri = p.Tepih.PoMjeri,
                     Rabat = p.Rabat
                 }).ToList();
+
+                var labelLength = length ?? entries.FirstOrDefault()?.Length;
+                var labelWidth = width ?? entries.FirstOrDefault()?.Width;
+                var labelSize = FormatSize(labelWidth, labelLength);
+                var labelM2 = entries.FirstOrDefault()?.PerM2 == true
+                    ? PoMjeriHelper.CalculateM2PerUnit(true, labelWidth, labelLength)
+                    : m2PerProduct;
 
                 var viewModel = new SalesEntryGroupViewModel
                 {
@@ -545,8 +958,8 @@ namespace Inventar.Controllers
                         ProductNumber = productNumber,
                         Name = name,
                         Model = model,
-                        Size = size,
-                        M2PerProduct = m2PerProduct,
+                        Size = string.IsNullOrWhiteSpace(labelSize) ? size : labelSize,
+                        M2PerProduct = labelM2,
                         Color = color,
                         CustName = buyer ?? null
                     }
@@ -576,8 +989,8 @@ namespace Inventar.Controllers
             {
                 var query = _context.Prodaje
     .Where(p => p.Tepih.Name == name &&
-                p.Tepih.Length == length &&
-                p.Tepih.Width == width &&
+                (p.CustomLength ?? p.Tepih.Length) == length &&
+                (p.CustomWidth ?? p.Tepih.Width) == width &&
                 p.Tepih.ProductNumber == productNumber &&
                 p.Disabled != true);
 
@@ -599,15 +1012,19 @@ namespace Inventar.Controllers
                     ProductId = p.TepihId,
                     Model = p.Tepih.Model,
                     Color = p.Tepih.Color,
-                    Length = p.Tepih.Length,
-                    Width = p.Tepih.Width,
+                    Length = p.CustomLength ?? p.Tepih.Length,
+                    Width = p.CustomWidth ?? p.Tepih.Width,
                     ProductNumber = p.Tepih.ProductNumber,
                     Name = p.Tepih.Name,
                     Price = p.Price,
                     Quantity = p.Quantity,
                     PerM2 = p.Tepih.PerM2,
+                    PoMjeri = p.Tepih.PoMjeri,
                     Rabat = p.Rabat
                 }).ToListAsync();
+
+                var labelLength = length ?? entries.FirstOrDefault()?.Length;
+                var labelWidth = width ?? entries.FirstOrDefault()?.Width;
 
                 var vm = new SalesEntryGroupViewModel
                 {
@@ -619,9 +1036,9 @@ namespace Inventar.Controllers
                     {
                         ProductNumber = productNumber,
                         Name = name,
-                        Size = width != null && length != null ? $"{width}X{length}" : "",
-                        M2PerProduct = width != null && length != null
-                            ? Math.Round(((int)length * (int)width) / 10000m, 2)
+                        Size = FormatSize(labelWidth, labelLength),
+                        M2PerProduct = labelWidth.HasValue && labelLength.HasValue
+                            ? Math.Round((labelLength.Value * labelWidth.Value) / 10000m, 2)
                             : null,
                         CustName = buyer ?? null
                     }
@@ -652,22 +1069,37 @@ namespace Inventar.Controllers
 
             try
             {
-                var query = from sale in _context.Prodaje
-                            join product in _context.Tepisi on sale.TepihId equals product.Id
-                            where sale.VrijemeProdaje >= date && sale.VrijemeProdaje < nextDay
-                            group new { sale, product } by new { sale.CustomerFullName } into grouped
-                            select new PerDayCustomersPurchaseSummary
-                            {
-                                CustomerName = grouped.Key.CustomerFullName,
-                                M2Total = grouped.Sum(g => g.product.PerM2 ? ((decimal)(g.product.Length * g.product.Width) / 10000) * g.sale.Quantity : 0),
-                                TotalQuantity = grouped.Sum(g => g.sale.Quantity),
-                                TotalSpent = grouped.Sum(g =>
-                                    g.product.PerM2
-                                    ? ((decimal)(g.product.Length * g.product.Width) / 10000) * g.sale.Quantity * g.sale.Price
-                                    : g.sale.Price * g.sale.Quantity)
-                            };
+                var sales = await (from sale in _context.Prodaje
+                                   join product in _context.Tepisi on sale.TepihId equals product.Id
+                                   where sale.VrijemeProdaje >= date
+                                         && sale.VrijemeProdaje < nextDay
+                                         && sale.Disabled != true
+                                         && product.Disabled != true
+                                   select new
+                                   {
+                                       sale.CustomerFullName,
+                                       product.PerM2,
+                                       Length = sale.CustomLength ?? product.Length,
+                                       Width = sale.CustomWidth ?? product.Width,
+                                       sale.Quantity,
+                                       sale.Price
+                                   }).ToListAsync();
 
-                var salesReport = await query.ToListAsync();
+                var salesReport = sales
+                    .GroupBy(sale => sale.CustomerFullName)
+                    .Select(grouped => new PerDayCustomersPurchaseSummary
+                    {
+                        CustomerName = grouped.Key,
+                        M2Total = grouped.Sum(g => g.PerM2
+                            ? (((g.Length ?? 0) * (g.Width ?? 0)) / 10000m) * g.Quantity
+                            : 0m),
+                        TotalQuantity = grouped.Sum(g => g.Quantity),
+                        TotalSpent = grouped.Sum(g => g.PerM2
+                            ? (((g.Length ?? 0) * (g.Width ?? 0)) / 10000m) * g.Quantity * g.Price
+                            : g.Price * g.Quantity)
+                    })
+                    .ToList();
+
                 var total = salesReport.Sum(r => r.TotalSpent);
                 var totalM2 = salesReport.Sum(r => r.M2Total);
                 var totalQty = salesReport.Sum(r => r.TotalQuantity);

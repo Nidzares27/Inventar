@@ -1,7 +1,54 @@
 @using Inventar.Utils
 @model IEnumerable<Inventar.ViewModels.StorefrontAdmin.WebOrderAdminListItemViewModel>
 
-<h2>@Inventar.Resources.Resource.WebOrders</h2>
+@{
+    var filteredCustomerEmail = ViewData["FilteredCustomerEmail"] as string;
+    var filteredCustomerName = ViewData["FilteredCustomerName"] as string;
+    var completedOnly = ViewData["CompletedOnly"] as bool? == true;
+    var canDeleteOrders = User.IsInRole("admin") || User.IsInRole("superadmin");
+    var showRowNumber = User.IsInRole("admin") || User.IsInRole("superadmin");
+
+    string GetStatusRowClass(string status) => status switch
+    {
+        Inventar.Models.WebOrderStatuses.Pending => "storefront-order-row--pending",
+        Inventar.Models.WebOrderStatuses.AwaitingPayment => "storefront-order-row--awaiting-payment",
+        Inventar.Models.WebOrderStatuses.Paid => "storefront-order-row--paid",
+        Inventar.Models.WebOrderStatuses.Processing => "storefront-order-row--processing",
+        Inventar.Models.WebOrderStatuses.Shipped => "storefront-order-row--shipped",
+        Inventar.Models.WebOrderStatuses.Completed => "storefront-order-row--completed",
+        Inventar.Models.WebOrderStatuses.Cancelled => "storefront-order-row--cancelled",
+        Inventar.Models.WebOrderStatuses.Refunded => "storefront-order-row--refunded",
+        _ => string.Empty
+    };
+}
+
+<div class="inventory-page-header">
+    <h2>@Inventar.Resources.Resource.WebOrders</h2>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(filteredCustomerEmail) || !string.IsNullOrWhiteSpace(filteredCustomerName) || completedOnly)
+{
+    <div class="alert alert-light border">
+        <div>
+            <strong>Filters:</strong>
+            @if (!string.IsNullOrWhiteSpace(filteredCustomerEmail))
+            {
+                <span>Email: @filteredCustomerEmail</span>
+            }
+            @if (!string.IsNullOrWhiteSpace(filteredCustomerName))
+            {
+                <span class="ms-3">@Inventar.Resources.Resource.Customer: @filteredCustomerName</span>
+            }
+            @if (completedOnly)
+            {
+                <span class="ms-3">@Inventar.Resources.Resource.CompletedOrdersOnly</span>
+            }
+        </div>
+        <div class="mt-2">
+            <a asp-action="Index">@Inventar.Resources.Resource.ClearFilters</a>
+        </div>
+    </div>
+}
 
 <table id="StorefrontOrdersTable" class="table stripe tabela" style="font-weight:500">
     <thead>
@@ -9,7 +56,6 @@
             <th>#</th>
             <th>@Inventar.Resources.Resource.Order</th>
             <th>@Inventar.Resources.Resource.Customer</th>
-            <th>Email</th>
             <th>@Inventar.Resources.Resource.Created</th>
             <th>@Inventar.Resources.Resource.Status</th>
             <th>@Inventar.Resources.Resource.Payment</th>
@@ -22,7 +68,6 @@
             <th><input style="width:2rem" disabled></th>
             <th><input style="width:7rem" placeholder="Order"></th>
             <th><input style="width:8rem" placeholder="Customer"></th>
-            <th><input style="width:10rem" placeholder="Email"></th>
             <th><input style="width:8rem" placeholder="Created"></th>
             <th><input style="width:7rem" placeholder="Status"></th>
             <th><input style="width:7rem" placeholder="Payment"></th>
@@ -35,34 +80,58 @@
     <tbody>
         @foreach (var order in Model)
         {
-            <tr>
+            <tr class="@GetStatusRowClass(order.Status)">
                 <td></td>
                 <td>@order.OrderNumber</td>
                 <td>@order.CustomerName</td>
-                <td>@order.CustomerEmail</td>
-                <td>@order.CreatedUtc.ToString("dd-MM-yyyy HH:mm")</td>
+                <td data-order="@order.CreatedUtc.ToString("yyyy-MM-dd HH:mm:ss")">@order.CreatedUtc.ToString("dd-MM-yyyy HH:mm")</td>
                 <td>@StorefrontStatusLocalizer.Localize(order.Status)</td>
                 <td>@StorefrontStatusLocalizer.Localize(order.PaymentStatus)</td>
                 <td>@StorefrontStatusLocalizer.Localize(order.FulfillmentStatus)</td>
                 <td>@order.TotalQuantity</td>
-                <td>@($"{order.GrandTotal:0.00} €")</td>
-                <td>
+                <td>@($"{order.GrandTotal:0.00} EUR")</td>
+                <td class="text-nowrap">
                     <a asp-action="Details" asp-route-id="@order.Id">@Inventar.Resources.Resource.Details</a>
+                    @if (canDeleteOrders)
+                    {
+                        <span class="mx-1">|</span>
+                        <form asp-action="Delete" asp-route-id="@order.Id" method="post" class="d-inline storefront-order-delete-form">
+                            @Html.AntiForgeryToken()
+                            <a href="#" class="text-danger storefront-order-delete-link">Delete</a>
+                        </form>
+                    }
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
+<div class="inventory-summary-bar inventory-summary-bar--legend-only">
+    <div class="inventory-summary-bar__totals"></div>
+    <div class="inventory-legend" aria-label="Web order status legend">
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch storefront-order-legend__swatch--pending"></span>@StorefrontStatusLocalizer.Localize(Inventar.Models.WebOrderStatuses.Pending)</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch storefront-order-legend__swatch--awaiting-payment"></span>@StorefrontStatusLocalizer.Localize(Inventar.Models.WebOrderStatuses.AwaitingPayment)</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch storefront-order-legend__swatch--paid"></span>@StorefrontStatusLocalizer.Localize(Inventar.Models.WebOrderStatuses.Paid)</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch storefront-order-legend__swatch--processing"></span>@StorefrontStatusLocalizer.Localize(Inventar.Models.WebOrderStatuses.Processing)</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch storefront-order-legend__swatch--shipped"></span>@StorefrontStatusLocalizer.Localize(Inventar.Models.WebOrderStatuses.Shipped)</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch storefront-order-legend__swatch--completed"></span>@StorefrontStatusLocalizer.Localize(Inventar.Models.WebOrderStatuses.Completed)</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch storefront-order-legend__swatch--cancelled"></span>@StorefrontStatusLocalizer.Localize(Inventar.Models.WebOrderStatuses.Cancelled)</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch storefront-order-legend__swatch--refunded"></span>@StorefrontStatusLocalizer.Localize(Inventar.Models.WebOrderStatuses.Refunded)</span>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function () {
             var table = $('#StorefrontOrdersTable').DataTable({
                 paging: true,
-                pageLength: 15,
-                order: [[4, "desc"]],
+                pageLength: 25,
+                order: [[3, "desc"]],
                 orderCellsTop: true,
-                fixedHeader: true
+                fixedHeader: true,
+                columnDefs: [
+                    { targets: 0, visible: @(showRowNumber ? "true" : "false") }
+                ]
             });
 
             $('#StorefrontOrdersTable thead tr:eq(1) th').each(function (index) {
@@ -77,8 +146,18 @@
             table.on('draw', function () {
                 let counter = 1;
                 table.rows({ search: 'applied', order: 'applied' }).every(function () {
-                    $('td:eq(0)', this.node()).html(counter++);
+                    table.cell(this.index(), 0).data(counter++);
                 });
+            });
+
+            $(document).on('click', '.storefront-order-delete-link', function (event) {
+                event.preventDefault();
+
+                if (!confirm('Da li ste sigurni da zelite obrisati ovu narudzbinu?')) {
+                    return;
+                }
+
+                $(this).closest('form').trigger('submit');
             });
 
             table.draw();

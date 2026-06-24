@@ -7,6 +7,7 @@ public interface ICheckoutService
     Task<CheckoutResult> CreateCashOnDeliveryOrderAsync(
         CheckoutRequest request,
         IReadOnlyCollection<CartItem> cartItems,
+        int? storefrontCustomerId = null,
         CancellationToken cancellationToken = default);
 }
 

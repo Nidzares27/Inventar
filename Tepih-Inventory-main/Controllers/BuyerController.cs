@@ -12,7 +12,7 @@ using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace Inventar.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "admin,superadmin,employee")]
     public class BuyerController : Controller
     {
         private readonly ApplicationDbContext _context;

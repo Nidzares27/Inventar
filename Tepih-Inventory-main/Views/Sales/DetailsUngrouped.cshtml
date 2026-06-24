@@ -88,7 +88,7 @@
                 }
                 <td>@(entry.PerM2 ? entry.M2Total : "")</td>
                 <td>@entry.Rabat</td>
-                <td style="color:@(entry.PerM2 ? "green" : "black")">@entry.Price€</td>
+                <td style="color:@(entry.PerM2 ? "green" : "black")">@entry.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)€</td>
                 <td>@entry.Quantity</td>
                 <td style="color:@(entry.PerM2 ? "green" : "black")">
                     @Math.Round(

@@ -18,12 +18,16 @@ using Inventar.ViewModels.Inventory.DTO;
 using iText.IO.Font;
 using static iText.Kernel.Font.PdfFontFactory;
 using Path = System.IO.Path;
+using Inventar.Models;
 using Inventar.ViewModels.Inventory;
 using Inventar.ViewModels.Pdf;
+using Inventar.Utils;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Inventar.Controllers
 {
+    [Authorize]
     public class PdfController : Controller
     {
         private readonly HttpClient _httpClient;
@@ -49,6 +53,172 @@ namespace Inventar.Controllers
                 return NotFound("Product not found!");
             }
 
+            try
+            {
+                var pdfBytes = await GenerateQrLabelPdfAsync(new List<Tepih> { tepih });
+                return File(pdfBytes, "application/pdf", "QRCodeLabel.pdf");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating Cloudinary image PDF for product {Id}.", id);
+                return StatusCode(500, "An error occurred while generating the QR code PDF.");
+            }
+        }
+
+        [HttpGet("generate-cloudinary-image-pdf-batch")]
+        public async Task<IActionResult> GenerateCloudinaryImagePdfBatch(string ids)
+        {
+            if (string.IsNullOrWhiteSpace(ids))
+            {
+                return BadRequest("Product IDs are required.");
+            }
+
+            var parsedIds = ids
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(value => int.TryParse(value, out var parsed) ? parsed : (int?)null)
+                .Where(value => value.HasValue)
+                .Select(value => value!.Value)
+                .Distinct()
+                .ToList();
+
+            if (parsedIds.Count == 0)
+            {
+                return BadRequest("No valid product IDs were provided.");
+            }
+
+            var products = await _context.Tepisi
+                .Where(product => parsedIds.Contains(product.Id))
+                .OrderBy(product => product.Id)
+                .ToListAsync();
+
+            if (products.Count == 0)
+            {
+                return NotFound("Products not found.");
+            }
+
+            try
+            {
+                var pdfBytes = await GenerateQrLabelPdfAsync(products);
+                return File(pdfBytes, "application/pdf", "QRCodeLabels.pdf");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating Cloudinary image batch PDF for products {Ids}.", ids);
+                return StatusCode(500, "An error occurred while generating the QR code PDF.");
+            }
+        }
+
+        private async Task<byte[]> GenerateQrLabelPdfAsync(IReadOnlyCollection<Tepih> tepisi)
+        {
+            using var memoryStream = new MemoryStream();
+
+            float MmToPt(float mm) => mm * 2.8346457f;
+
+            var pageSize = new PageSize(
+                MmToPt(80),
+                MmToPt(40)
+            );
+            using var writer = new PdfWriter(memoryStream);
+            using var pdf = new PdfDocument(writer);
+
+            pdf.SetDefaultPageSize(pageSize);
+
+            using var document = new Document(pdf);
+            document.SetMargins(2, 5, 2, 5);
+
+            string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+            if (!System.IO.File.Exists(fontPath))
+            {
+                _logger.LogError("Font file missing at {Path}", fontPath);
+                throw new FileNotFoundException("Font file not found.", fontPath);
+            }
+
+            PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+            document.SetFont(font);
+
+            var orderedProducts = tepisi.OrderBy(product => product.Id).ToList();
+            for (var index = 0; index < orderedProducts.Count; index++)
+            {
+                var tepih = orderedProducts[index];
+                if (string.IsNullOrWhiteSpace(tepih.QRCodeUrl))
+                {
+                    throw new InvalidOperationException($"QR code URL is missing for product {tepih.Id}.");
+                }
+
+                var imageBytes = await LoadQrCodeBytesAsync(tepih);
+
+                var description = $"{tepih.Name.ToUpper().Trim() ?? ""}/{tepih.Model.ToUpper().Trim() ?? ""}/" +
+                                  $"{tepih.Width?.ToString("0.##")}/{tepih.Length?.ToString("0.##")}/" +
+                                  $"{tepih.Color.ToUpper().Trim() ?? ""}" +
+                                  $"{(string.IsNullOrWhiteSpace(tepih.UnID) ? string.Empty : $"/{tepih.UnID}")}";
+
+                var paragraph = new Paragraph(description)
+                    .SetFontSize(8)
+                    .SimulateBold()
+                    .SetMarginBottom(5)
+                    .SetTextAlignment(TextAlignment.CENTER);
+
+                document.Add(paragraph);
+
+                var imgData = ImageDataFactory.Create(imageBytes);
+                var image = new Image(imgData)
+                    .ScaleToFit(
+                        MmToPt(25),
+                        MmToPt(25)
+                    )
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+
+                document.Add(image);
+
+                if (index < orderedProducts.Count - 1)
+                {
+                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                }
+            }
+
+            document.Close();
+            return memoryStream.ToArray();
+        }
+
+        private async Task<byte[]> LoadQrCodeBytesAsync(Tepih tepih)
+        {
+            if (QrCodeStorageHelper.TryMapLocalUrlToFilePath(_env.WebRootPath, tepih.QRCodeUrl, out var localFilePath))
+            {
+                if (!System.IO.File.Exists(localFilePath))
+                {
+                    throw new InvalidOperationException($"Local QR code image is missing for product {tepih.Id}.");
+                }
+
+                return await System.IO.File.ReadAllBytesAsync(localFilePath);
+            }
+
+            using var response = await _httpClient.GetAsync(tepih.QRCodeUrl);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException($"Could not retrieve the QR code image for product {tepih.Id}.");
+            }
+
+            return await response.Content.ReadAsByteArrayAsync();
+        }
+
+        private string BuildLegacyQrDescription(Tepih tepih)
+        {
+            return $"{tepih.Name.ToUpper().Trim() ?? ""}/{tepih.Model.ToUpper().Trim() ?? ""}/" +
+                   $"{tepih.Width?.ToString("0.##")}/{tepih.Length?.ToString("0.##")}/" +
+                   $"{tepih.Color.ToUpper().Trim() ?? ""}" +
+                   $"{(string.IsNullOrWhiteSpace(tepih.UnID) ? string.Empty : $"/{tepih.UnID}")}";
+        }
+
+        [NonAction]
+        private async Task<IActionResult> LegacyGenerateCloudinaryImagePdf(int id)
+        {
+            var tepih = await _context.Tepisi.FindAsync(id);
+            if (tepih == null)
+            {
+                _logger.LogError("Couldn't find a product with an ID: {id} for generating Cloudinary image!", id);
+                return NotFound("Product not found!");
+            }
+
             if (string.IsNullOrWhiteSpace(tepih.QRCodeUrl))
             {
                 _logger.LogError("QR code URL is missing for a product with an ID: {id} for generating Cloudinary image!", id);
@@ -58,15 +228,11 @@ namespace Inventar.Controllers
             byte[] imageBytes;
             try
             {
-                using var response = await _httpClient.GetAsync(tepih.QRCodeUrl);
-                if (!response.IsSuccessStatusCode)
-                    return BadRequest("Could not retrieve the image from Cloudinary.");
-
-                imageBytes = await response.Content.ReadAsByteArrayAsync();
+                imageBytes = await LoadQrCodeBytesAsync(tepih);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving image from Cloudinary.");
+                _logger.LogError(ex, "Error retrieving QR code image.");
                 return StatusCode(500, $"Error retrieving image: {ex.Message}");
             }
 
@@ -98,9 +264,7 @@ namespace Inventar.Controllers
             document.SetFont(font);
 
             // Build description line
-            var description = $"{tepih.Name.ToUpper().Trim() ?? ""}/{tepih.Model.ToUpper().Trim() ?? ""}/" +
-                              $"{tepih.Width?.ToString("0.##")}/{tepih.Length?.ToString("0.##")}/" +
-                              $"{tepih.Color.ToUpper().Trim() ?? ""}";
+            var description = BuildLegacyQrDescription(tepih);
 
             var paragraph = new Paragraph(description)
                 .SetFontSize(8)//12 MODIFED
@@ -131,7 +295,9 @@ namespace Inventar.Controllers
 
             document.Close();
 
-            return File(memoryStream.ToArray(), "application/pdf", $"CloudinaryImage_{tepih.Id}.pdf");
+            //return File(memoryStream.ToArray(), "application/pdf", $"CloudinaryImage_{tepih.Id}.pdf");
+            return File(memoryStream.ToArray(), "application/pdf", $"{description}.pdf");
+
         }
 
         public async Task<IActionResult> ExportBuyerActivity(int buyerId, DateTime? startDate, DateTime? endDate)
@@ -1402,7 +1568,7 @@ namespace Inventar.Controllers
                     .SetMarginBottom(10);
                 document.Add(heading);
 
-                int numColumns = request.Data.Count > 0 ? request.Data[0].Length - 1 : request.ColumnHeaders.Count;
+                int numColumns = request.ColumnHeaders.Count;
                 var table = new Table(numColumns).UseAllAvailableWidth();
 
                 foreach (var header in request.ColumnHeaders)
@@ -1435,8 +1601,12 @@ namespace Inventar.Controllers
                     }
                 }
 
+                var summaryText = request.IncludeTotalM2
+                    ? $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {(request.TotalM2 ?? 0):0.##}"
+                    : $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity}";
+
                 table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph($"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2}"))
+                    .Add(new Paragraph(summaryText))
                     .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SimulateBold()

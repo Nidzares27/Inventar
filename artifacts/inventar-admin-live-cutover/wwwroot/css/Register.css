@@ -1,0 +1,57 @@
+﻿input {
+    border: 2px solid blueviolet !important;
+}
+
+label {
+    margin-right: 1rem;
+    font-size: larger;
+    font-weight: 700;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* ✅ Tablet-only styling */
+@media screen and (min-width: 768px) and (min-height: 768px) {
+    label{
+        font-size:x-large;
+    }
+
+    input {
+        line-height:2.2;
+        margin-top:1rem;
+    }
+
+    .radioDiv{
+        margin-top:2rem;
+    }
+
+    .form-check-input {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .otkaziBtn {
+        margin-top: 1rem;
+        margin-left: 1.5rem;
+        width: 10rem;
+        height: 4rem;
+        font-size: x-large;
+        font-weight: bolder;
+        align-content: center;
+        background-color: darkgrey;
+        color: black;
+    }
+
+    #confirmBtn {
+        width: 10rem;
+        height: 4rem;
+        font-size: x-large;
+        font-weight: bolder;
+    }
+
+    .naslov {
+        font-size: 3rem;
+    }
+}

@@ -2,9 +2,24 @@
 @model EditProdajaViewModel
 @{
     ViewData["Title"] = "Edit";
+    var discountedUnitPrice = Math.Round(Model.Price * (1m - ((Model.Rabat ?? 0) / 100m)), 2);
 }
 
 <h1>@Inventar.Resources.Resource.EditSale</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (Model.IsDirectSaleProduct)
+{
+    <div class="alert alert-warning">
+        @Inventar.Resources.Resource.TemporaryProduct
+    </div>
+}
 
 <hr />
 <div class="row g-3">
@@ -14,17 +29,27 @@
         <input type="hidden" id="Length" asp-for="Length" />
         <input type="hidden" id="Width" asp-for="Width" />
         <input type="hidden" id="PerM2" asp-for="PerM2" />
+        <input type="hidden" id="PoMjeri" asp-for="PoMjeri" />
+        <input type="hidden" id="DirectSaleOriginalTotal" asp-for="DirectSaleOriginalTotal" />
         <input type="hidden" id="PlannedPaymentType" asp-for="PlannedPaymentType" />
         <input type="hidden" name="returnFromDetails" value="@ViewBag.ReturnFromDetails" />
         <input type="hidden" name="returnUrl" value="@Context.Request.Query["returnUrl"]" />
+
         <div class="col-sm-3">
             <label asp-for="TepihId" class="control-label">@Inventar.Resources.Resource.ProductID</label>
-            <input asp-for="TepihId" class="form-control" readonly/>
+            <input asp-for="TepihId" class="form-control" readonly />
             <span asp-validation-for="TepihId" class="text-danger"></span>
         </div>
         <div class="col-sm-3">
             <label asp-for="Quantity" class="control-label">@Inventar.Resources.Resource.Quantity</label>
-            <input asp-for="Quantity" id="Quantity" class="form-control" min="1" />
+            @if (Model.IsDirectSaleProduct)
+            {
+                <input asp-for="Quantity" id="Quantity" class="form-control" min="1" readonly="readonly" />
+            }
+            else
+            {
+                <input asp-for="Quantity" id="Quantity" class="form-control" min="1" />
+            }
             <span asp-validation-for="Quantity" class="text-danger"></span>
         </div>
         <div class="col-sm-6">
@@ -44,8 +69,15 @@
         </div>
         <div class="col-sm-3">
             <label class="control-label">@Inventar.Resources.Resource.Size</label>
-            <input id="Size" class="form-control" value="@(Model.PerM2 ? $"{Model.Width}X{Model.Length}" : null)" readonly />
+            <input id="Size" class="form-control" value="@((Model.Width.HasValue && Model.Length.HasValue) ? $"{Model.Width}X{Model.Length}" : string.Empty)" readonly />
         </div>
+        @if (Model.PoMjeri)
+        {
+            <div class="col-sm-3">
+                <label class="control-label">Original size</label>
+                <input class="form-control" value="@($"{Model.OriginalWidth}X{Model.OriginalLength}")" readonly />
+            </div>
+        }
         <div class="col-sm-3">
             <label asp-for="M2Total" class="control-label">@Inventar.Resources.Resource.M2Total</label>
             <input asp-for="M2Total" id="M2Total" class="form-control" readonly />
@@ -53,20 +85,52 @@
         </div>
         <div class="col-sm-3">
             <label asp-for="Rabat" class="control-label">Rabat</label>
-            <input asp-for="Rabat" type="number" id="Rabat" class="form-control" />
+            @if (Model.IsDirectSaleProduct)
+            {
+                <input asp-for="Rabat" type="number" id="Rabat" class="form-control" readonly="readonly" />
+            }
+            else
+            {
+                <input asp-for="Rabat" type="number" id="Rabat" class="form-control" />
+            }
             <span asp-validation-for="Rabat" class="text-danger"></span>
         </div>
         <div class="col-sm-3">
             <label asp-for="Price" class="control-label">@Inventar.Resources.Resource.Price</label>
-            <input asp-for="Price" type="number" id="Price" class="form-control" />
+            @if (Model.IsDirectSaleProduct)
+            {
+                <input asp-for="Price" type="number" step="0.01" id="Price" class="form-control" value="@Model.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" readonly="readonly" />
+            }
+            else
+            {
+                <input asp-for="Price" type="number" step="0.01" id="Price" class="form-control" value="@Model.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" />
+            }
             <span asp-validation-for="Price" class="text-danger"></span>
         </div>
         <div class="col-sm-3">
-            <label class="control-label">@Inventar.Resources.Resource.TotalPrice</label>
-            <input type="number" step="any" min="0.1" class="form-control" id="TotalPrice" value="@Math.Round((Model.PerM2 ? Model.Rabat != null || Model.Rabat > 0 ? ((Model.Price * (decimal)Model.M2Total) - (((decimal)Model.Rabat / 100) * (Model.Price * (decimal)Model.M2Total))) : Model.Price * (decimal)Model.M2Total : Model.Rabat != null || Model.Rabat > 0 ? (Model.Price * Model.Quantity) - (((decimal)Model.Rabat / 100) * (Model.Price * Model.Quantity)) : Model.Price * Model.Quantity), 2)" /> @* DODAT DECIMAL CAST *@
+            <label class="control-label">@Inventar.Resources.Resource.DiscountedPrice</label>
+            <input type="number" step="0.01" id="DiscountedUnitPrice" class="form-control" value="@discountedUnitPrice.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" readonly />
         </div>
         <div class="col-sm-3">
-            <input type="submit" value="@Inventar.Resources.Resource.Edit" class="btn btn-primary" />
+            <label class="control-label">@Inventar.Resources.Resource.TotalPrice</label>
+            @if (Model.IsDirectSaleProduct)
+            {
+                <input type="number" step="0.01" min="0" class="form-control" id="TotalPrice" value="@Model.TotalPrice.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" readonly="readonly" />
+            }
+            else
+            {
+                <input type="number" step="0.01" min="0" class="form-control" id="TotalPrice" value="@Model.TotalPrice.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" />
+            }
+        </div>
+        <div class="col-12 d-flex flex-wrap gap-2">
+            @if (Model.IsDirectSaleProduct)
+            {
+                <button type="button" id="openReplacementModal" class="btn btn-warning">@Inventar.Resources.Resource.ReplaceProduct</button>
+            }
+            else
+            {
+                <input type="submit" value="@Inventar.Resources.Resource.Edit" class="btn btn-primary" />
+            }
         </div>
     </form>
 </div>
@@ -74,8 +138,90 @@
 <div>
     <a href="@ViewBag.ReturnUrl" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
 </div>
+
+@if (Model.IsDirectSaleProduct)
+{
+    <div id="replacementProductPickerModal" class="product-picker-modal" hidden>
+        <div class="product-picker-modal__backdrop"></div>
+        <div class="product-picker-modal__panel">
+            <button type="button" id="closeReplacementProductPickerModal" class="product-picker-modal__close" aria-label="Close">&times;</button>
+            <h5 class="product-picker-modal__title">@Inventar.Resources.Resource.ReplaceProduct</h5>
+
+            <div class="scan-search-layout scan-search-layout--modal">
+                <div id="replacementMidDiv">
+                    <form id="replacementFormByParameters" method="post">
+                        <div class="parameter-grid">
+                            <div>
+                                <input id="replacementSearchName" type="text" class="form-control parameter-input" placeholder="@Inventar.Resources.Resource.Name" />
+                            </div>
+                            <div>
+                                <input id="replacementSearchModel" type="text" class="form-control parameter-input" placeholder="Model" />
+                            </div>
+                            <div>
+                                <input id="replacementSearchColor" type="text" class="form-control parameter-input" placeholder="@Inventar.Resources.Resource.Color" />
+                            </div>
+                            <div>
+                                <input id="replacementSearchSize" type="text" class="form-control parameter-input" placeholder="@Inventar.Resources.Resource.Size" />
+                            </div>
+                        </div>
+
+                        <div class="parameter-actions">
+                            <button id="replacementClearInputs" type="button" class="btn btn-warning btn-sm parameter-clear-button">
+                                @Inventar.Resources.Resource.ClearInputs
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="product-picker-modal__manual">
+                        <div class="product-picker-modal__manual-title">@Inventar.Resources.Resource.ManuallyEnterId</div>
+                        <form id="replacementManualForm" method="post" class="manual-entry-form">
+                            <input type="number" id="replacementManualId" class="form-control manual-entry-input" />
+                            <button type="submit" class="btn btn-outline-secondary manual-entry-button">@Inventar.Resources.Resource.AddProduct</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="replacementRightDiv"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="replacementPoMjeriModal" class="po-mjeri-modal" hidden>
+        <div class="po-mjeri-modal__backdrop"></div>
+        <div class="po-mjeri-modal__panel">
+            <button type="button" id="closeReplacementPoMjeriModal" class="po-mjeri-modal__close" aria-label="Close">&times;</button>
+            <h5 id="replacementPoMjeriModalTitle">Po mjeri proizvod</h5>
+            <input type="hidden" id="replacementPoMjeriProductId" />
+            <div class="po-mjeri-modal__meta">
+                <div><strong>@Inventar.Resources.Resource.OriginalSize:</strong> <span id="replacementPoMjeriOriginalSize"></span></div>
+                <div><strong>@Inventar.Resources.Resource.RemainingSize:</strong> <span id="replacementPoMjeriRemainingSize"></span></div>
+                <div><strong>UnID:</strong> <span id="replacementPoMjeriUnId"></span></div>
+                <div><strong>@Inventar.Resources.Resource.Quantity:</strong> <span id="replacementPoMjeriRequestedQty">@Model.Quantity</span></div>
+            </div>
+            <div class="po-mjeri-modal__grid">
+                <div>
+                    <label for="replacementPoMjeriWidth">@Inventar.Resources.Resource.Width</label>
+                    <input id="replacementPoMjeriWidthDisplay" type="text" class="form-control" readonly />
+                    <input id="replacementPoMjeriWidth" type="hidden" />
+                </div>
+                <div>
+                    <label for="replacementPoMjeriLength">@Inventar.Resources.Resource.Length</label>
+                    <input id="replacementPoMjeriLength" type="number" min="1" class="form-control" />
+                </div>
+            </div>
+            <div class="po-mjeri-modal__meta">
+                <div><strong>@Inventar.Resources.Resource.MaxAvailableQuantity:</strong> <span id="replacementPoMjeriMaxQty">0</span></div>
+            </div>
+            <div id="replacementPoMjeriValidation" class="text-danger small" style="min-height:1.25rem;"></div>
+            <div class="po-mjeri-modal__actions">
+                <button type="button" id="submitReplacementPoMjeriSelection" class="btn btn-primary">Replace product</button>
+            </div>
+        </div>
+    </div>
+}
+
 <style>
-    label{
+    label {
         font-weight: 700;
         margin-bottom: 0.2rem;
     }
@@ -83,84 +229,193 @@
     input {
         border: 1.5px solid blueviolet !important;
     }
+
+    .product-picker-modal[hidden],
+    .po-mjeri-modal[hidden] {
+        display: none !important;
+    }
+
+    .product-picker-modal,
+    .po-mjeri-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+    }
+
+    .product-picker-modal__backdrop,
+    .po-mjeri-modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+    }
+
+    .product-picker-modal__panel,
+    .po-mjeri-modal__panel {
+        position: relative;
+        z-index: 1;
+        max-width: 860px;
+        margin: 6vh auto 0;
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.25rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    }
+
+    .po-mjeri-modal__panel {
+        max-width: 520px;
+    }
+
+    .product-picker-modal__close,
+    .po-mjeri-modal__close {
+        position: absolute;
+        top: 0.6rem;
+        right: 0.8rem;
+        border: 0;
+        background: transparent;
+        font-size: 1.8rem;
+        line-height: 1;
+    }
+
+    .parameter-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .parameter-actions,
+    .po-mjeri-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+
+    .scan-search-layout--modal {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .product-picker-modal__manual {
+        margin-top: 1rem;
+    }
+
+    .product-picker-modal__manual-title {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .manual-entry-form {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    #replacementRightDiv {
+        max-height: 420px;
+        overflow: auto;
+    }
+
+    .po-mjeri-modal__meta {
+        display: grid;
+        gap: 0.45rem;
+        margin-bottom: 1rem;
+    }
+
+    .po-mjeri-modal__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+        text-align: left;
+    }
 </style>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-        function calculateTotalPrice() {
-            let quantity = parseInt($("#Quantity").val()) || 0;
-            let m2Total = parseFloat($("#M2Total").val()) || 0;
-            let price = parseFloat($("#Price").val()) || 0;
-            let length = parseInt($("#Length").val()) || 0;
-            let width = parseInt($("#Width").val()) || 0;
-            let perM2 = $("#PerM2").val();
-            let rabat = parseInt($("#Rabat").val()) || 0;
-            console.log("rabat");
-            console.log(rabat);
+        function isPerM2() {
+            return ($("#PerM2").val() || "").toLowerCase() === "true";
+        }
 
-            if(rabat != null || rabat > 0){
-                if (perM2 == "True") {
-                    m2Total = (length * width / 10000) * quantity
-                    $("#M2Total").val(((length * width / 10000) * quantity).toFixed(2));
-                    $("#TotalPrice").val(((price * m2Total) - ((rabat / 100) * (price * m2Total))).toFixed(2));
-                } 
-                else if (perM2 ="False") {
-                    $("#TotalPrice").val(((price * quantity) - ((rabat / 100) * (price * quantity))).toFixed(2));
-                }
+        function isPoMjeri() {
+            return ($("#PoMjeri").val() || "").toLowerCase() === "true";
+        }
+
+        function getDiscountFactor() {
+            let rabat = parseFloat($("#Rabat").val());
+            if (!Number.isFinite(rabat) || rabat <= 0) {
+                return 1;
             }
-            else{
-                if (perM2 == "True") {
-                    m2Total = (length * width / 10000) * quantity
-                    $("#M2Total").val(((length * width / 10000) * quantity).toFixed(2));
-                    $("#TotalPrice").val(((price * m2Total)).toFixed(2));
-                } 
-                else if (perM2 ="False") {
-                    $("#TotalPrice").val((price * quantity).toFixed(2));
-                }
+
+            return Math.max(0, 1 - (rabat / 100));
+        }
+
+        function calculateM2Total(quantity) {
+            let length = parseFloat($("#Length").val()) || 0;
+            let width = parseFloat($("#Width").val()) || 0;
+            return ((length * width) / 10000) * quantity;
+        }
+
+        function calculatePoMjeriLengthFactor() {
+            let length = parseFloat($("#Length").val()) || 0;
+            return Math.max(length, 100) / 100;
+        }
+
+        function updateDiscountedPrice() {
+            let price = parseFloat($("#Price").val()) || 0;
+            $("#DiscountedUnitPrice").val((price * getDiscountFactor()).toFixed(2));
+        }
+
+        function calculateTotalPrice() {
+            let quantity = parseFloat($("#Quantity").val()) || 0;
+            let price = parseFloat($("#Price").val()) || 0;
+            let discountFactor = getDiscountFactor();
+
+            if (isPoMjeri()) {
+                let m2Total = calculateM2Total(quantity);
+                $("#M2Total").val(m2Total.toFixed(2));
+                $("#TotalPrice").val((price * discountFactor * calculatePoMjeriLengthFactor() * quantity).toFixed(2));
             }
-            // if (perM2 == "True") {
-            //     m2Total = (length * width / 10000) * quantity
-            //     $("#M2Total").val(((length * width / 10000) * quantity).toFixed(2));
-            //     $("#TotalPrice").val(((price * m2Total)).toFixed(2));
-            // } else if (perM2 ="False") {
-            //     $("#TotalPrice").val((price * quantity).toFixed(2));
-            // }
+            else if (isPerM2()) {
+                let m2Total = calculateM2Total(quantity);
+                $("#M2Total").val(m2Total.toFixed(2));
+                $("#TotalPrice").val((price * discountFactor * m2Total).toFixed(2));
+            }
+            else {
+                $("#TotalPrice").val((price * discountFactor * quantity).toFixed(2));
+            }
+
+            updateDiscountedPrice();
         }
 
         function updatePriceFromTotal() {
             let totalPrice = parseFloat($("#TotalPrice").val()) || 0;
-            let quantity = parseInt($("#Quantity").val()) || 1;
-            let m2Total = parseFloat($("#M2Total").val()) || 1;
-            let price = parseFloat($("#Price").val()) || 0;
-            let perM2 = $("#PerM2").val();
-            let rabat = parseInt($("#Rabat").val()) || 0;
+            let quantity = parseFloat($("#Quantity").val()) || 0;
+            let discountFactor = getDiscountFactor();
 
-            if(rabat != null || rabat > 0){
-                if (perM2 =="True") {
-                    // $("#Price").val(((totalPrice / m2Total) + ((rabat / 100) * (price * m2Total))).toFixed(2));
-                    $("#Price").val(((totalPrice / m2Total) / (rabat / 100)).toFixed(2));
-                } 
-                else if (perM2 ="False") {
-                    $("#Price").val(((totalPrice / quantity) / (rabat / 100)).toFixed(2));
-                    // $("#Price").val(((totalPrice / quantity) + ((rabat / 100) * (price * quantity))).toFixed(2));
-                }
+            if (discountFactor <= 0) {
+                updateDiscountedPrice();
+                return;
             }
-            else{
-                if (perM2 =="True") {
-                    $("#Price").val((totalPrice / m2Total).toFixed(2));
-                } 
-                else if (perM2 ="False") {
-                    $("#Price").val((totalPrice / quantity).toFixed(2));
-                }
+
+            if (isPoMjeri()) {
+                let factor = calculatePoMjeriLengthFactor() * quantity;
+            $("#Price").val(factor > 0 ? (totalPrice / (factor * discountFactor)).toFixed(2) : "0.00");
             }
-            // if (perM2 =="True") {
-            //     $("#Price").val((totalPrice / m2Total).toFixed(2));
-            // } else if (perM2 ="False") {
-            //     $("#Price").val((totalPrice / quantity).toFixed(2));
-            // }
+            else if (isPerM2()) {
+                let m2Total = calculateM2Total(quantity);
+                $("#M2Total").val(m2Total.toFixed(2));
+            $("#Price").val(m2Total > 0 ? (totalPrice / (m2Total * discountFactor)).toFixed(2) : "0.00");
+            }
+            else {
+            $("#Price").val(quantity > 0 ? (totalPrice / (quantity * discountFactor)).toFixed(2) : "0.00");
+            }
+
+            updateDiscountedPrice();
         }
 
-        $("#Quantity, #M2Total, #Price, #Rabat").on("input", function () {
+        $("#Quantity, #Price, #Rabat").on("input", function () {
             calculateTotalPrice();
         });
 
@@ -168,9 +423,274 @@
             updatePriceFromTotal();
         });
 
-        // Ensure only one of PriceM2 or PriceUnit has a value
-        $("#Price").on("input", function () {
-            calculateTotalPrice();
-        });
+        updateDiscountedPrice();
+        calculateTotalPrice();
     });
 </script>
+
+@if (Model.IsDirectSaleProduct)
+{
+    <script>
+        const saleId = @Model.Id;
+        let currentReplacementPoMjeriSelection = null;
+        const replacementProductPickerModal = document.getElementById("replacementProductPickerModal");
+
+        function openReplacementProductPickerModal() {
+            replacementProductPickerModal.hidden = false;
+            document.getElementById("replacementSearchName")?.focus();
+        }
+
+        function closeReplacementProductPickerModal() {
+            replacementProductPickerModal.hidden = true;
+        }
+
+        function closeReplacementPoMjeriModal() {
+            currentReplacementPoMjeriSelection = null;
+            document.getElementById("replacementPoMjeriModal").hidden = true;
+            document.getElementById("replacementPoMjeriValidation").textContent = "";
+            document.getElementById("replacementPoMjeriWidth").value = "";
+            document.getElementById("replacementPoMjeriWidthDisplay").value = "";
+            document.getElementById("replacementPoMjeriLength").value = "";
+            document.getElementById("replacementPoMjeriMaxQty").textContent = "0";
+        }
+
+        function calculateReplacementConsumedLength(selection, customWidth, customLength) {
+            if (!selection || !customWidth || !customLength) {
+                return 0;
+            }
+
+            return customLength <= selection.remainingWidth
+                ? customWidth
+                : customLength;
+        }
+
+        function updateReplacementPoMjeriPreview() {
+            const validation = document.getElementById("replacementPoMjeriValidation");
+            const maxQtyElement = document.getElementById("replacementPoMjeriMaxQty");
+
+            if (!currentReplacementPoMjeriSelection) {
+                validation.textContent = "";
+                maxQtyElement.textContent = "0";
+                return false;
+            }
+
+            const width = parseInt(document.getElementById("replacementPoMjeriWidth").value, 10);
+            const length = parseInt(document.getElementById("replacementPoMjeriLength").value, 10);
+            const availableRemainingLength = currentReplacementPoMjeriSelection.availableRemainingLength ?? currentReplacementPoMjeriSelection.remainingLength;
+            const requestedQuantity = @Model.Quantity;
+
+            if (!width || !length) {
+                validation.textContent = "";
+                maxQtyElement.textContent = "0";
+                return false;
+            }
+
+            if (length > availableRemainingLength) {
+                validation.textContent = "Unesena duzina ne moze biti veca od preostale duzine.";
+                maxQtyElement.textContent = "0";
+                return false;
+            }
+
+            const consumedLength = calculateReplacementConsumedLength(currentReplacementPoMjeriSelection, width, length);
+            const maxQty = consumedLength > 0
+                ? Math.floor(availableRemainingLength / consumedLength)
+                : 0;
+
+            maxQtyElement.textContent = maxQty.toString();
+            if (maxQty < requestedQuantity) {
+                validation.textContent = `Za ovu prodaju je potrebno najmanje ${requestedQuantity} komada.`;
+                return false;
+            }
+
+            validation.textContent = "";
+            return true;
+        }
+
+        function openReplacementPoMjeriModal(selection) {
+            currentReplacementPoMjeriSelection = selection;
+            document.getElementById("replacementPoMjeriProductId").value = selection.productId;
+            document.getElementById("replacementPoMjeriOriginalSize").textContent = selection.originalSize || "";
+            document.getElementById("replacementPoMjeriRemainingSize").textContent = selection.remainingSize || "";
+            document.getElementById("replacementPoMjeriUnId").textContent = selection.unId || "-";
+            document.getElementById("replacementPoMjeriModalTitle").textContent = `${selection.name} / ${selection.model}`;
+            document.getElementById("replacementPoMjeriWidth").value = selection.fixedWidth || selection.remainingWidth || "";
+            document.getElementById("replacementPoMjeriWidthDisplay").value = selection.fixedWidth || selection.remainingWidth || "";
+            document.getElementById("replacementPoMjeriModal").hidden = false;
+            document.getElementById("replacementPoMjeriLength").focus();
+            updateReplacementPoMjeriPreview();
+        }
+
+        function handleReplacementSelectionResponse(result) {
+            if (result.success && result.requiresCustomSize) {
+                closeReplacementProductPickerModal();
+                openReplacementPoMjeriModal(result);
+                return;
+            }
+
+            if (result.success) {
+                window.location.reload();
+                return;
+            }
+
+            alert(result.message || "Greska prilikom zamjene proizvoda.");
+        }
+
+        function searchReplacementProducts() {
+            let filters = {
+                name: $("#replacementSearchName").val(),
+                model: $("#replacementSearchModel").val(),
+                color: $("#replacementSearchColor").val(),
+                size: $("#replacementSearchSize").val()
+            };
+
+            if (!filters.name && !filters.model && !filters.color && !filters.size) {
+                $("#replacementRightDiv").hide().empty();
+                return;
+            }
+
+            $.ajax({
+                url: "/InventoryItem/SearchTepisi",
+                type: "GET",
+                data: filters,
+                success: function (result) {
+                    $("#replacementRightDiv").html("");
+
+                    if (result.length === 0) {
+                        $("#replacementRightDiv").html("<p>@Inventar.Resources.Resource.NoResultsFound</p>").show();
+                        return;
+                    }
+
+                    let html = "<ul class='list-group'>";
+                    result.forEach(item => {
+                        let sizeText = "";
+                        if (item.width != null && item.length != null) {
+                            sizeText = ` - ${item.width}X${item.length}`;
+                        }
+
+                        let poMjeriText = "";
+                        if (item.poMjeri) {
+                            let remainingSize = "";
+                            if (item.remainingWidth != null && item.remainingLength != null) {
+                                remainingSize = `${item.remainingWidth}X${item.remainingLength}`;
+                            }
+
+                            poMjeriText = ` - ${remainingSize}`;
+                            if (item.unId) {
+                                poMjeriText += ` / ${item.unId}`;
+                            }
+                        }
+
+                        html += `
+                            <li class="list-group-item list-group-item-action replacement-add-item"
+                                data-id="${item.id}">
+                                <strong>${item.productNumber}</strong> -
+                                ${item.name} -
+                                ${item.model} -
+                                ${item.color}
+                                ${sizeText}
+                                ${poMjeriText}
+                            </li>
+                        `;
+                    });
+
+                    html += "</ul>";
+                    $("#replacementRightDiv").html(html).show();
+                }
+            });
+        }
+
+        $("#replacementSearchName, #replacementSearchModel, #replacementSearchColor, #replacementSearchSize")
+            .on("input", function () {
+                searchReplacementProducts();
+            });
+
+        $(document).on("click", ".replacement-add-item", function () {
+            const productId = $(this).data("id");
+
+            fetch(`/Sales/PrepareReplacementSelection?saleId=${saleId}&productId=${encodeURIComponent(productId)}`)
+                .then(response => response.json())
+                .then(handleReplacementSelectionResponse)
+                .catch(error => {
+                    console.error(error);
+                    alert("Greska prilikom pripreme zamjene.");
+                });
+        });
+
+        $("#replacementClearInputs").on("click", function () {
+            $("#replacementSearchName, #replacementSearchModel, #replacementSearchColor, #replacementSearchSize").val("");
+            $("#replacementRightDiv").hide().empty();
+        });
+
+        document.getElementById("replacementFormByParameters").addEventListener("submit", function (e) {
+            e.preventDefault();
+        });
+
+        document.getElementById("replacementManualForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const idInput = document.getElementById("replacementManualId").value.trim();
+
+            if (idInput === "") {
+                alert("Unesite ID proizvoda.");
+                return;
+            }
+
+            fetch(`/Sales/PrepareReplacementSelection?saleId=${saleId}&productId=${encodeURIComponent(idInput)}`)
+                .then(response => response.json())
+                .then(handleReplacementSelectionResponse)
+                .catch(error => {
+                    console.error(error);
+                    alert("Greska prilikom pripreme zamjene.");
+                });
+        });
+
+        $("#replacementPoMjeriLength").on("input", function () {
+            updateReplacementPoMjeriPreview();
+        });
+
+        $("#submitReplacementPoMjeriSelection").on("click", function () {
+            if (!currentReplacementPoMjeriSelection || !updateReplacementPoMjeriPreview()) {
+                return;
+            }
+
+            const payload = {
+                saleId: saleId,
+                productId: Number(document.getElementById("replacementPoMjeriProductId").value),
+                customWidth: Number(document.getElementById("replacementPoMjeriWidth").value),
+                customLength: Number(document.getElementById("replacementPoMjeriLength").value)
+            };
+
+            fetch("/Sales/ReplacePlaceholderProduct", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        window.location.reload();
+                        return;
+                    }
+
+                    document.getElementById("replacementPoMjeriValidation").textContent = result.message || "Greska prilikom zamjene proizvoda.";
+                })
+                .catch(error => {
+                    console.error(error);
+                    document.getElementById("replacementPoMjeriValidation").textContent = "Greska prilikom zamjene proizvoda.";
+                });
+        });
+
+        $("#openReplacementModal").on("click", function () {
+            openReplacementProductPickerModal();
+        });
+
+        $("#closeReplacementProductPickerModal, #replacementProductPickerModal .product-picker-modal__backdrop").on("click", function () {
+            closeReplacementProductPickerModal();
+        });
+
+        $("#closeReplacementPoMjeriModal, #replacementPoMjeriModal .po-mjeri-modal__backdrop").on("click", function () {
+            closeReplacementPoMjeriModal();
+        });
+    </script>
+}

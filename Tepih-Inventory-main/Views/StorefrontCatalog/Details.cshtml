@@ -31,6 +31,14 @@
         <td>@Html.DisplayFor(model => model.Model)</td>
     </tr>
     <tr>
+        <th>@Inventar.Resources.Resource.BroaderCategory</th>
+        <td>@Html.DisplayFor(model => model.BroaderCategory)</td>
+    </tr>
+    <tr>
+        <th>@Inventar.Resources.Resource.NarrowerCategory</th>
+        <td>@Html.DisplayFor(model => model.NarrowerCategory)</td>
+    </tr>
+    <tr>
         <th>@Inventar.Resources.Resource.DateTime</th>
         <td>@Html.DisplayFor(model => model.DateTime)</td>
     </tr>
@@ -119,7 +127,7 @@
     <h4>@Inventar.Resources.Resource.ProductImages</h4>
     @if (storefrontImages.Count == 0)
     {
-        <div class="alert alert-light border">No storefront images uploaded for this product.</div>
+        <div class="alert alert-light border">@Inventar.Resources.Resource.NoImagesUploadedForThisProduct_</div>
     }
     else
     {
@@ -128,13 +136,32 @@
             {
                 <div class="col-md-4 col-lg-3">
                     <div class="card h-100">
-                        <img src="@(image.ThumbnailUrl ?? image.Url)" class="card-img-top storefront-thumb" alt="@(image.AltText ?? Model.Name)" />
+                        @if (string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <div class="storefront-media-frame storefront-media-frame--video">
+                                <video class="card-img-top storefront-thumb"
+                                       controls
+                                       preload="metadata"
+                                       playsinline>
+                                    <source src="@image.Url" />
+                                </video>
+                                <span class="storefront-media-badge">Video</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <img src="@(image.ThumbnailUrl ?? image.Url)" class="card-img-top storefront-thumb" alt="@(image.AltText ?? Model.Name)" />
+                        }
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center gap-2">
                                 <strong>#@image.SortOrder</strong>
-                                @if (image.IsPrimary)
+                                @if (image.IsPrimary && !string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <span class="badge bg-success">@Inventar.Resources.Resource.Primary</span>
+                                }
+                                else if (string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="badge bg-secondary">Video</span>
                                 }
                             </div>
                             <div class="small text-muted mt-2">@(image.AltText ?? "No alt text")</div>
@@ -159,5 +186,29 @@
         aspect-ratio: 1 / 1;
         object-fit: cover;
         border-bottom: 1px solid #eee;
+        width: 100%;
+        background: #f7f4ff;
+    }
+
+    .storefront-media-frame {
+        position: relative;
+    }
+
+    .storefront-media-frame--video {
+        background: #f4f6fb;
+    }
+
+    .storefront-media-badge {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: rgba(25, 32, 56, 0.8);
+        color: #fff;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
     }
 </style>

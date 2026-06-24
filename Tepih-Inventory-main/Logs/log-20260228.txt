@@ -1,2 +1,0 @@
-2026-02-28 11:08:06.812 +01:00 [WRN] [NikolaPetricevic] ProcessQRCode: QR Code data doesn't follow required structure: https://www.mecalux.es/
-2026-02-28 11:08:24.820 +01:00 [WRN] [NikolaPetricevic] ProcessQRCode: QR Code data doesn't follow required structure: https://www.mecalux.es/

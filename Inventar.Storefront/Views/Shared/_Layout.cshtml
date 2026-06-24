@@ -1,9 +1,17 @@
-@using System.Text.Json
+﻿@using System.Text.Json
 @using Inventar.Storefront.ViewModels.Cart
+@using Microsoft.AspNetCore.Antiforgery
 @inject Inventar.Storefront.Services.ICartService CartService
+@inject IAntiforgery Antiforgery
 @{
     var cartCount = CartService.GetTotalItemCount();
+    var requestVerificationToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
     CartAddedNotificationViewModel? cartAddedNotification = null;
+    var isAuthenticatedCustomer = User.Identity?.IsAuthenticated == true;
+    var accountAction = isAuthenticatedCustomer ? "Index" : "Login";
+    var accountLabel = isAuthenticatedCustomer ? "Moj nalog" : "Prijavite se";
+    var currentQuery = Context.Request.Query["q"].ToString();
+    var predictiveSearchUrl = Url.Action("PredictiveSearch", "Catalog") ?? "/proizvodi/pretraga/predlozi";
 
     if (TempData["CartAddedNotification"] is string cartAddedJson && !string.IsNullOrWhiteSpace(cartAddedJson))
     {
@@ -28,7 +36,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Ka&scaron;mir Home</title>
+    <meta name="request-verification-token" content="@requestVerificationToken" />
+    <title>@ViewData["Title"] - Kasmir Home</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="@string.Join(" ", bodyClasses)">
@@ -41,29 +50,94 @@
 
     <div class="site-chrome" data-site-chrome>
         <div class="top-strip">
-            Dostava na va&scaron;u adresu za 1-2 dana!
+            Dostava na vašu adresu za 1-2 dana!
         </div>
 
         <header class="site-header">
             <div class="shell site-header__inner">
-@*                 <a class="site-brand" asp-controller="Home" asp-action="Index">
-                    <span class="site-brand__eyebrow">Topla selekcija za dom</span>
-                    <span class="site-brand__name">Ka&scaron;mir Home</span>
-                </a> *@
                 <a class="site-brand" asp-controller="Home" asp-action="Index">
-                    <img src="slike/KasmirHomeLogo.png" alt="Kašmir Home" style="width: 75px; height: 75px">
+                    <img src="~/slike/KasmirHomeLogo.png" asp-append-version="true" alt="Kasmir Home" style="width: 75px; height: 75px">
                 </a>
 
                 <div class="site-header__actions">
                     <nav class="site-nav" aria-label="Glavna navigacija">
-                        <a asp-controller="Home" asp-action="Index">Po&#269;etna</a>
+                        <a asp-controller="Home" asp-action="Index">Početna</a>
                         <a asp-controller="Catalog" asp-action="Index">Proizvodi</a>
+                        <a asp-controller="Home" asp-action="Promotions">Akcije</a>
+                        @await Component.InvokeAsync("CategoryMenu", new { isMobile = false })
                         <a asp-controller="Info" asp-action="Contact">Kontakt</a>
                     </nav>
 
-                    <a class="cart-pill" asp-controller="Cart" asp-action="Index">
-                        Korpa
-                        <span class="cart-pill__count">@cartCount</span>
+                    <div class="site-header-search"
+                         data-header-search-root
+                         data-predictive-search-url="@predictiveSearchUrl">
+                        <button class="header-icon-button header-icon-button--search"
+                                type="button"
+                                data-header-search-toggle
+                                aria-label="Otvori pretragu"
+                                title="Pretraga">
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M10.5 4a6.5 6.5 0 1 0 4.09 11.55l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z" />
+                            </svg>
+                        </button>
+
+                        <div class="site-header-search__panel" data-header-search-panel hidden>
+                            <form asp-controller="Catalog"
+                                  asp-action="Index"
+                                  method="get"
+                                  class="site-header-search__form"
+                                  data-header-search-form>
+                                <input type="search"
+                                       name="q"
+                                       value="@currentQuery"
+                                       placeholder="Pretrazite proizvode, kategorije i boje"
+                                       autocomplete="off"
+                                       spellcheck="false"
+                                       data-header-search-input />
+
+                                <button class="site-header-search__submit"
+                                        type="submit"
+                                        aria-label="Pretrazi">
+                                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                        <path d="M10.5 4a6.5 6.5 0 1 0 4.09 11.55l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z" />
+                                    </svg>
+                                </button>
+
+                                <button class="site-header-search__close"
+                                        type="button"
+                                        data-header-search-close
+                                        aria-label="Zatvori pretragu">
+                                    &#10005;
+                                </button>
+                            </form>
+
+                            <div class="site-header-search__results" data-header-search-results hidden></div>
+                        </div>
+                    </div>
+
+                    <a class="cart-pill cart-pill--icon"
+                       asp-controller="Cart"
+                       asp-action="Index"
+                       aria-label="Korpa"
+                       title="Korpa">
+                        <span class="cart-pill__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M7 4H3v2h2.13l1.7 8.39A2 2 0 0 0 8.79 16H18a2 2 0 0 0 1.92-1.45L21.9 8.5A1 1 0 0 0 20.94 7H8.62l-.3-1.47A2 2 0 0 0 7 4Zm1.03 5h11.58l-1.5 5H9.05l-1.02-5ZM10 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" />
+                            </svg>
+                        </span>
+                        <span class="cart-pill__count cart-pill__count--icon" data-cart-pill-count>@cartCount</span>
+                    </a>
+
+                    <a class="account-icon-pill site-header__account-mobile"
+                       asp-controller="Account"
+                       asp-action="@accountAction"
+                       aria-label="@accountLabel"
+                       title="@accountLabel">
+                        <span class="account-icon-pill__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5Zm0 2c-4.42 0-8 2.58-8 5.75 0 .69.56 1.25 1.25 1.25h13.5c.69 0 1.25-.56 1.25-1.25C20 16.58 16.42 14 12 14Z" />
+                            </svg>
+                        </span>
                     </a>
 
                     <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav-drawer" aria-label="Otvori meni">
@@ -80,16 +154,31 @@
         <div class="site-nav-drawer__header">
             <div>
                 <p class="site-nav-drawer__eyebrow">Navigacija</p>
-                <strong class="site-nav-drawer__title">Ka&scaron;mir Home</strong>
+                <strong class="site-nav-drawer__title">Kašmir Home</strong>
             </div>
             <button class="site-nav-drawer__close" type="button" data-nav-close aria-label="Zatvori meni">x</button>
         </div>
 
         <nav class="site-nav-drawer__links" aria-label="Mobilna navigacija">
-            <a asp-controller="Home" asp-action="Index">Po&#269;etna</a>
+            <a asp-controller="Home" asp-action="Index">Početna</a>
             <a asp-controller="Catalog" asp-action="Index">Proizvodi</a>
+            <a asp-controller="Home" asp-action="Promotions">Akcije</a>
+            @await Component.InvokeAsync("CategoryMenu", new { isMobile = true })
             <a asp-controller="Info" asp-action="Contact">Kontakt</a>
-            <a asp-controller="Cart" asp-action="Index">Korpa (@cartCount)</a>
+            <a class="site-nav-drawer__link--account"
+               asp-controller="Account"
+               asp-action="@accountAction">
+                <span class="site-nav-drawer__link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5Zm0 2c-4.42 0-8 2.58-8 5.75 0 .69.56 1.25 1.25 1.25h13.5c.69 0 1.25-.56 1.25-1.25C20 16.58 16.42 14 12 14Z" />
+                    </svg>
+                </span>
+                <span>@accountLabel</span>
+            </a>
+            <a class="site-nav-drawer__link--cart" asp-controller="Cart" asp-action="Index">
+                <span>Korpa</span>
+                <span class="site-nav-drawer__cart-count">@cartCount</span>
+            </a>
         </nav>
     </aside>
 
@@ -117,15 +206,12 @@
                         <p class="cart-notification__collection">@cartAddedNotification.CollectionName</p>
                     }
 
-                    <h3>@cartAddedNotification.Name</h3>
+                    <p class="cart-notification__description">
+                        @(string.IsNullOrWhiteSpace(cartAddedNotification.ShortDescription)
+                            ? cartAddedNotification.Name
+                            : cartAddedNotification.ShortDescription)
+                    </p>
 
-@*                     @if (!string.IsNullOrWhiteSpace(cartAddedNotification.CollectionName))
-                    {
-                        <p class="cart-notification__collection">@cartAddedNotification.CollectionName</p>
-                    }
-
-                    <h3>@cartAddedNotification.Name</h3>
- *@
                     <p class="cart-notification__meta">
                         @if (!string.IsNullOrWhiteSpace(cartAddedNotification.SizeLabel))
                         {
@@ -138,7 +224,13 @@
                         <span>@cartAddedNotification.QuantityAdded kom.</span>
                     </p>
 
-                    <strong class="cart-notification__price">@cartAddedNotification.UnitPrice.ToString("0.00") EUR</strong>
+                    <strong class="cart-notification__price">@cartAddedNotification.UnitPrice.ToString("0.00") €</strong>
+                    @if (cartAddedNotification.PricePerSquareMeter.HasValue)
+                    {
+                        <span class="cart-notification__price-note">
+                            @cartAddedNotification.PricePerSquareMeter.Value.ToString("0.00") € (cijena po kvadratnom metru)
+                        </span>
+                    }
                 </div>
             </div>
 
@@ -169,7 +261,7 @@
         <div class="shell site-footer__grid">
             <div>
                 <p class="eyebrow">Online prodavnica</p>
-                <p class="site-footer__title">Ka&scaron;mir Home</p>
+                <p class="site-footer__title">Kašmir Home</p>
                 <p class="site-footer__copy">Jednostavna kupovina, plaćanje pouzećem i dostava na adresu širom zemlje.</p>
             </div>
             <div>
@@ -180,12 +272,67 @@
             </div>
             <div>
                 <p class="site-footer__title">Podrška kupcima</p>
-                <p class="site-footer__copy">Za pitanja o proizvodima, narudžbama, dostavi, kao i bilo koja druga pitanja o našem poslovanju, stojimo na raspolaganju 24-7.</p>
+                <p class="site-footer__copy">Za pitanja o proizvodima, narudžbinama, dostavi, kao i bilo koja druga pitanja o našem poslovanju, stojimo na raspolaganju 24-7.</p>
             </div>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        (function () {
+            const token = document.querySelector('meta[name="request-verification-token"]')?.getAttribute('content');
+            if (!token) {
+                return;
+            }
+
+            const safeMethods = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
+            const isSameOrigin = (urlValue) => {
+                try {
+                    const url = new URL(urlValue || window.location.href, window.location.origin);
+                    return url.origin === window.location.origin;
+                } catch {
+                    return true;
+                }
+            };
+
+            if (window.fetch) {
+                const originalFetch = window.fetch.bind(window);
+                window.fetch = function (input, init) {
+                    const method = (init?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
+                    const urlValue = typeof input === "string" || input instanceof URL
+                        ? input.toString()
+                        : input instanceof Request
+                            ? input.url
+                            : window.location.href;
+
+                    if (!safeMethods.has(method) && isSameOrigin(urlValue)) {
+                        const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined));
+                        if (!headers.has("RequestVerificationToken")) {
+                            headers.set("RequestVerificationToken", token);
+                        }
+
+                        return originalFetch(input, { ...init, headers });
+                    }
+
+                    return originalFetch(input, init);
+                };
+            }
+
+            if (window.jQuery) {
+                $.ajaxPrefilter(function (options) {
+                    const method = (options.type || options.method || "GET").toUpperCase();
+                    if (safeMethods.has(method) || !isSameOrigin(options.url || window.location.href)) {
+                        return;
+                    }
+
+                    options.headers = options.headers || {};
+                    if (!options.headers["RequestVerificationToken"]) {
+                        options.headers["RequestVerificationToken"] = token;
+                    }
+                });
+            }
+        })();
+    </script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -1,22 +1,166 @@
+﻿@using System.Text.Json
 @model Inventar.Storefront.ViewModels.Catalog.ProductDetailsViewModel
 @{
     ViewData["Title"] = Model.SeoTitle;
+
+    var galleryImagesJson = JsonSerializer.Serialize(Model.Variants, new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    });
+
+    var initialGalleryImage = Model.GalleryImages.FirstOrDefault();
+    var hasInitialGalleryImage = initialGalleryImage != null;
+    var showGalleryThumbs = Model.GalleryImages.Count > 1;
 }
 
 <section class="product-details">
     <div class="product-details__gallery">
-        @if (Model.GalleryUrls.Count > 0)
+        @if (Model.GalleryImages.Count > 0 && hasInitialGalleryImage)
         {
-            <img class="product-details__main-image" src="@Model.GalleryUrls[0]" alt="@Model.Name" />
-            @if (Model.GalleryUrls.Count > 1)
-            {
-                <div class="product-details__thumbs">
-                    @foreach (var imageUrl in Model.GalleryUrls.Skip(1))
-                    {
-                        <img src="@imageUrl" alt="@Model.Name" />
-                    }
+            var primaryGalleryImage = initialGalleryImage!;
+
+            <div class="product-gallery" data-product-gallery>
+                <div class="product-gallery__media">
+                    <div class="product-gallery__thumbs"
+                         role="tablist"
+                         aria-label="Galerija proizvoda"
+                         hidden="@(!showGalleryThumbs)">
+                        @for (var index = 0; index < Model.GalleryImages.Count; index++)
+                        {
+                            var image = Model.GalleryImages[index];
+
+                            <button class="product-gallery__thumb @(index == 0 ? "is-active" : null)"
+                                    type="button"
+                                    data-gallery-thumb
+                                    data-media-url="@image.Url"
+                                    data-media-type="@image.MediaType"
+                                    data-media-alt="@image.AltText"
+                                    aria-label="Prikaži medij @(index + 1)"
+                                    aria-current="@(index == 0 ? "true" : "false")">
+                                @if (image.IsVideo)
+                                {
+                                    <span class="product-gallery__thumb-video">
+                                        <span class="product-gallery__thumb-video-icon">▶</span>
+                                        <span>Video</span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <img src="@(image.ThumbnailUrl ?? image.Url)" alt="@image.AltText" loading="lazy" />
+                                }
+                            </button>
+                        }
+                    </div>
+
+                    <div class="product-gallery__stage"
+                         data-gallery-open
+                         tabindex="0"
+                         role="button"
+                         aria-label="Prikaži medij proizvoda">
+                        <span class="product-image-overlay" data-product-sold-out-overlay @(Model.IsSoldOut ? null : "hidden")>
+                            @Inventar.Storefront.Services.StorefrontStockRules.SoldOutOverlayText
+                        </span>
+                        <div class="product-gallery__stage-media" data-gallery-main-media>
+                            @if (primaryGalleryImage.IsVideo)
+                            {
+                                <video class="product-details__main-video"
+                                       controls
+                                       playsinline
+                                       preload="metadata">
+                                    <source src="@primaryGalleryImage.Url" />
+                                </video>
+                            }
+                            else
+                            {
+                                <img class="product-details__main-image"
+                                     src="@primaryGalleryImage.Url"
+                                     alt="@primaryGalleryImage.AltText"
+                                     data-gallery-main />
+                            }
+                        </div>
+                    </div>
                 </div>
-            }
+
+                <div class="product-gallery__footer">
+                        @if (Model.GalleryImages.Count > 1)
+                        {
+                            <button class="product-gallery__inline-nav product-gallery__inline-nav--prev"
+                                    type="button"
+                                    data-gallery-prev
+                                    aria-label="Prethodni medij">
+                                &lt;
+                            </button>
+                        }
+
+                    <span class="product-gallery__count" data-gallery-count>1 / @Model.GalleryImages.Count</span>
+
+                        @if (Model.GalleryImages.Count > 1)
+                        {
+                            <button class="product-gallery__inline-nav product-gallery__inline-nav--next"
+                                    type="button"
+                                    data-gallery-next
+                                    aria-label="Sljedeći medij">
+                                &gt;
+                            </button>
+                        }
+                </div>
+
+                <div class="product-gallery-modal" data-gallery-modal hidden>
+                    <div class="product-gallery-modal__backdrop" data-gallery-close></div>
+
+                    <div class="product-gallery-modal__dialog" role="dialog" aria-modal="true" aria-label="Galerija proizvoda">
+                        <button class="product-gallery-modal__close"
+                                type="button"
+                                data-gallery-close
+                                aria-label="Zatvori galeriju">
+                            x
+                        </button>
+
+                        @if (Model.GalleryImages.Count > 1)
+                        {
+                            <button class="product-gallery-modal__nav product-gallery-modal__nav--prev"
+                                    type="button"
+                                    data-gallery-prev
+                                    aria-label="Prethodni medij">
+                                &#8249;
+                            </button>
+                        }
+
+                        <div class="product-gallery-modal__image-wrap" data-gallery-modal-media>
+                            @if (primaryGalleryImage.IsVideo)
+                            {
+                                <video class="product-gallery-modal__video"
+                                       controls
+                                       playsinline
+                                       preload="metadata">
+                                    <source src="@primaryGalleryImage.Url" />
+                                </video>
+                            }
+                            else
+                            {
+                                <img class="product-gallery-modal__image"
+                                     src="@primaryGalleryImage.Url"
+                                     alt="@primaryGalleryImage.AltText"
+                                     data-gallery-modal-image />
+                            }
+                        </div>
+
+                        @if (Model.GalleryImages.Count > 1)
+                        {
+                            <button class="product-gallery-modal__nav product-gallery-modal__nav--next"
+                                    type="button"
+                                    data-gallery-next
+                                    aria-label="Sljedeći medij">
+                                &#8250;
+                            </button>
+                        }
+
+                        <div class="product-gallery-modal__meta">
+                            <span data-gallery-modal-count>1 / @Model.GalleryImages.Count</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
         else
         {
@@ -24,42 +168,137 @@
         }
     </div>
 
-    <div class="product-details__content">
-        <span class="eyebrow">@Model.Name</span>
-        <h1>@Model.CollectionName</h1>
-@*         <span class="eyebrow">@Model.CollectionName</span>
-        <h1>@Model.Name</h1> *@
+    <div class="product-details__content"
+         data-variant-picker
+         data-preview-url="@Url.Action("PreviewPoMjeriSelection", "Catalog")"
+         data-is-po-mjeri="@Model.PoMjeri.ToString().ToLowerInvariant()">
+        <script type="application/json" data-variant-data>@Html.Raw(galleryImagesJson)</script>
+
+        <h1>@Model.ShortDescription</h1>
 
         <div class="product-details__meta">
-            @if (!string.IsNullOrWhiteSpace(Model.SizeLabel))
-            {
-                <span>@Model.SizeLabel</span>
-            }
-            <span>@Model.Color</span>
+            <span data-selected-size @(string.IsNullOrWhiteSpace(Model.SelectedSizeLabel) ? "hidden" : null)>@Model.SelectedSizeLabel</span>
+            <span data-selected-color @(string.IsNullOrWhiteSpace(Model.SelectedColor) ? "hidden" : null)>@Model.SelectedColor</span>
+        </div>
+
+        @if (Model.HasColorOptions || Model.HasSizeOptions)
+        {
+            <div class="product-details__selectors">
+                @if (Model.HasColorOptions)
+                {
+                    <div class="field">
+                        <label for="variant-color">Boja</label>
+                        <select id="variant-color" data-variant-select="color">
+                            @foreach (var colorOption in Model.AvailableColors)
+                            {
+                                <option value="@colorOption" selected="@(string.Equals(Model.SelectedColor, colorOption, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                                    @colorOption
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                @if (Model.HasSizeOptions)
+                {
+                    <div class="field">
+                        <label for="variant-size">@(Model.PoMjeri ? "Širina (cm)" : "Dimenzija")</label>
+                        <select id="variant-size" data-variant-select="size">
+                            @foreach (var sizeOption in Model.AvailableSizes)
+                            {
+                                <option value="@sizeOption" selected="@(string.Equals(Model.SelectedSizeLabel, sizeOption, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                                    @sizeOption
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Model.PoMjeri)
+        {
+            <div class="product-details__custom-size">
+                <div class="field">
+                    <label for="custom-length">Dužina (cm)</label>
+                    <input id="custom-length"
+                           type="number"
+                           min="1"
+                           value="@(Model.CustomLength?.ToString() ?? string.Empty)"
+                           data-po-mjeri-length />
+                </div>
+            </div>
+        }
+
+        <div class="field product-details__quantity-field">
+            <label for="product-quantity">Količina</label>
+            <div class="cart-line__quantity-stepper cart-line__quantity-stepper--details">
+                <button type="button"
+                        class="cart-line__quantity-button"
+                        data-details-decrement
+                        aria-label="Smanji količinu">
+                    -
+                </button>
+
+                <input id="product-quantity"
+                       type="number"
+                       min="1"
+                       max="@Math.Max(Model.MaxOrderQuantity, 1)"
+                       value="@Model.Quantity"
+                       inputmode="numeric"
+                       name="quantity"
+                       data-variant-quantity />
+
+                <button type="button"
+                        class="cart-line__quantity-button"
+                        data-details-increment
+                        aria-label="Povećaj količinu">
+                    +
+                </button>
+            </div>
+            <p class="field__error product-details__quantity-feedback" data-quantity-feedback hidden></p>
         </div>
 
         <div class="price-block price-block--large">
-            <span class="price-block__current">@Model.CurrentPrice.ToString("0.00") €</span>
-            @if (Model.CompareAtPrice.HasValue)
-            {
-                <span class="price-block__old">@Model.CompareAtPrice.Value.ToString("0.00") €</span>
-            }
+            <span class="price-block__current" data-variant-price>@Model.CurrentPrice.ToString("0.00") €</span>
+            <span class="price-block__old" data-variant-compare-price @(!Model.CompareAtPrice.HasValue ? "hidden" : null)>
+                @(Model.CompareAtPrice.HasValue ? Model.CompareAtPrice.Value.ToString("0.00") + " €" : string.Empty)
+            </span>
+            <span class="price-block__note"
+                  data-variant-price-note
+                  @(!(Model.PerM2 || Model.PoMjeri) || !Model.PricePerSquareMeter.HasValue ? "hidden" : null)>
+                @(Model.PricePerSquareMeter.HasValue
+                    ? Model.PoMjeri
+                        ? $"{Model.PricePerSquareMeter.Value:0.00} € (cijena po metru dužine)"
+                        : $"{Model.PricePerSquareMeter.Value:0.00} € (cijena po kvadratnom metru)"
+                    : string.Empty)
+            </span>
         </div>
 
-        <p class="product-details__status">
-            @(Model.AvailableQuantity > 0 ? $"Dostupno odmah: {Model.AvailableQuantity} kom." : "Trenutno nije dostupno")
+        <p class="product-details__status @(Model.IsSoldOut ? "is-unavailable" : null)"
+           data-variant-availability
+           @(string.IsNullOrWhiteSpace(Model.AvailabilityStatusMessage) ? "hidden" : null)>
+            @Model.AvailabilityStatusMessage
         </p>
-
-        <p class="product-details__description">@Model.Description</p>
 
         <form asp-controller="Cart" asp-action="Add" method="post" class="product-details__actions">
             @Html.AntiForgeryToken()
-            <input type="hidden" name="productId" value="@Model.Id" />
-            <input type="hidden" name="quantity" value="1" />
+            <input type="hidden" name="productId" value="@Model.Id" data-selected-product-id />
+            <input type="hidden" name="quantity" value="@Model.Quantity" data-selected-quantity />
+            <input type="hidden" name="color" value="@Model.SelectedColor" data-selected-color-input />
+            @if (Model.PoMjeri)
+            {
+                <input type="hidden" name="customWidth" value="@(Model.CustomWidth?.ToString() ?? string.Empty)" data-selected-custom-width />
+                <input type="hidden" name="customLength" value="@(Model.CustomLength?.ToString() ?? string.Empty)" data-selected-custom-length />
+            }
             <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
-            <button type="submit" class="button" @(Model.AvailableQuantity <= 0 ? "disabled" : null)>Dodaj u korpu</button>
+            <button type="submit" class="button" data-variant-submit @(Model.CanAddToCart ? null : "disabled")>
+                @(Model.CanAddToCart ? "Dodaj u korpu" : Inventar.Storefront.Services.StorefrontStockRules.SoldOutStatusText)
+            </button>
             <a class="button button--ghost" asp-controller="Catalog" asp-action="Index">Nazad na katalog</a>
         </form>
+
+        <p class="product-details__description">@Model.Description</p>
     </div>
 </section>
 
@@ -69,7 +308,7 @@
         <div class="section__header">
             <div>
                 <span class="eyebrow">Slično</span>
-                <h2>Još iz iste kolekcije</h2>
+                <h2>Preporučujemo i ove proizvode</h2>
             </div>
         </div>
 

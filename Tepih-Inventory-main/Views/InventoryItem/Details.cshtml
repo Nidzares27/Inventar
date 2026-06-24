@@ -28,6 +28,14 @@
         <td>@Html.DisplayFor(model => model.Model)</td>
     </tr>
     <tr>
+        <th>@Inventar.Resources.Resource.BroaderCategory</th>
+        <td>@Html.DisplayFor(model => model.BroaderCategory)</td>
+    </tr>
+    <tr>
+        <th>@Inventar.Resources.Resource.NarrowerCategory</th>
+        <td>@Html.DisplayFor(model => model.NarrowerCategory)</td>
+    </tr>
+    <tr>
         <th>@Inventar.Resources.Resource.DateTime</th>
         <td>@Html.DisplayFor(model => model.DateTime)</td>
     </tr>
@@ -74,6 +82,17 @@
         <th>@Inventar.Resources.Resource.PerM2</th>
         <td>@Html.DisplayFor(model => model.PerM2)</td>
     </tr>
+    <tr>
+        <th>@Inventar.Resources.Resource.PerMeasure</th>
+        <td>@Html.DisplayFor(model => model.PoMjeri)</td>
+    </tr>
+    @if (Model.PoMjeri)
+    {
+        <tr>
+            <th>UnID</th>
+            <td>@Html.DisplayFor(model => model.UnID)</td>
+        </tr>
+    }
     <tr>
         <th>@Inventar.Resources.Resource.Description</th>
         <td>@Html.DisplayFor(model => model.Description)</td>

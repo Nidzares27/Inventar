@@ -79,12 +79,20 @@
                         }
 
                         $(document).ready(function () {
+                            const columnCount = $('#PerProductsTable thead tr:first th').length;
+                            const columnDefs = [];
+
+                            if (columnCount === 11) {
+                                columnDefs.push({ targets: 1, visible: false });
+                            }
+
                             var table = $('#PerProductsTable').DataTable({
                                 "paging": true,
                                 "pageLength": 10,
                                 "order": [[1, "desc"]],
                                 "orderCellsTop": true,
-                                "fixedHeader": true
+                                "fixedHeader": true,
+                                "columnDefs": columnDefs
                             });
                             $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
                                 $('input', this).on('keyup change', function () {
@@ -98,9 +106,6 @@
                                 var totalQuantity = 0;
                                 var totalPrice = 0;
                                 var totalM2 = 0;
-
-                                // Determine table type by checking number of columns
-                                const columnCount = $('#PerProductsTable thead tr:first th').length;
 
                                 // Index mapping based on table mode
                                 let indexes = {
@@ -143,8 +148,18 @@
 
                                 let counter = 1;
                                 table.rows({ search: 'applied', order: 'applied' }).every(function () {
-                                    var node = this.node();
-                                    $('td:eq(0)', node).html(counter++);
+                                    var rowNumber = counter++;
+                                    var firstCell = $('td:eq(0)', this.node());
+                                    var link = firstCell.find('a');
+
+                                    if (link.length) {
+                                        var href = link.attr('href');
+                                        var target = link.attr('target');
+                                        var targetAttribute = target ? ' target="' + target + '"' : '';
+                                        table.cell(this.index(), 0).data('<a href="' + href + '"' + targetAttribute + '>' + rowNumber + '</a>');
+                                    } else {
+                                        table.cell(this.index(), 0).data(rowNumber);
+                                    }
                                 });
                             });
 
@@ -178,25 +193,31 @@
         $(document).ready(function () {
             $('#downloadSalesUngroupedPDF').on('click', function () {
                 var table = $('#PerProductsTable').DataTable();
+                var visibleColumnIndexes = table
+                    .columns()
+                    .indexes()
+                    .toArray()
+                    .filter(function (columnIndex) {
+                        return table.column(columnIndex).visible();
+                    });
 
                 var data = [];
 
-                table.rows({ search: 'applied' }).every(function () {
-                    var row = this.node();
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    var rowDataSource = this.data();
                     var rowData = [];
-                    $(row).find('td').each(function () {
-                        rowData.push($(this).text().trim());
+
+                    visibleColumnIndexes.forEach(function (columnIndex) {
+                        rowData.push($('<div>').html(rowDataSource[columnIndex] ?? '').text().trim());
                     });
+
                     data.push(rowData);
                 });
 
                 // Get filter values
                 var filters = {};
-                $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
-                    var input = $(this).find('input');
-                    if (input.length > 0) {
-                        filters[i] = input.val();
-                    }
+                visibleColumnIndexes.forEach(function (columnIndex, pdfIndex) {
+                    filters[pdfIndex] = table.column(columnIndex).search() || "";
                 });
 
                 // Get heading text
@@ -206,11 +227,8 @@
 
 
                 // Get column headers (excluding last one)
-                var columnHeaders = [];
-                $('#PerProductsTable thead tr:eq(0) th').each(function (i, th) {
-                    if (i < $(this).closest('tr').children().length/*  - 1 */) { // exclude last column
-                        columnHeaders.push($(th).text().trim());
-                    }
+                var columnHeaders = visibleColumnIndexes.map(function (columnIndex) {
+                    return $('<div>').html($(table.column(columnIndex).header()).text()).text().trim();
                 });
 
                 // Get totals from your DOM or compute here
@@ -255,25 +273,31 @@
         $(document).ready(function () {
             $('#downloadSalesGroupedPDF').on('click', function () {
                 var table = $('#PerProductsTable').DataTable();
+                var visibleColumnIndexes = table
+                    .columns()
+                    .indexes()
+                    .toArray()
+                    .filter(function (columnIndex) {
+                        return table.column(columnIndex).visible();
+                    });
 
                 var data = [];
 
-                table.rows({ search: 'applied' }).every(function () {
-                    var row = this.node();
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    var rowDataSource = this.data();
                     var rowData = [];
-                    $(row).find('td').each(function () {
-                        rowData.push($(this).text().trim());
+
+                    visibleColumnIndexes.forEach(function (columnIndex) {
+                        rowData.push($('<div>').html(rowDataSource[columnIndex] ?? '').text().trim());
                     });
+
                     data.push(rowData);
                 });
 
                 // Get filter values
                 var filters = {};
-                $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
-                    var input = $(this).find('input');
-                    if (input.length > 0) {
-                        filters[i] = input.val();
-                    }
+                visibleColumnIndexes.forEach(function (columnIndex, pdfIndex) {
+                    filters[pdfIndex] = table.column(columnIndex).search() || "";
                 });
 
                 // Get heading text
@@ -283,11 +307,8 @@
 
 
                 // Get column headers (excluding last one)
-                var columnHeaders = [];
-                $('#PerProductsTable thead tr:eq(0) th').each(function (i, th) {
-                    if (i < $(this).closest('tr').children().length/*  - 1 */) { // exclude last column
-                        columnHeaders.push($(th).text().trim());
-                    }
+                var columnHeaders = visibleColumnIndexes.map(function (columnIndex) {
+                    return $('<div>').html($(table.column(columnIndex).header()).text()).text().trim();
                 });
 
                 // Get totals from your DOM or compute here

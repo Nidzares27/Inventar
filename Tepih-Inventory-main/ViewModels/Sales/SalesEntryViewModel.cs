@@ -11,6 +11,7 @@ namespace Inventar.ViewModels.Sales
         public string Name { get; set; }
         public string Model { get; set; }
         public string Color { get; set; }
+        public bool PoMjeri { get; set; }
         public int? Length { get; set; }
         public int? Width { get; set; }
         public decimal Price { get; set; }

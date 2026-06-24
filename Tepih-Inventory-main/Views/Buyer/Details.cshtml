@@ -59,7 +59,7 @@
                 <td>@Math.Round((decimal)item.M2PerUnit, 2)</td>
                 <td>@Math.Round((decimal)item.M2Total, 2)</td>
                 <td>@item.Quantity</td>
-                <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price€</td>
+                <td style="color:@(item.PerM2 ? "green" : "black")">@item.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)€</td>
                 <td>@Math.Round((item.PerM2 ? item.Price * (decimal)item.M2Total : item.Price * item.Quantity), 2)€</td>
                 <td>
                     <a href="@Url.Action("Edit", "Sales", new {id=item.Id, returnUrl = Context.Request.Path })">@Inventar.Resources.Resource.Edit</a>

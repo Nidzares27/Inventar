@@ -3,6 +3,7 @@ namespace Inventar.Storefront.ViewModels.Catalog;
 public class ProductCardViewModel
 {
     public int Id { get; set; }
+    public int DirectAddProductId { get; set; }
     public string Slug { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Model { get; set; } = string.Empty;
@@ -15,4 +16,9 @@ public class ProductCardViewModel
     public decimal CurrentPrice { get; set; }
     public decimal? CompareAtPrice { get; set; }
     public int AvailableQuantity { get; set; }
+    public bool HasSelectableOptions { get; set; }
+    public bool PoMjeri { get; set; }
+    public bool IsSoldOut { get; set; }
+    public bool ShowSoldOutOverlay { get; set; }
+    public bool CanAddToCart { get; set; }
 }

@@ -1,6 +1,7 @@
 using Inventar.Data;
 using Inventar.Interfaces;
 using Inventar.Models;
+using Inventar.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inventar.Services
@@ -28,8 +29,6 @@ namespace Inventar.Services
             string changedBy,
             CancellationToken cancellationToken = default)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
             var order = await _context.WebOrders
                 .Include(webOrder => webOrder.Items)
                 .Include(webOrder => webOrder.Reservations)
@@ -61,11 +60,13 @@ namespace Inventar.Services
             }
 
             var utcNow = DateTime.UtcNow;
+            changedBy = TextEncodingHelper.NormalizeInput(changedBy) ?? "Admin";
+            note = TextEncodingHelper.NormalizeInput(note, trim: false);
 
             order.PaymentStatus = paymentStatus;
             order.InternalNote = string.IsNullOrWhiteSpace(internalNote)
                 ? null
-                : internalNote.Trim();
+                : TextEncodingHelper.NormalizeInput(internalNote);
 
             if (paymentStatus == WebPaymentStatuses.Paid && order.PaidUtc == null)
             {
@@ -78,7 +79,6 @@ namespace Inventar.Services
                 var completionResult = await CompleteOrderAsync(order, activeReservations, utcNow, cancellationToken);
                 if (!completionResult.Succeeded)
                 {
-                    await transaction.RollbackAsync(cancellationToken);
                     return completionResult;
                 }
 
@@ -91,7 +91,6 @@ namespace Inventar.Services
                 var cancellationResult = await CancelOrderAsync(order, activeReservations, utcNow, false, cancellationToken);
                 if (!cancellationResult.Succeeded)
                 {
-                    await transaction.RollbackAsync(cancellationToken);
                     return cancellationResult;
                 }
 
@@ -127,7 +126,6 @@ namespace Inventar.Services
                 CombineNotes(systemNote, note));
 
             await _context.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
 
             return status switch
             {
@@ -152,8 +150,6 @@ namespace Inventar.Services
             var expiredCount = 0;
             foreach (var orderId in expiredOrderIds)
             {
-                await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-
                 var order = await _context.WebOrders
                     .Include(webOrder => webOrder.Reservations)
                     .FirstOrDefaultAsync(webOrder => webOrder.Id == orderId, cancellationToken);
@@ -188,7 +184,6 @@ namespace Inventar.Services
 
                 if (!cancellationResult.Succeeded)
                 {
-                    await transaction.RollbackAsync(cancellationToken);
                     _logger.LogWarning("Failed to expire reservations for storefront order {OrderId}: {Reason}", orderId, cancellationResult.Message);
                     continue;
                 }
@@ -202,7 +197,6 @@ namespace Inventar.Services
                     cancellationResult.Message);
 
                 await _context.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
                 expiredCount += activeReservations.Count;
             }
 
@@ -227,11 +221,20 @@ namespace Inventar.Services
                 return Failure("Cannot complete an order without active reservations.");
             }
 
-            var reservedByProduct = activeReservations
+            var orderItemsById = order.Items.ToDictionary(item => item.Id);
+            var poMjeriReservations = activeReservations
+                .Where(reservation => IsPoMjeriReservation(reservation, orderItemsById))
+                .ToList();
+            var regularReservations = activeReservations
+                .Where(reservation => !IsPoMjeriReservation(reservation, orderItemsById))
+                .ToList();
+
+            var reservedByProduct = regularReservations
                 .GroupBy(reservation => reservation.TepihId)
                 .ToDictionary(group => group.Key, group => group.Sum(reservation => reservation.Quantity));
 
             var orderedByProduct = order.Items
+                .Where(item => !item.PoMjeri)
                 .GroupBy(item => item.TepihId)
                 .ToDictionary(group => group.Key, group => group.Sum(item => item.Quantity));
 
@@ -241,7 +244,9 @@ namespace Inventar.Services
                 return Failure("Active reservations no longer match the order items.");
             }
 
-            var products = await _context.Tepisi
+            var products = reservedByProduct.Count == 0
+                ? new Dictionary<int, Tepih>()
+                : await _context.Tepisi
                 .Where(product => reservedByProduct.Keys.Contains(product.Id))
                 .ToDictionaryAsync(product => product.Id, cancellationToken);
 
@@ -263,11 +268,17 @@ namespace Inventar.Services
                 }
             }
 
-            foreach (var reservation in activeReservations)
+            foreach (var reservation in regularReservations)
             {
                 var product = products[reservation.TepihId];
                 product.Quantity -= reservation.Quantity;
                 product.ReservedQuantity -= reservation.Quantity;
+                reservation.Status = InventoryReservationStatuses.Converted;
+                reservation.ReleasedUtc = utcNow;
+            }
+
+            foreach (var reservation in poMjeriReservations)
+            {
                 reservation.Status = InventoryReservationStatuses.Converted;
                 reservation.ReleasedUtc = utcNow;
             }
@@ -278,7 +289,7 @@ namespace Inventar.Services
                 string.IsNullOrWhiteSpace(order.PaymentProvider) ? order.PaymentStatus : order.PaymentProvider!,
                 20);
 
-            foreach (var item in order.Items)
+            foreach (var item in order.Items.Where(orderItem => !orderItem.PoMjeri))
             {
                 _context.Prodaje.Add(new Prodaja
                 {
@@ -287,6 +298,30 @@ namespace Inventar.Services
                     CustomerFullName = customerName,
                     VrijemeProdaje = saleTime,
                     Price = item.UnitPrice,
+                    PlannedPaymentType = plannedPaymentType,
+                    Prodavac = WebStoreSellerName,
+                    Disabled = false
+                });
+            }
+
+            foreach (var reservation in poMjeriReservations)
+            {
+                if (!reservation.WebOrderItemId.HasValue ||
+                    !orderItemsById.TryGetValue(reservation.WebOrderItemId.Value, out var poMjeriItem))
+                {
+                    return Failure("Po mjeri rezervacija više nije povezana sa stavkom narudžbine.");
+                }
+
+                _context.Prodaje.Add(new Prodaja
+                {
+                    TepihId = reservation.TepihId,
+                    Quantity = reservation.Quantity,
+                    CustomerFullName = customerName,
+                    VrijemeProdaje = saleTime,
+                    Price = poMjeriItem.UnitPrice,
+                    CustomWidth = reservation.CutWidth,
+                    CustomLength = reservation.CutLength,
+                    ConsumedLength = reservation.ConsumedLengthPerUnit,
                     PlannedPaymentType = plannedPaymentType,
                     Prodavac = WebStoreSellerName,
                     Disabled = false
@@ -319,7 +354,13 @@ namespace Inventar.Services
                 return Success("Order already cancelled.");
             }
 
+            var poMjeriReservationItemIds = order.Items
+                .Where(item => item.PoMjeri)
+                .Select(item => item.Id)
+                .ToHashSet();
+
             var reservedByProduct = activeReservations
+                .Where(reservation => !(reservation.WebOrderItemId.HasValue && poMjeriReservationItemIds.Contains(reservation.WebOrderItemId.Value)))
                 .GroupBy(reservation => reservation.TepihId)
                 .ToDictionary(group => group.Key, group => group.Sum(reservation => reservation.Quantity));
 
@@ -331,7 +372,8 @@ namespace Inventar.Services
 
             foreach (var reservation in activeReservations)
             {
-                if (products.TryGetValue(reservation.TepihId, out var product))
+                if (!(reservation.WebOrderItemId.HasValue && poMjeriReservationItemIds.Contains(reservation.WebOrderItemId.Value))
+                    && products.TryGetValue(reservation.TepihId, out var product))
                 {
                     product.ReservedQuantity = Math.Max(product.ReservedQuantity - reservation.Quantity, 0);
                 }
@@ -377,7 +419,7 @@ namespace Inventar.Services
 
             if (!string.IsNullOrWhiteSpace(note))
             {
-                noteParts.Add(note.Trim());
+                noteParts.Add(TextEncodingHelper.NormalizeInput(note) ?? note.Trim());
             }
 
             AddStatusHistory(order, changedBy, order.Status, noteParts.Count == 0 ? null : string.Join(" | ", noteParts));
@@ -389,14 +431,16 @@ namespace Inventar.Services
             {
                 WebOrderId = order.Id,
                 Status = status,
-                ChangedBy = changedBy,
-                Note = note,
+                ChangedBy = TextEncodingHelper.NormalizeInput(changedBy) ?? changedBy,
+                Note = TextEncodingHelper.NormalizeInput(note, trim: false),
                 ChangedUtc = DateTime.UtcNow
             });
         }
 
         private static string? CombineNotes(string? first, string? second)
         {
+            first = TextEncodingHelper.NormalizeInput(first, trim: false);
+            second = TextEncodingHelper.NormalizeInput(second, trim: false);
             return (string.IsNullOrWhiteSpace(first), string.IsNullOrWhiteSpace(second)) switch
             {
                 (true, true) => null,
@@ -409,6 +453,15 @@ namespace Inventar.Services
         private static string Truncate(string value, int maxLength)
         {
             return value.Length <= maxLength ? value : value[..maxLength];
+        }
+
+        private static bool IsPoMjeriReservation(
+            InventoryReservation reservation,
+            IReadOnlyDictionary<int, WebOrderItem> orderItemsById)
+        {
+            return reservation.WebOrderItemId.HasValue
+                && orderItemsById.TryGetValue(reservation.WebOrderItemId.Value, out var orderItem)
+                && orderItem.PoMjeri;
         }
 
         private static WebOrderProcessingResult Success(string message)

@@ -1,6 +1,6 @@
 @model Inventar.Storefront.ViewModels.Checkout.CheckoutPageViewModel
 @{
-    ViewData["Title"] = "Narudžba";
+    ViewData["Title"] = "Narudzbina";
 }
 
 <section class="page-head">
@@ -10,6 +10,13 @@
 <section class="checkout-layout">
     <form asp-controller="Checkout" asp-action="Index" method="post" class="checkout-form">
         <div asp-validation-summary="ModelOnly" class="flash flash--error"></div>
+
+@*         @if (Model.IsAuthenticatedCustomer && !string.IsNullOrWhiteSpace(Model.AuthenticatedCustomerEmail))
+        {
+            <div class="flash flash--success">
+                Prijavljeni ste kao <strong>@Model.AuthenticatedCustomerEmail</strong>. Podaci iz profila su unaprijed popunjeni, a ovu narudzbu cemo odmah vezati za vas nalog.
+            </div>
+        } *@
 
         <div class="checkout-form__grid">
             <div class="field">
@@ -26,7 +33,14 @@
 
             <div class="field">
                 <label asp-for="Form.Email"></label>
-                <input asp-for="Form.Email" />
+                @if (Model.IsAuthenticatedCustomer)
+                {
+                    <input asp-for="Form.Email" readonly />
+                }
+                else
+                {
+                    <input asp-for="Form.Email" />
+                }
                 <span asp-validation-for="Form.Email" class="field__error"></span>
             </div>
 
@@ -55,7 +69,7 @@
             </div>
         </div>
 
-        <button type="submit" class="button button--full">Pošalji narudžbu</button>
+        <button type="submit" class="button button--full">@(Model.IsAuthenticatedCustomer ? "Potvrdi narudžbinu" : "Nastavi na potvrdu emaila")</button>
     </form>
 
     <aside class="summary-card">
@@ -65,26 +79,48 @@
         <div class="summary-list">
             @foreach (var line in Model.Lines)
             {
-                <div class="summary-list__row">
-                    <span>@line.Name x @line.Quantity</span>
-                    <strong>@line.LineTotal.ToString("0.00") €</strong>
+                <div class="summary-list__row summary-list__row--product">
+                    <div class="summary-line">
+                        <div class="summary-line__media">
+                            <div class="summary-line__image-wrap">
+                                @if (!string.IsNullOrWhiteSpace(line.ImageUrl))
+                                {
+                                    <img class="summary-line__image" src="@line.ImageUrl" alt="@line.Name" />
+                                }
+                                else
+                                {
+                                    <div class="product-card__placeholder summary-line__image">Bez fotografije</div>
+                                }
+
+                                <span class="summary-line__quantity">@line.Quantity</span>
+                            </div>
+                        </div>
+
+                        <div class="summary-line__content">
+                            <span class="summary-line__description">@line.ShortDescription</span>
+                        </div>
+                    </div>
+
+                    <strong>@line.LineTotal.ToString("0.00") &#8364;</strong>
                 </div>
             }
         </div>
 
         <div class="summary-card__row">
             <span>Artikli</span>
-            <strong>@Model.Subtotal.ToString("0.00") €</strong>
+            <strong>@Model.Subtotal.ToString("0.00") &#8364;</strong>
         </div>
         <div class="summary-card__row">
             <span>Dostava</span>
-            <strong>@Model.ShippingTotal.ToString("0.00") €</strong>
+            <strong>@Model.ShippingTotal.ToString("0.00") &#8364;</strong>
         </div>
         <div class="summary-card__row summary-card__row--total">
-            <span>Ukupno za placanje</span>
-            <strong>@Model.GrandTotal.ToString("0.00") €</strong>
+            <span>Ukupno za plaćanje</span>
+            <strong>@Model.GrandTotal.ToString("0.00") &#8364;</strong>
         </div>
-        <p class="summary-card__note">Plaćanje se vrši prilikom preuzimanja pošiljke.</p>
+        <p class="summary-card__note">
+            <text>Plaćanje se vrši prilikom preuzimanja pošiljke.</text>
+        </p>
     </aside>
 </section>
 

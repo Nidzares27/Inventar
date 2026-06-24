@@ -1,3 +1,0 @@
-2026-02-01 16:23:34.943 +01:00 [WRN] [NikolaPetricevic] ProcessQRCode: QR Code data doesn't follow required structure: http://en.m.wikipedia.org
-2026-02-01 16:23:58.837 +01:00 [WRN] [NikolaPetricevic] ProcessQRCode: QR Code data doesn't follow required structure: http://en.m.wikipedia.org
-2026-02-01 16:40:51.751 +01:00 [WRN] [NikolaPetricevic] ProcessQRCode: QR Code data doesn't follow required structure: http://en.m.wikipedia.org

@@ -1,5 +1,6 @@
 ﻿@using Inventar.ViewModels.Shared
 @model IEnumerable<SummaryViewModel>
+
 <div id="pdfContent">
     <h2>@Inventar.Resources.Resource.SalesGrouped</h2>
 
@@ -28,15 +29,20 @@
                 <th><input type="text" placeholder="" /></th>
                 <th><input type="text" placeholder="" /></th>
                 <th><input type="text" placeholder="" /></th>
-                <th></th>
+                <th>
+                    <label class="sales-colored-filter" for="showColoredGroupsOnly">
+                        <input id="showColoredGroupsOnly" type="checkbox">
+                        <span>samo obojane</span>
+                    </label>
+                </th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in Model)
             {
-                <tr>
+                <tr class="@(item.IsDirectSaleGroup ? "sale-row--direct" : string.Empty)">
                     <td></td>
-                    <td>@item.VrijemeProdaje.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                    <td data-order="@item.VrijemeProdaje.ToString("yyyy-MM-dd")">@item.VrijemeProdaje.ToString("dd-MM-yyyy")</td>
                     <td>@item.CustomerFullName</td>
                     <td>@(item.M2Total > 0 ? Math.Round((decimal)item.M2Total, 2) : "" )
                     <td>@Math.Round(item.TotalPrice, 2)€</td>
@@ -103,10 +109,19 @@
             }
 
             $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                if (settings.nTable.id !== 'SalesTable') {
+                    return true;
+                }
 
                 var minDate = $('#minDate').val();
                 var maxDate = $('#maxDate').val();
                 var purchaseTime = data[1];
+                var showColoredOnly = $('#showColoredGroupsOnly').is(':checked');
+                var rowNode = settings.aoData[dataIndex]?.nTr;
+
+                if (showColoredOnly && rowNode && !rowNode.classList.contains('sale-row--direct')) {
+                    return false;
+                }
 
                 var purchaseDate = parseCustomDate(purchaseTime);
                 if (!purchaseDate) return false;
@@ -125,11 +140,13 @@
                 updateTotals();
             });
 
+            $('#showColoredGroupsOnly').on('change', function () {
+                table.draw();
+                updateTotals();
+            });
+
             $('#SalesTable thead tr:eq(1) th').each(function (i) {
-                $('input', this).on('keyup change', function () {
-                    if (i === 1) {
-                        return;
-                    }
+                $('input[type="text"]', this).on('keyup change', function () {
                     table.column(i).search(this.value).draw();
                 });
             });
@@ -257,6 +274,24 @@
     <style>
         #SalesTable thead tr:first-child th {
             background-color: khaki;
+        }
+
+        .sale-row--direct td {
+            background-color: #fff4d6 !important;
+        }
+
+        .sales-colored-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.72rem;
+            font-weight: 500;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        .sales-colored-filter input {
+            margin: 0;
         }
     </style>
 }

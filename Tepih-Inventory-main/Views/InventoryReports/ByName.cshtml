@@ -1,0 +1,546 @@
+@using System.Globalization
+@using System.Text.Json
+@model Inventar.ViewModels.InventoryReports.InventoryNameReportPageViewModel
+@{
+    ViewData["Title"] = "Izvjestaj po imenu";
+    var initialGrandTotalM2 = Model.Groups.Sum(group => group.TotalM2);
+    var initialGrandTotalQuantity = Model.Groups.Sum(group => group.TotalQuantity);
+
+    var groupsJson = JsonSerializer.Serialize(
+        Model.Groups.Select(group => new
+        {
+            productName = group.ProductName,
+            totalM2 = group.TotalM2,
+            totalQuantity = group.TotalQuantity,
+            rowSpan = group.RowSpan,
+            sizeRows = group.SizeRows.Select(sizeRow => new
+            {
+                sizeLabel = sizeRow.SizeLabel,
+                totalM2 = sizeRow.TotalM2,
+                totalQuantity = sizeRow.TotalQuantity
+            })
+        }));
+}
+
+<div class="inventory-report-page">
+    <div class="inventory-report-toolbar">
+        <button type="button" id="toggleCustomTable" class="btn btn-primary">@Inventar.Resources.Resource.CreateNewTable</button>
+
+        <div class="inventory-report-toolbar__search">
+            <input type="text"
+                   id="customTableProductName"
+                   class="form-control"
+                   list="inventory-report-name-options"
+                   placeholder="@Inventar.Resources.Resource.AddProductNameToNewTable" />
+            <datalist id="inventory-report-name-options">
+                @foreach (var name in Model.ProductNameOptions)
+                {
+                    <option value="@name"></option>
+                }
+            </datalist>
+            <button type="button" id="addToCustomTable" class="btn btn-outline-primary" disabled>@Inventar.Resources.Resource.Add</button>
+        </div>
+    </div>
+
+    <section id="customTableSection" class="inventory-report-card" hidden>
+        <div class="inventory-report-card__header">
+            <h2 class="inventory-report-card__title">@Inventar.Resources.Resource.NewTable</h2>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered inventory-report-table" id="customNameReportTable">
+                <thead>
+                    <tr>
+                        <th>@Inventar.Resources.Resource.Name</th>
+                        <th>@Inventar.Resources.Resource.Size</th>
+                        <th>@Inventar.Resources.Resource.Quantity</th>
+                        <th>@Inventar.Resources.Resource.M2Total</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="inventory-report-actions">
+            <button type="button" id="printCustomPdf" class="btn btn-primary" disabled>@Inventar.Resources.Resource.PrintPDF</button>
+            <button type="button" id="createCustomExcel" class="btn btn-success" disabled>Excel</button>
+        </div>
+    </section>
+
+    <section class="inventory-report-card">
+        <div class="inventory-report-card__header">
+            <h2 class="inventory-report-card__title">@Inventar.Resources.Resource.ReportByName</h2>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered inventory-report-table" id="nameReportTable">
+                <thead>
+                    <tr>
+                        <th>@Inventar.Resources.Resource.Name</th>
+                        <th>@Inventar.Resources.Resource.Size</th>
+                        <th>@Inventar.Resources.Resource.Quantity</th>
+                        <th>@Inventar.Resources.Resource.M2Total</th>
+                    </tr>
+                    <tr class="inventory-report-table__filters">
+                        <th>
+                            <div class="inventory-report-filter-stack">
+                                <input type="text"
+                                       id="productNameFilter"
+                                       class="form-control"
+                                       placeholder="@Inventar.Resources.Resource.Filter" />
+                                <div class="inventory-report-filter-buttons">
+                                    <button type="button" id="checkAllNames" class="btn btn-sm btn-outline-success">@Inventar.Resources.Resource.CheckAll</button>
+                                    <button type="button" id="uncheckAllNames" class="btn btn-sm btn-outline-secondary">@Inventar.Resources.Resource.UncheckAll</button>
+                                </div>
+                            </div>
+                        </th>
+                        <th colspan="3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var group in Model.Groups)
+                    {
+                        var sizeRows = group.SizeRows.Count == 0
+                            ? new List<Inventar.ViewModels.InventoryReports.InventoryNameReportSizeSummaryViewModel>
+                            {
+                                new()
+                                {
+                                    SizeLabel = "-",
+                                    TotalM2 = group.TotalM2,
+                                    TotalQuantity = group.TotalQuantity
+                                }
+                            }
+                            : group.SizeRows;
+
+                        for (var index = 0; index < sizeRows.Count; index++)
+                        {
+                            var row = sizeRows[index];
+
+                            <tr class="inventory-report-row"
+                                data-group-name="@group.ProductName"
+                                data-group-name-normalized="@group.ProductName.ToLowerInvariant()">
+                                @if (index == 0)
+                                {
+                                    <td class="inventory-report-table__name-cell" rowspan="@group.RowSpan">
+                                        <label class="inventory-report-name-option">
+                                            <input type="checkbox"
+                                                   class="form-check-input inventory-report-main-check"
+                                                   data-product-name="@group.ProductName"
+                                                   checked />
+                                            <span>@group.ProductName</span>
+                                        </label>
+                                    </td>
+                                }
+
+                                <td>@row.SizeLabel</td>
+                                <td>@row.TotalQuantity</td>
+                                <td>@row.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</td>
+                            </tr>
+                        }
+
+                        <tr class="inventory-report-row inventory-report-row--total"
+                            data-group-name="@group.ProductName"
+                            data-group-name-normalized="@group.ProductName.ToLowerInvariant()">
+                            <td><strong>@Inventar.Resources.Resource.Total</strong></td>
+                            <td><strong>@group.TotalQuantity</strong></td>
+                            <td><strong>@group.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
+                        </tr>
+                    }
+
+                    <tr class="inventory-report-row inventory-report-row--grand-total" id="nameReportGrandTotalRow">
+                        <td colspan="2"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
+                        <td id="nameGrandTotalQuantity"><strong>@initialGrandTotalQuantity</strong></td>
+                        <td id="nameGrandTotalM2"><strong>@initialGrandTotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="inventory-report-load-more">
+            <button type="button" id="loadMoreMainRows" class="btn btn-outline-primary">@Inventar.Resources.Resource.LoadAnother300Rows</button>
+        </div>
+
+        <div class="inventory-report-actions">
+            <button type="button" id="printSelectedPdf" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+            <button type="button" id="createSelectedExcel" class="btn btn-success">Excel</button>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const reportGroups = @Html.Raw(groupsJson);
+            const groupsByName = Object.fromEntries(reportGroups.map(group => [group.productName.toLowerCase(), group]));
+
+            const toggleCustomTableButton = document.getElementById('toggleCustomTable');
+            const addToCustomTableButton = document.getElementById('addToCustomTable');
+            const customTableSection = document.getElementById('customTableSection');
+            const customTableBody = document.querySelector('#customNameReportTable tbody');
+            const customTableInput = document.getElementById('customTableProductName');
+            const productNameFilter = document.getElementById('productNameFilter');
+            const checkAllNamesButton = document.getElementById('checkAllNames');
+            const uncheckAllNamesButton = document.getElementById('uncheckAllNames');
+            const printSelectedPdfButton = document.getElementById('printSelectedPdf');
+            const createSelectedExcelButton = document.getElementById('createSelectedExcel');
+            const printCustomPdfButton = document.getElementById('printCustomPdf');
+            const createCustomExcelButton = document.getElementById('createCustomExcel');
+            const mainGrandTotalM2 = document.getElementById('nameGrandTotalM2');
+            const mainGrandTotalQuantity = document.getElementById('nameGrandTotalQuantity');
+            const mainRowLoader = window.InventarTableLoadMore.init({
+                rowSelector: '#nameReportTable tbody > tr.inventory-report-row:not(.inventory-report-row--grand-total)',
+                loadMoreButtonId: 'loadMoreMainRows',
+                pageSize: 300
+            });
+
+            let customTableActive = false;
+            let customProductNames = [];
+
+            function escapeHtml(value) {
+                return (value ?? '')
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#39;');
+            }
+
+            function formatNumber(value) {
+                return Number(value ?? 0).toFixed(2);
+            }
+
+            function getVisibleGroupRows(productName) {
+                return document.querySelectorAll(`[data-group-name="${CSS.escape(productName)}"]`);
+            }
+
+            function findGroupByInputValue(rawValue) {
+                return groupsByName[(rawValue || '').trim().toLowerCase()] ?? null;
+            }
+
+            function applyMainTableFilter() {
+                const filterValue = (productNameFilter.value || '').trim().toLowerCase();
+                reportGroups.forEach(group => {
+                    const isVisible = filterValue.length === 0 || group.productName.toLowerCase().includes(filterValue);
+                    getVisibleGroupRows(group.productName).forEach(row => {
+                        row.dataset.filterMatch = isVisible ? 'true' : 'false';
+                    });
+                });
+                mainRowLoader.refresh(true);
+            }
+
+            function getSelectedMainNames() {
+                return Array.from(document.querySelectorAll('.inventory-report-main-check:checked'))
+                    .map(input => input.getAttribute('data-product-name'))
+                    .filter(Boolean);
+            }
+
+            function calculateTotals(groupKeys) {
+                return groupKeys.reduce((totals, groupKey) => {
+                    const group = groupsByName[groupKey.toLowerCase()];
+                    if (!group) {
+                        return totals;
+                    }
+
+                    totals.totalM2 += Number(group.totalM2 ?? 0);
+                    totals.totalQuantity += Number(group.totalQuantity ?? 0);
+                    return totals;
+                }, { totalM2: 0, totalQuantity: 0 });
+            }
+
+            function updateMainGrandTotals() {
+                const totals = calculateTotals(getSelectedMainNames());
+                mainGrandTotalM2.innerHTML = `<strong>${formatNumber(totals.totalM2)}</strong>`;
+                mainGrandTotalQuantity.innerHTML = `<strong>${totals.totalQuantity}</strong>`;
+            }
+
+            function updateCustomTableButtons() {
+                const hasRows = customProductNames.length > 0;
+                printCustomPdfButton.disabled = !hasRows;
+                createCustomExcelButton.disabled = !hasRows;
+            }
+
+            function renderCustomTable() {
+                if (!customTableActive) {
+                    customTableBody.innerHTML = '';
+                    updateCustomTableButtons();
+                    return;
+                }
+
+                if (customProductNames.length === 0) {
+                    customTableBody.innerHTML = `
+                        <tr>
+                                    <td colspan="4" class="text-center text-muted">@Inventar.Resources.Resource.TheNewTableIsEmpty</td>
+                        </tr>`;
+                    updateCustomTableButtons();
+                    return;
+                }
+
+                let totalM2 = 0;
+                let totalQuantity = 0;
+
+                const html = customProductNames.map(name => {
+                    const group = groupsByName[name.toLowerCase()];
+                    if (!group) {
+                        return '';
+                    }
+
+                    totalM2 += Number(group.totalM2 ?? 0);
+                    totalQuantity += Number(group.totalQuantity ?? 0);
+
+                    const sizeRows = group.sizeRows && group.sizeRows.length > 0
+                        ? group.sizeRows
+                        : [{ sizeLabel: '-', totalM2: group.totalM2, totalQuantity: group.totalQuantity }];
+
+                    const sizeRowsHtml = sizeRows.map((row, index) => `
+                        <tr>
+                            ${index === 0 ? `
+                                <td class="inventory-report-table__name-cell" rowspan="${sizeRows.length + 1}">
+                                    <div class="inventory-report-name-delete">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger inventory-report-remove-name"
+                                                data-product-name="${escapeHtml(group.productName)}"
+                                                title="Ukloni iz nove tabele">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <span>${escapeHtml(group.productName)}</span>
+                                    </div>
+                                </td>` : ''}
+                            <td>${escapeHtml(row.sizeLabel)}</td>
+                            <td>${row.totalQuantity ?? 0}</td>
+                            <td>${formatNumber(row.totalM2)}</td>
+                        </tr>`).join('');
+
+                    const totalRowHtml = `
+                        <tr class="inventory-report-row--total">
+                            <td><strong>@Inventar.Resources.Resource.Total</strong></td>
+                            <td><strong>${group.totalQuantity ?? 0}</strong></td>
+                            <td><strong>${formatNumber(group.totalM2)}</strong></td>
+                        </tr>`;
+
+                    return sizeRowsHtml + totalRowHtml;
+                }).join('');
+
+                customTableBody.innerHTML = html + `
+                    <tr class="inventory-report-row--grand-total">
+                        <td colspan="2"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
+                        <td><strong>${totalQuantity}</strong></td>
+                        <td><strong>${formatNumber(totalM2)}</strong></td>
+                    </tr>`;
+
+                updateCustomTableButtons();
+            }
+
+            function ensureCustomTableActive() {
+                customTableActive = true;
+                customTableSection.hidden = false;
+                toggleCustomTableButton.textContent = '@Inventar.Resources.Resource.DeleteNewTable';
+                addToCustomTableButton.disabled = false;
+            }
+
+            function resetCustomTable() {
+                customTableActive = false;
+                customProductNames = [];
+                customTableSection.hidden = true;
+                toggleCustomTableButton.textContent = '@Inventar.Resources.Resource.CreateNewTable';
+                addToCustomTableButton.disabled = true;
+                customTableInput.value = '';
+                renderCustomTable();
+            }
+
+            function addCurrentInputToCustomTable(showAlertWhenMissing = true) {
+                const rawValue = (customTableInput.value || '').trim();
+                if (!rawValue) {
+                    return false;
+                }
+
+                const group = findGroupByInputValue(rawValue);
+                if (!group) {
+                    if (showAlertWhenMissing) {
+                        alert('Odabrani ProductName nije pronađen.');
+                    }
+                    return false;
+                }
+
+                ensureCustomTableActive();
+
+                if (!customProductNames.some(name => name.toLowerCase() === group.productName.toLowerCase())) {
+                    customProductNames.push(group.productName);
+                    customProductNames.sort((left, right) => left.localeCompare(right));
+                }
+
+                customTableInput.value = '';
+                renderCustomTable();
+                return true;
+            }
+
+            async function downloadReport(url, payload, fileName) {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || 'Export failed.');
+                }
+
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = fileName;
+                link.click();
+                window.URL.revokeObjectURL(blobUrl);
+            }
+
+            toggleCustomTableButton.addEventListener('click', function () {
+                if (customTableActive) {
+                    resetCustomTable();
+                    return;
+                }
+
+                ensureCustomTableActive();
+                renderCustomTable();
+            });
+
+            addToCustomTableButton.addEventListener('click', function () {
+                addCurrentInputToCustomTable(true);
+            });
+
+            customTableInput.addEventListener('input', function () {
+                if (findGroupByInputValue(customTableInput.value)) {
+                    addCurrentInputToCustomTable(false);
+                }
+            });
+
+            customTableInput.addEventListener('change', function () {
+                addCurrentInputToCustomTable(false);
+            });
+
+            customTableInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addCurrentInputToCustomTable(true);
+                }
+            });
+
+            customTableBody.addEventListener('click', function (event) {
+                const button = event.target.closest('.inventory-report-remove-name');
+                if (!button) {
+                    return;
+                }
+
+                const productName = button.getAttribute('data-product-name');
+                customProductNames = customProductNames.filter(name => name !== productName);
+                renderCustomTable();
+            });
+
+            productNameFilter.addEventListener('input', applyMainTableFilter);
+
+            document.querySelectorAll('.inventory-report-main-check').forEach(checkbox => {
+                checkbox.addEventListener('change', updateMainGrandTotals);
+            });
+
+            checkAllNamesButton.addEventListener('click', function () {
+                document.querySelectorAll('.inventory-report-main-check').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                updateMainGrandTotals();
+            });
+
+            uncheckAllNamesButton.addEventListener('click', function () {
+                document.querySelectorAll('.inventory-report-main-check').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                updateMainGrandTotals();
+            });
+
+            printSelectedPdfButton.addEventListener('click', async function () {
+                const selectedNames = getSelectedMainNames();
+                if (selectedNames.length === 0) {
+                    alert('Odaberite bar jedan ProductName za PDF.');
+                    return;
+                }
+
+                try {
+                    await downloadReport(
+                        '@Url.Action("ExportNameReportPdf", "InventoryReports")',
+                        {
+                            heading: 'Izvjestaj po Imenu',
+                            productNames: selectedNames,
+                            useCustomTable: false
+                        },
+                        'Izvjestaj_po_Imenu.pdf');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            createSelectedExcelButton.addEventListener('click', async function () {
+                const selectedNames = getSelectedMainNames();
+                if (selectedNames.length === 0) {
+                    alert('Odaberite bar jedan ProductName za Excel.');
+                    return;
+                }
+
+                try {
+                    await downloadReport(
+                        '@Url.Action("ExportNameReportExcel", "InventoryReports")',
+                        {
+                            heading: 'Izvjestaj po Imenu',
+                            productNames: selectedNames,
+                            useCustomTable: false
+                        },
+                        'Izvjestaj_po_Imenu.xlsx');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            printCustomPdfButton.addEventListener('click', async function () {
+                if (customProductNames.length === 0) {
+                    return;
+                }
+
+                try {
+                    await downloadReport(
+                        '@Url.Action("ExportNameReportPdf", "InventoryReports")',
+                        {
+                            heading: 'Nova tabela - Izvjestaj po Imenu',
+                            productNames: customProductNames,
+                            useCustomTable: true
+                        },
+                        'NovaTabela_Izvjestaj_po_Imenu.pdf');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            createCustomExcelButton.addEventListener('click', async function () {
+                if (customProductNames.length === 0) {
+                    return;
+                }
+
+                try {
+                    await downloadReport(
+                        '@Url.Action("ExportNameReportExcel", "InventoryReports")',
+                        {
+                            heading: 'Nova tabela - Izvjestaj po Imenu',
+                            productNames: customProductNames,
+                            useCustomTable: true
+                        },
+                        'NovaTabela_Izvjestaj_po_Imenu.xlsx');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            applyMainTableFilter();
+            updateMainGrandTotals();
+            renderCustomTable();
+        })();
+    </script>
+}

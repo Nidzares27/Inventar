@@ -666,18 +666,6 @@
   <data name="WebOrders" xml:space="preserve">
     <value>Web Narudžbine</value>
   </data>
-  <data name="Width" xml:space="preserve">
-    <value>Širina</value>
-  </data>
-  <data name="WithYourNewPassword" xml:space="preserve">
-    <value>sa tvojom novom lozinkom</value>
-  </data>
-  <data name="YouCanNow" xml:space="preserve">
-    <value>Sada se možeš</value>
-  </data>
-  <data name="YourPasswordHasBeenResetSuccessfully" xml:space="preserve">
-    <value>Vaša lozinka je uspješno promjenjena</value>
-  </data>
   <data name="WebOrderStatus_Pending" xml:space="preserve">
     <value>Na čekanju</value>
   </data>
@@ -743,5 +731,308 @@
   </data>
   <data name="InventoryReservationStatus_Expired" xml:space="preserve">
     <value>Istekla</value>
+  </data>
+  <data name="Width" xml:space="preserve">
+    <value>Širina</value>
+  </data>
+  <data name="WithYourNewPassword" xml:space="preserve">
+    <value>sa tvojom novom lozinkom</value>
+  </data>
+  <data name="YouCanNow" xml:space="preserve">
+    <value>Sada se možeš</value>
+  </data>
+  <data name="YourPasswordHasBeenResetSuccessfully" xml:space="preserve">
+    <value>Vaša lozinka je uspješno promjenjena</value>
+  </data>
+  <data name="BroaderCategory" xml:space="preserve">
+    <value>Šira kategorija</value>
+  </data>
+  <data name="NarrowerCategory" xml:space="preserve">
+    <value>Uža kategorija</value>
+  </data>
+  <data name="CopyDescAndShortDesc" xml:space="preserve">
+    <value>Kopirajte Opis i Kratak opis za proizvode sa istim Nazivom + Modelom</value>
+  </data>
+  <data name="ReuseCloudinaryImages" xml:space="preserve">
+    <value>Ponovo koristite ovu sliku za proizvode sa istim Nazivom i Modelom</value>
+  </data>
+  <data name="SyncImages" xml:space="preserve">
+    <value>Sinhronizujte nedostajuće slike sa novokreiranim grupnim proizvodima</value>
+  </data>
+  <data name="CreateNewTable" xml:space="preserve">
+    <value>Napravi novu tabelu</value>
+  </data>
+  <data name="AddColorToNewTable" xml:space="preserve">
+    <value>Dodajte boju u novu tabelu</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Dodaj</value>
+  </data>
+  <data name="ReportByName" xml:space="preserve">
+    <value>Izvještaj po Imenu</value>
+  </data>
+  <data name="CheckAll" xml:space="preserve">
+    <value>Označi sve</value>
+  </data>
+  <data name="UncheckAll" xml:space="preserve">
+    <value>Opozovi izbor svih</value>
+  </data>
+  <data name="OverallTotal" xml:space="preserve">
+    <value>Ukupan zbir</value>
+  </data>
+  <data name="AddProductNameToNewTable" xml:space="preserve">
+    <value>Dodajte naziv proizvoda u novu tabelu</value>
+  </data>
+  <data name="AddSizeToNewTable" xml:space="preserve">
+    <value>Dodajte veličinu novoj tabeli</value>
+  </data>
+  <data name="AddProductNumberToNewTable" xml:space="preserve">
+    <value>Dodaj šifru u novu tabelu</value>
+  </data>
+  <data name="ReportByM2" xml:space="preserve">
+    <value>Izveštaj po m2</value>
+  </data>
+  <data name="ReportPerUnit" xml:space="preserve">
+    <value>Izveštaj po jedinici</value>
+  </data>
+  <data name="ReportBySize" xml:space="preserve">
+    <value>Izvještaj po veličini</value>
+  </data>
+  <data name="ReportByColor" xml:space="preserve">
+    <value>Izveštaj po boji</value>
+  </data>
+  <data name="ReportByErrors" xml:space="preserve">
+    <value>Izveštaj po greškama</value>
+  </data>
+  <data name="ReportByProductNumber" xml:space="preserve">
+    <value>Izvještaj po šifri</value>
+  </data>
+  <data name="NewTable" xml:space="preserve">
+    <value>Nova tabela</value>
+  </data>
+  <data name="DeleteNewTable" xml:space="preserve">
+    <value>Obrisi novu tabelu</value>
+  </data>
+  <data name="PerMeasure" xml:space="preserve">
+    <value>po mjeri</value>
+  </data>
+  <data name="PerMeasureProduct" xml:space="preserve">
+    <value>proizvod po mjeri</value>
+  </data>
+  <data name="NoProductsWithQuantityLessThanZero." xml:space="preserve">
+    <value>Nema proizvoda sa količinom manjom od nule.</value>
+  </data>
+  <data name="DiscountedPrice" xml:space="preserve">
+    <value>Cijena sa Rabatom</value>
+  </data>
+  <data name="TheNewTableIsEmpty" xml:space="preserve">
+    <value>Nova tabela je prazna.</value>
+  </data>
+  <data name="LoadAnother300Rows" xml:space="preserve">
+    <value>Učitaj još 300 redova</value>
+  </data>
+  <data name="LoadAnother30Rows" xml:space="preserve">
+    <value>Učitaj još 30 redova</value>
+  </data>
+  <data name="NoImagesUploadedForThisProduct." xml:space="preserve">
+    <value>Nije otpremljena nijedna slika za ovaj proizvod.</value>
+  </data>
+  <data name="CopyDescriptionAndShortDescriptionToIdenticalPoMjeriProducts" xml:space="preserve">
+    <value>Kopirajte opis i kratak opis na identične proizvode (po mjeri)</value>
+  </data>
+  <data name="ClearFilters" xml:space="preserve">
+    <value>Obriši filtere</value>
+  </data>
+  <data name="CompletedOrdersOnly" xml:space="preserve">
+    <value>Samo završene narudžbine</value>
+  </data>
+  <data name="OriginalSize" xml:space="preserve">
+    <value>Originalna veličina</value>
+  </data>
+  <data name="RemainingSize" xml:space="preserve">
+    <value>Preostala veličina</value>
+  </data>
+  <data name="AddProduct" xml:space="preserve">
+    <value>Dodaj Proizvod</value>
+  </data>
+  <data name="MaxAvailableQuantity" xml:space="preserve">
+    <value>Maksimalna dostupna količina</value>
+  </data>
+  <data name="WebCustomer" xml:space="preserve">
+    <value>Veb korisnici</value>
+  </data>
+  <data name="Orders" xml:space="preserve">
+    <value>Narudžbine</value>
+  </data>
+  <data name="ItemsOrdered" xml:space="preserve">
+    <value>Naručene stavke</value>
+  </data>
+  <data name="TotalMoneySpent" xml:space="preserve">
+    <value>Ukupno potrošen novac</value>
+  </data>
+  <data name="ViewOrders" xml:space="preserve">
+    <value>Vidi narudžbine</value>
+  </data>
+  <data name="ThereAreNoCompletedWebOrdersToDisplay" xml:space="preserve">
+    <value>Nema završenih web narudžbina za prikaz</value>
+  </data>
+  <data name="TheEnteredWidthCannotBeGreaterThanTheRemainingWidth" xml:space="preserve">
+    <value>Unesena širina ne može biti veća od preostale širine</value>
+  </data>
+  <data name="TheEnteredLengthCannotBeGreaterThanTheRemainingLength" xml:space="preserve">
+    <value>Unesena dužina ne može biti veća od preostale dužine</value>
+  </data>
+  <data name="TheLengthCannotBeLessThanTheWidth" xml:space="preserve">
+    <value>Dužina ne može biti manja od širine</value>
+  </data>
+  <data name="ThereIsNoLengthAvailableForTheDimensionEntered" xml:space="preserve">
+    <value>Za unesenu dimenziju nema dostupne dužine</value>
+  </data>
+  <data name="FailedToAddProduct" xml:space="preserve">
+    <value>Dodavanje proizvoda nije uspjelo</value>
+  </data>
+  <data name="EditItems" xml:space="preserve">
+    <value>Uredi stavke</value>
+  </data>
+  <data name="ConfirmChanges" xml:space="preserve">
+    <value>Potvrdi izmjene</value>
+  </data>
+  <data name="ItemsRemainInDraftModeUntilYouClickConfirm" xml:space="preserve">
+    <value>Stavke ostaju u draft modu dok ne kliknete potvrdu</value>
+  </data>
+  <data name="QuantitiesAndCustomDimensionsAreRevalidatedBeforeSaving" xml:space="preserve">
+    <value>Količine i po mjeri dimenzije se ponovo validiraju prije čuvanja</value>
+  </data>
+  <data name="ItemsCanOnlyBeEditedForActiveOrders" xml:space="preserve">
+    <value>Stavke se mogu uredjivati samo za aktivne narudžbine</value>
+  </data>
+  <data name="PerMeasureAllocations" xml:space="preserve">
+    <value>Po mjeri alokacije</value>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>Izvor</value>
+  </data>
+  <data name="Cut" xml:space="preserve">
+    <value>Rez</value>
+  </data>
+  <data name="ThereAreNoActiveReservationsForThisItem" xml:space="preserve">
+    <value>Nema aktivnih rezervacija za ovu stavku</value>
+  </data>
+  <data name="CustomerGoal" xml:space="preserve">
+    <value>Cilj kupca</value>
+  </data>
+  <data name="ManuallyAllocateHowManyPiecesYouTakeFromEachAvailableInstance" xml:space="preserve">
+    <value>Ručno rasporedite koliko komada uzimate iz svake dostupne instance</value>
+  </data>
+  <data name="TheSumMustBeExact" xml:space="preserve">
+    <value>Zbir mora biti tačno</value>
+  </data>
+  <data name="ThereAreCurrentlyNoOtherValidInstancesForThisPerMeasureAllocation" xml:space="preserve">
+    <value>Trenutno nema drugih validnih instanci za ovu po mjeri alokaciju</value>
+  </data>
+  <data name="Instance" xml:space="preserve">
+    <value>Instanca</value>
+  </data>
+  <data name="MaxPieces" xml:space="preserve">
+    <value>Maks. komada</value>
+  </data>
+  <data name="Currently" xml:space="preserve">
+    <value>Trenutno</value>
+  </data>
+  <data name="NewQuantity" xml:space="preserve">
+    <value>Nova količina</value>
+  </data>
+  <data name="ApplyAllocation" xml:space="preserve">
+    <value>Primijeni alokaciju</value>
+  </data>
+  <data name="NoInventoryReservationsRecordedForThisOrderYet" xml:space="preserve">
+    <value>Još uvek nema zabeleženih rezervacija zaliha za ovu narudžbinu</value>
+  </data>
+  <data name="NoStatusHistoryEntriesYet" xml:space="preserve">
+    <value>Još nema unosa u istoriji statusa</value>
+  </data>
+  <data name="AddProductToOrder" xml:space="preserve">
+    <value>Dodaj proizvod u narudžbinu</value>
+  </data>
+  <data name="AddPerMeasureProduct" xml:space="preserve">
+    <value>Dodaj proizvod po meri</value>
+  </data>
+  <data name="TotalItems" xml:space="preserve">
+    <value>Ukupno stavke</value>
+  </data>
+  <data name="TotalOrderAmount" xml:space="preserve">
+    <value>Ukupan iznos narudzbine</value>
+  </data>
+  <data name="AnOrderMustHaveAtLeastOneItem" xml:space="preserve">
+    <value>Narudžbina mora imati barem jednu stavku</value>
+  </data>
+  <data name="AddNewProductOrCancelTheChanges" xml:space="preserve">
+    <value>Dodajte novi proizvod ili odustanite od izmjena</value>
+  </data>
+  <data name="DeleteItem" xml:space="preserve">
+    <value>Obriši stavku</value>
+  </data>
+  <data name="ItIsPossibleToOrderMaximumOf" xml:space="preserve">
+    <value>Moguće je naručiti najviše</value>
+  </data>
+  <data name="pieces" xml:space="preserve">
+    <value>komada</value>
+  </data>
+  <data name="PMquantityUpdateFailed" xml:space="preserve">
+    <value>Ažuriranje PM količine nije uspjelo </value>
+  </data>
+  <data name="PMamountCheckFailed" xml:space="preserve">
+    <value>Provjera PM količine nije uspjela</value>
+  </data>
+  <data name="TryAgain" xml:space="preserve">
+    <value>Pokušajte ponovo</value>
+  </data>
+  <data name="ProductSearchFailed" xml:space="preserve">
+    <value>Pretraga proizvoda nije uspjela</value>
+  </data>
+  <data name="PiecesForGivenProduct" xml:space="preserve">
+    <value>komada za dati proizvod</value>
+  </data>
+  <data name="TheProductHasBeenAddedToTheDraftChanges" xml:space="preserve">
+    <value>Proizvod je dodat u draft izmjene</value>
+  </data>
+  <data name="PMproductVerificationFailed" xml:space="preserve">
+    <value>Provjera PM proizvoda nije uspjela</value>
+  </data>
+  <data name="FirstEnterTheCorrectDimensions" xml:space="preserve">
+    <value>Prvo unesite ispravne dimenzije</value>
+  </data>
+  <data name="FailedToUpdateItems" xml:space="preserve">
+    <value>Ažuriranje stavki nije uspjelo</value>
+  </data>
+  <data name="TheAllocationIsReadyToSave" xml:space="preserve">
+    <value>Alokacija je spremna za čuvanje</value>
+  </data>
+  <data name="ItIsNecessaryToAdd" xml:space="preserve">
+    <value>Potrebno je dodati</value>
+  </data>
+  <data name="more" xml:space="preserve">
+    <value>još</value>
+  </data>
+  <data name="ItIsNecessaryToReduceBy" xml:space="preserve">
+    <value>Potrebno je smanjiti za</value>
+  </data>
+  <data name="QRCodesGrouped" xml:space="preserve">
+    <value>QR kodovi grupisano</value>
+  </data>
+  <data name="CreateProductForSelling" xml:space="preserve">
+    <value>Napravite proizvod za prodaju</value>
+  </data>
+  <data name="TemporaryProduct" xml:space="preserve">
+    <value>Privremeni proizvod</value>
+  </data>
+  <data name="FixedQuantity" xml:space="preserve">
+    <value>Fiksna količina</value>
+  </data>
+  <data name="ReplaceProduct" xml:space="preserve">
+    <value>Zamjeni proizvod</value>
+  </data>
+  <data name="PerUnit" xml:space="preserve">
+    <value>Po komadu</value>
   </data>
 </root>

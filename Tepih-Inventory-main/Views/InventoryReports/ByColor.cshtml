@@ -1,0 +1,559 @@
+@using System.Globalization
+@using System.Text.Json
+@model Inventar.ViewModels.InventoryReports.InventoryColorReportPageViewModel
+@{
+    ViewData["Title"] = "Izvjestaj po boji";
+    var initialGrandTotalM2 = Model.Groups.Sum(group => group.TotalM2);
+    var initialGrandTotalQuantity = Model.Groups.Sum(group => group.TotalQuantity);
+
+    var groupsJson = JsonSerializer.Serialize(
+        Model.Groups.Select(group => new
+        {
+            color = group.Color,
+            totalM2 = group.TotalM2,
+            totalQuantity = group.TotalQuantity,
+            rowSpan = group.RowSpan,
+            productGroups = group.ProductGroups.Select(productGroup => new
+            {
+                productName = productGroup.ProductName,
+                totalM2 = productGroup.TotalM2,
+                totalQuantity = productGroup.TotalQuantity,
+                rowSpan = productGroup.RowSpan,
+                sizeRows = productGroup.SizeRows.Select(sizeRow => new
+                {
+                    sizeLabel = sizeRow.SizeLabel,
+                    totalM2 = sizeRow.TotalM2,
+                    totalQuantity = sizeRow.TotalQuantity
+                })
+            })
+        }));
+}
+
+<div class="inventory-report-page">
+    <div class="inventory-report-toolbar">
+        <button type="button" id="toggleCustomTable" class="btn btn-primary">@Inventar.Resources.Resource.CreateNewTable</button>
+
+        <div class="inventory-report-toolbar__search">
+            <input type="text"
+                   id="customTableColor"
+                   class="form-control"
+                   list="inventory-report-color-options"
+                   placeholder="@Inventar.Resources.Resource.AddColorToNewTable" />
+            <datalist id="inventory-report-color-options">
+                @foreach (var color in Model.ColorOptions)
+                {
+                    <option value="@color"></option>
+                }
+            </datalist>
+            <button type="button" id="addToCustomTable" class="btn btn-outline-primary" disabled>@Inventar.Resources.Resource.Add</button>
+        </div>
+    </div>
+
+    <section id="customTableSection" class="inventory-report-card" hidden>
+        <div class="inventory-report-card__header">
+            <h2 class="inventory-report-card__title">@Inventar.Resources.Resource.NewTable</h2>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered inventory-report-table" id="customColorReportTable">
+                <thead>
+                    <tr>
+                        <th>@Inventar.Resources.Resource.Color</th>
+                        <th>@Inventar.Resources.Resource.Name</th>
+                        <th>@Inventar.Resources.Resource.Size</th>
+                        <th>@Inventar.Resources.Resource.Quantity</th>
+                        <th>@Inventar.Resources.Resource.M2Total</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="inventory-report-actions">
+            <button type="button" id="printCustomPdf" class="btn btn-primary" disabled>@Inventar.Resources.Resource.PrintPDF</button>
+            <button type="button" id="createCustomExcel" class="btn btn-success" disabled>Excel</button>
+        </div>
+    </section>
+
+    <section class="inventory-report-card">
+        <div class="inventory-report-card__header">
+            <h2 class="inventory-report-card__title">@Inventar.Resources.Resource.ReportByColor</h2>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered inventory-report-table" id="colorReportTable">
+                <thead>
+                    <tr>
+                        <th>@Inventar.Resources.Resource.Color</th>
+                        <th>@Inventar.Resources.Resource.Name</th>
+                        <th>@Inventar.Resources.Resource.Size</th>
+                        <th>@Inventar.Resources.Resource.Quantity</th>
+                        <th>@Inventar.Resources.Resource.M2Total</th>
+                    </tr>
+                    <tr class="inventory-report-table__filters">
+                        <th>
+                            <div class="inventory-report-filter-stack">
+                                <input type="text"
+                                       id="colorFilter"
+                                       class="form-control"
+                                       placeholder="@Inventar.Resources.Resource.Filter" />
+                                <div class="inventory-report-filter-buttons">
+                                    <button type="button" id="checkAllColors" class="btn btn-sm btn-outline-success">@Inventar.Resources.Resource.CheckAll</button>
+                                    <button type="button" id="uncheckAllColors" class="btn btn-sm btn-outline-secondary">@Inventar.Resources.Resource.UncheckAll</button>
+                                </div>
+                            </div>
+                        </th>
+                        <th colspan="4"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var colorGroup in Model.Groups)
+                    {
+                        for (var productIndex = 0; productIndex < colorGroup.ProductGroups.Count; productIndex++)
+                        {
+                            var productGroup = colorGroup.ProductGroups[productIndex];
+                            var sizeRows = productGroup.SizeRows.Count == 0
+                                ? new List<Inventar.ViewModels.InventoryReports.InventoryColorReportSizeSummaryViewModel>
+                                {
+                                    new()
+                                    {
+                                        SizeLabel = "-",
+                                        TotalM2 = productGroup.TotalM2,
+                                        TotalQuantity = productGroup.TotalQuantity
+                                    }
+                                }
+                                : productGroup.SizeRows;
+
+                            for (var sizeIndex = 0; sizeIndex < sizeRows.Count; sizeIndex++)
+                            {
+                                var sizeRow = sizeRows[sizeIndex];
+
+                                <tr class="inventory-report-row"
+                                    data-group-name="@colorGroup.Color"
+                                    data-group-name-normalized="@colorGroup.Color.ToLowerInvariant()">
+                                    @if (productIndex == 0 && sizeIndex == 0)
+                                    {
+                                        <td class="inventory-report-table__name-cell" rowspan="@colorGroup.RowSpan">
+                                            <label class="inventory-report-name-option">
+                                                <input type="checkbox"
+                                                       class="form-check-input inventory-report-main-check"
+                                                       data-color="@colorGroup.Color"
+                                                       checked />
+                                                <span>@colorGroup.Color</span>
+                                            </label>
+                                        </td>
+                                    }
+
+                                    @if (sizeIndex == 0)
+                                    {
+                                        <td rowspan="@productGroup.RowSpan">@productGroup.ProductName</td>
+                                    }
+
+                                    <td>@sizeRow.SizeLabel</td>
+                                    <td>@sizeRow.TotalQuantity</td>
+                                    <td>@sizeRow.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</td>
+                                </tr>
+                            }
+
+                            <tr class="inventory-report-row inventory-report-row--subtotal"
+                                data-group-name="@colorGroup.Color"
+                                data-group-name-normalized="@colorGroup.Color.ToLowerInvariant()">
+                                <td><strong>@Inventar.Resources.Resource.Total</strong></td>
+                                <td><strong>@productGroup.TotalQuantity</strong></td>
+                                <td><strong>@productGroup.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
+                            </tr>
+                        }
+
+                        <tr class="inventory-report-row inventory-report-row--total"
+                            data-group-name="@colorGroup.Color"
+                            data-group-name-normalized="@colorGroup.Color.ToLowerInvariant()">
+                            <td><strong>@Inventar.Resources.Resource.Total</strong></td>
+                            <td></td>
+                            <td><strong>@colorGroup.TotalQuantity</strong></td>
+                            <td><strong>@colorGroup.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
+                        </tr>
+                    }
+
+                    <tr class="inventory-report-row inventory-report-row--grand-total" id="colorReportGrandTotalRow">
+                        <td colspan="3"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
+                        <td id="colorGrandTotalQuantity"><strong>@initialGrandTotalQuantity</strong></td>
+                        <td id="colorGrandTotalM2"><strong>@initialGrandTotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="inventory-report-load-more">
+            <button type="button" id="loadMoreMainRows" class="btn btn-outline-primary">@Inventar.Resources.Resource.LoadAnother300Rows</button>
+        </div>
+
+        <div class="inventory-report-actions">
+            <button type="button" id="printSelectedPdf" class="btn btn-primary">PrintPDF</button>
+            <button type="button" id="createSelectedExcel" class="btn btn-success">Excel</button>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const reportGroups = @Html.Raw(groupsJson);
+            const groupsByKey = Object.fromEntries(reportGroups.map(group => [group.color.toLowerCase(), group]));
+
+            const toggleCustomTableButton = document.getElementById('toggleCustomTable');
+            const addToCustomTableButton = document.getElementById('addToCustomTable');
+            const customTableSection = document.getElementById('customTableSection');
+            const customTableBody = document.querySelector('#customColorReportTable tbody');
+            const customTableInput = document.getElementById('customTableColor');
+            const colorFilter = document.getElementById('colorFilter');
+            const checkAllColorsButton = document.getElementById('checkAllColors');
+            const uncheckAllColorsButton = document.getElementById('uncheckAllColors');
+            const printSelectedPdfButton = document.getElementById('printSelectedPdf');
+            const createSelectedExcelButton = document.getElementById('createSelectedExcel');
+            const printCustomPdfButton = document.getElementById('printCustomPdf');
+            const createCustomExcelButton = document.getElementById('createCustomExcel');
+            const mainGrandTotalM2 = document.getElementById('colorGrandTotalM2');
+            const mainGrandTotalQuantity = document.getElementById('colorGrandTotalQuantity');
+            const mainRowLoader = window.InventarTableLoadMore.init({
+                rowSelector: '#colorReportTable tbody > tr.inventory-report-row:not(.inventory-report-row--grand-total)',
+                loadMoreButtonId: 'loadMoreMainRows',
+                pageSize: 300
+            });
+
+            let customTableActive = false;
+            let customColors = [];
+
+            function escapeHtml(value) {
+                return (value ?? '')
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#39;');
+            }
+
+            function formatNumber(value) {
+                return Number(value ?? 0).toFixed(2);
+            }
+
+            function getVisibleGroupRows(groupKey) {
+                return document.querySelectorAll(`[data-group-name="${CSS.escape(groupKey)}"]`);
+            }
+
+            function findGroupByInputValue(rawValue) {
+                return groupsByKey[(rawValue || '').trim().toLowerCase()] ?? null;
+            }
+
+            function applyMainTableFilter() {
+                const filterValue = (colorFilter.value || '').trim().toLowerCase();
+                reportGroups.forEach(group => {
+                    const isVisible = filterValue.length === 0 || group.color.toLowerCase().includes(filterValue);
+                    getVisibleGroupRows(group.color).forEach(row => {
+                        row.dataset.filterMatch = isVisible ? 'true' : 'false';
+                    });
+                });
+                mainRowLoader.refresh(true);
+            }
+
+            function getSelectedMainKeys() {
+                return Array.from(document.querySelectorAll('.inventory-report-main-check:checked'))
+                    .map(input => input.getAttribute('data-color'))
+                    .filter(Boolean);
+            }
+
+            function calculateTotals(groupKeys) {
+                return groupKeys.reduce((totals, groupKey) => {
+                    const group = groupsByKey[groupKey.toLowerCase()];
+                    if (!group) {
+                        return totals;
+                    }
+
+                    totals.totalM2 += Number(group.totalM2 ?? 0);
+                    totals.totalQuantity += Number(group.totalQuantity ?? 0);
+                    return totals;
+                }, { totalM2: 0, totalQuantity: 0 });
+            }
+
+            function updateMainGrandTotals() {
+                const totals = calculateTotals(getSelectedMainKeys());
+                mainGrandTotalM2.innerHTML = `<strong>${formatNumber(totals.totalM2)}</strong>`;
+                mainGrandTotalQuantity.innerHTML = `<strong>${totals.totalQuantity}</strong>`;
+            }
+
+            function updateCustomTableButtons() {
+                const hasRows = customColors.length > 0;
+                printCustomPdfButton.disabled = !hasRows;
+                createCustomExcelButton.disabled = !hasRows;
+            }
+
+            function renderCustomTable() {
+                if (!customTableActive) {
+                    customTableBody.innerHTML = '';
+                    updateCustomTableButtons();
+                    return;
+                }
+
+                if (customColors.length === 0) {
+                    customTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">@Inventar.Resources.Resource.TheNewTableIsEmpty</td></tr>';
+                    updateCustomTableButtons();
+                    return;
+                }
+
+                let totalM2 = 0;
+                let totalQuantity = 0;
+
+                customTableBody.innerHTML = customColors.map(colorKey => {
+                    const colorGroup = groupsByKey[colorKey.toLowerCase()];
+                    if (!colorGroup) {
+                        return '';
+                    }
+
+                    totalM2 += Number(colorGroup.totalM2 ?? 0);
+                    totalQuantity += Number(colorGroup.totalQuantity ?? 0);
+
+                    const rowsHtml = colorGroup.productGroups.map((productGroup, productIndex) => {
+                        const sizeRows = productGroup.sizeRows && productGroup.sizeRows.length > 0
+                            ? productGroup.sizeRows
+                            : [{ sizeLabel: '-', totalM2: productGroup.totalM2, totalQuantity: productGroup.totalQuantity }];
+
+                        const sizeRowsHtml = sizeRows.map((sizeRow, sizeIndex) => `
+                            <tr>
+                                ${productIndex === 0 && sizeIndex === 0 ? `
+                                    <td class="inventory-report-table__name-cell" rowspan="${colorGroup.rowSpan}">
+                                        <div class="inventory-report-name-delete">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger inventory-report-remove-key"
+                                                    data-group-key="${escapeHtml(colorGroup.color)}"
+                                                    title="Ukloni iz nove tabele">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            <span>${escapeHtml(colorGroup.color)}</span>
+                                        </div>
+                                    </td>` : ''}
+                                ${sizeIndex === 0 ? `<td rowspan="${productGroup.rowSpan}">${escapeHtml(productGroup.productName)}</td>` : ''}
+                                <td>${escapeHtml(sizeRow.sizeLabel)}</td>
+                                <td>${sizeRow.totalQuantity ?? 0}</td>
+                                <td>${formatNumber(sizeRow.totalM2)}</td>
+                            </tr>`).join('');
+
+                        return sizeRowsHtml + `
+                            <tr class="inventory-report-row--subtotal">
+                                <td><strong>@Inventar.Resources.Resource.Total</strong></td>
+                                <td><strong>${productGroup.totalQuantity ?? 0}</strong></td>
+                                <td><strong>${formatNumber(productGroup.totalM2)}</strong></td>
+                            </tr>`;
+                    }).join('');
+
+                    return rowsHtml + `
+                        <tr class="inventory-report-row--total">
+                            <td><strong>@Inventar.Resources.Resource.Total</strong></td>
+                            <td></td>
+                            <td><strong>${colorGroup.totalQuantity ?? 0}</strong></td>
+                            <td><strong>${formatNumber(colorGroup.totalM2)}</strong></td>
+                        </tr>`;
+                }).join('') + `
+                    <tr class="inventory-report-row--grand-total">
+                        <td colspan="3"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
+                        <td><strong>${totalQuantity}</strong></td>
+                        <td><strong>${formatNumber(totalM2)}</strong></td>
+                    </tr>`;
+
+                updateCustomTableButtons();
+            }
+
+            function ensureCustomTableActive() {
+                customTableActive = true;
+                customTableSection.hidden = false;
+                toggleCustomTableButton.textContent = '@Inventar.Resources.Resource.DeleteNewTable';
+                addToCustomTableButton.disabled = false;
+            }
+
+            function resetCustomTable() {
+                customTableActive = false;
+                customColors = [];
+                customTableSection.hidden = true;
+                toggleCustomTableButton.textContent = '@Inventar.Resources.Resource.CreateNewTable';
+                addToCustomTableButton.disabled = true;
+                customTableInput.value = '';
+                renderCustomTable();
+            }
+
+            function addCurrentInputToCustomTable(showAlertWhenMissing = true) {
+                const rawValue = (customTableInput.value || '').trim();
+                if (!rawValue) {
+                    return false;
+                }
+
+                const group = findGroupByInputValue(rawValue);
+                if (!group) {
+                    if (showAlertWhenMissing) {
+                        alert('Odabrana boja nije pronađena.');
+                    }
+                    return false;
+                }
+
+                ensureCustomTableActive();
+
+                if (!customColors.some(value => value.toLowerCase() === group.color.toLowerCase())) {
+                    customColors.push(group.color);
+                    customColors.sort((left, right) => left.localeCompare(right));
+                }
+
+                customTableInput.value = '';
+                renderCustomTable();
+                return true;
+            }
+
+            async function downloadReport(url, payload, fileName) {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || 'Export failed.');
+                }
+
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = fileName;
+                link.click();
+                window.URL.revokeObjectURL(blobUrl);
+            }
+
+            toggleCustomTableButton.addEventListener('click', function () {
+                if (customTableActive) {
+                    resetCustomTable();
+                    return;
+                }
+
+                ensureCustomTableActive();
+                renderCustomTable();
+            });
+
+            addToCustomTableButton.addEventListener('click', function () {
+                addCurrentInputToCustomTable(true);
+            });
+
+            customTableInput.addEventListener('input', function () {
+                if (findGroupByInputValue(customTableInput.value)) {
+                    addCurrentInputToCustomTable(false);
+                }
+            });
+
+            customTableInput.addEventListener('change', function () {
+                addCurrentInputToCustomTable(false);
+            });
+
+            customTableInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addCurrentInputToCustomTable(true);
+                }
+            });
+
+            customTableBody.addEventListener('click', function (event) {
+                const button = event.target.closest('.inventory-report-remove-key');
+                if (!button) {
+                    return;
+                }
+
+                const groupKey = button.getAttribute('data-group-key');
+                customColors = customColors.filter(value => value !== groupKey);
+                renderCustomTable();
+            });
+
+            colorFilter.addEventListener('input', applyMainTableFilter);
+
+            document.querySelectorAll('.inventory-report-main-check').forEach(checkbox => {
+                checkbox.addEventListener('change', updateMainGrandTotals);
+            });
+
+            checkAllColorsButton.addEventListener('click', function () {
+                document.querySelectorAll('.inventory-report-main-check').forEach(checkbox => checkbox.checked = true);
+                updateMainGrandTotals();
+            });
+
+            uncheckAllColorsButton.addEventListener('click', function () {
+                document.querySelectorAll('.inventory-report-main-check').forEach(checkbox => checkbox.checked = false);
+                updateMainGrandTotals();
+            });
+
+            printSelectedPdfButton.addEventListener('click', async function () {
+                const selectedKeys = getSelectedMainKeys();
+                if (selectedKeys.length === 0) {
+                    alert('Odaberite bar jednu boju za PDF.');
+                    return;
+                }
+
+                try {
+                    await downloadReport('@Url.Action("ExportColorReportPdf", "InventoryReports")', {
+                        heading: 'Izvjestaj po boji',
+                        colors: selectedKeys,
+                        useCustomTable: false
+                    }, 'Izvjestaj_po_boji.pdf');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            createSelectedExcelButton.addEventListener('click', async function () {
+                const selectedKeys = getSelectedMainKeys();
+                if (selectedKeys.length === 0) {
+                    alert('Odaberite bar jednu boju za Excel.');
+                    return;
+                }
+
+                try {
+                    await downloadReport('@Url.Action("ExportColorReportExcel", "InventoryReports")', {
+                        heading: 'Izvjestaj po boji',
+                        colors: selectedKeys,
+                        useCustomTable: false
+                    }, 'Izvjestaj_po_boji.xlsx');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            printCustomPdfButton.addEventListener('click', async function () {
+                if (customColors.length === 0) {
+                    return;
+                }
+
+                try {
+                    await downloadReport('@Url.Action("ExportColorReportPdf", "InventoryReports")', {
+                        heading: 'Nova tabela - Izvjestaj po boji',
+                        colors: customColors,
+                        useCustomTable: true
+                    }, 'NovaTabela_Izvjestaj_po_boji.pdf');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            createCustomExcelButton.addEventListener('click', async function () {
+                if (customColors.length === 0) {
+                    return;
+                }
+
+                try {
+                    await downloadReport('@Url.Action("ExportColorReportExcel", "InventoryReports")', {
+                        heading: 'Nova tabela - Izvjestaj po boji',
+                        colors: customColors,
+                        useCustomTable: true
+                    }, 'NovaTabela_Izvjestaj_po_boji.xlsx');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            applyMainTableFilter();
+            updateMainGrandTotals();
+            renderCustomTable();
+        })();
+    </script>
+}

@@ -1,0 +1,62 @@
+﻿@model Inventar.Storefront.ViewModels.Account.AccountDashboardViewModel
+@{
+    ViewData["Title"] = "Moj nalog";
+}
+
+<section class="page-head">
+    <span class="eyebrow">Moj nalog</span>
+    <h1>Zdravo, @Model.DisplayName.</h1>
+    <p>Ovdje možete urediti podatke za dostavu i pregledati ranije narudžbine.</p>
+</section>
+
+<partial name="_AccountNav" />
+
+<section class="account-grid account-grid--single">
+    <article class="content-card">
+        <p class="site-footer__title">Profil</p>
+        <p>@(Model.IsProfileComplete ? "Podaci za dostavu su spremni." : "Profil još nije kompletiran. Dodajte podatke za brzi checkout.")</p>
+        <a class="button button--ghost" asp-controller="Account" asp-action="Profile">Uredi profil</a>
+    </article>
+</section>
+
+<section class="content-card account-orders-card">
+    <div class="section__header">
+        <div>
+            <p class="eyebrow">Narudžbine</p>
+            <h2>Posljednje narudžbine</h2>
+        </div>
+        <a class="button button--ghost account-orders-card__link" asp-controller="Account" asp-action="Orders">Sve narudžbine</a>
+    </div>
+
+    @if (Model.RecentOrders.Count == 0)
+    {
+        <p>Još nemate evidentiranih narudžbina.</p>
+    }
+    else
+    {
+        <div class="account-order-list">
+            @foreach (var order in Model.RecentOrders)
+            {
+                <a class="account-order-card" asp-controller="Account" asp-action="OrderDetails" asp-route-orderNumber="@order.OrderNumber">
+                    <div>
+                        <strong>@order.OrderNumber</strong>
+                        <p>@order.CreatedUtc.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</p>
+                    </div>
+                    <div class="account-order-card__summary">
+                        @if (order.PreviewImageUrls.Count > 0)
+                        {
+                            <div class="account-order-card__previews" aria-hidden="true">
+                                @foreach (var imageUrl in order.PreviewImageUrls)
+                                {
+                                    <img src="@imageUrl" alt="" />
+                                }
+                            </div>
+                        }
+                        <span>@order.TotalItems artikala</span>
+                        <strong>@order.GrandTotal.ToString("0.00") &#8364;</strong>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</section>

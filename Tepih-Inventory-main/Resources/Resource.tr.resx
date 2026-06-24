@@ -744,4 +744,295 @@
   <data name="YourPasswordHasBeenResetSuccessfully" xml:space="preserve">
     <value>Şifreniz başarıyla değiştirildi</value>
   </data>
+  <data name="BroaderCategory" xml:space="preserve">
+    <value>Daha GenişKategori</value>
+  </data>
+  <data name="NarrowerCategory" xml:space="preserve">
+    <value>Dar Kategori</value>
+  </data>
+  <data name="CopyDescAndShortDesc" xml:space="preserve">
+    <value>Ürün Açıklamasını ve Kısa Açıklamasını aynı İsim + Model'e sahip ürünlere kopyala</value>
+  </data>
+  <data name="ReuseCloudinaryImages" xml:space="preserve">
+    <value>Aynı isim ve modele sahip ürünler için bu görseli tekrar kullanın.</value>
+  </data>
+  <data name="SyncImages" xml:space="preserve">
+    <value>Eksik görselleri yeni oluşturulan grup ürünleriyle senkronize edin</value>
+  </data>
+  <data name="CreateNewTable" xml:space="preserve">
+    <value>Yeni tablo oluştur</value>
+  </data>
+  <data name="AddColorToNewTable" xml:space="preserve">
+    <value>Yeni bir masaya renk katın</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Eklemek</value>
+  </data>
+  <data name="ReportByName" xml:space="preserve">
+    <value>İsimle Raporla</value>
+  </data>
+  <data name="CheckAll" xml:space="preserve">
+    <value>Tümünü işaretle</value>
+  </data>
+  <data name="UncheckAll" xml:space="preserve">
+    <value>Tümünün işaretini kaldır</value>
+  </data>
+  <data name="OverallTotal" xml:space="preserve">
+    <value>Toplam</value>
+  </data>
+  <data name="AddProductNameToNewTable" xml:space="preserve">
+    <value>Ürün adını yeni bir tabloya ekleyin.</value>
+  </data>
+  <data name="AddSizeToNewTable" xml:space="preserve">
+    <value>Yeni bir tabloya boyut ekle</value>
+  </data>
+  <data name="AddProductNumberToNewTable" xml:space="preserve">
+    <value>Yeni bir tabloya parola ekle</value>
+  </data>
+  <data name="ReportByM2" xml:space="preserve">
+    <value>m2 tarafından hazırlanan rapor</value>
+  </data>
+  <data name="ReportPerUnit" xml:space="preserve">
+    <value>Birim başına rapor</value>
+  </data>
+  <data name="ReportBySize" xml:space="preserve">
+    <value>Boyuta göre raporla</value>
+  </data>
+  <data name="ReportByColor" xml:space="preserve">
+    <value>Renk bazında rapor</value>
+  </data>
+  <data name="ReportByErrors" xml:space="preserve">
+    <value>Hata raporu</value>
+  </data>
+  <data name="ReportByProductNumber" xml:space="preserve">
+    <value>Kod bazında raporla</value>
+  </data>
+  <data name="NewTable" xml:space="preserve">
+    <value>Yeni tablo</value>
+  </data>
+  <data name="DeleteNewTable" xml:space="preserve">
+    <value>Yeni Tabloyu Sil</value>
+  </data>
+  <data name="PerMeasure" xml:space="preserve">
+    <value>ölçü başına</value>
+  </data>
+  <data name="PerMeasureProduct" xml:space="preserve">
+    <value>ölçü başına ürün</value>
+  </data>
+  <data name="NoProductsWithQuantityLessThanZero." xml:space="preserve">
+    <value>Miktarı sıfırdan az olan ürün bulunmamaktadır.</value>
+  </data>
+  <data name="DiscountedPrice" xml:space="preserve">
+    <value>İndirimli fiyat</value>
+  </data>
+  <data name="TheNewTableIsEmpty" xml:space="preserve">
+    <value>Yeni masa boş.</value>
+  </data>
+  <data name="LoadAnother300Rows" xml:space="preserve">
+    <value>300 satır daha yükle</value>
+  </data>
+  <data name="LoadAnother30Rows" xml:space="preserve">
+    <value>30 satır daha yükle</value>
+  </data>
+  <data name="NoImagesUploadedForThisProduct." xml:space="preserve">
+    <value>Bu ürün için hiçbir görsel yüklenmedi.</value>
+  </data>
+  <data name="CopyDescriptionAndShortDescriptionToIdenticalPoMjeriProducts" xml:space="preserve">
+    <value>Açıklamayı ve kısa açıklamayı aynı ürünlere kopyala (ölçü başına)</value>
+  </data>
+  <data name="ClearFilters" xml:space="preserve">
+    <value>Filtreleri temizle</value>
+  </data>
+  <data name="CompletedOrdersOnly" xml:space="preserve">
+    <value>Yalnızca tamamlanmış siparişler</value>
+  </data>
+  <data name="OriginalSize" xml:space="preserve">
+    <value>Orijinal boyut</value>
+  </data>
+  <data name="RemainingSize" xml:space="preserve">
+    <value>Kalan boyut</value>
+  </data>
+  <data name="AddProduct" xml:space="preserve">
+    <value>Ürün Ekle</value>
+  </data>
+  <data name="MaxAvailableQuantity" xml:space="preserve">
+    <value>Maksimum mevcut miktar</value>
+  </data>
+  <data name="WebCustomer" xml:space="preserve">
+    <value>Web müşterileri</value>
+  </data>
+  <data name="Orders" xml:space="preserve">
+    <value>Siparişler</value>
+  </data>
+  <data name="ItemsOrdered" xml:space="preserve">
+    <value>Sipariş Edilen Ürünler</value>
+  </data>
+  <data name="TotalMoneySpent" xml:space="preserve">
+    <value>Toplam Harcanan Para</value>
+  </data>
+  <data name="ViewOrders" xml:space="preserve">
+    <value>Siparişleri Görüntüle</value>
+  </data>
+  <data name="ThereAreNoCompletedWebOrdersToDisplay" xml:space="preserve">
+    <value>Gösterilecek tamamlanmış web siparişi bulunmamaktadır</value>
+  </data>
+  <data name="TheEnteredWidthCannotBeGreaterThanTheRemainingWidth" xml:space="preserve">
+    <value>Girilen genişlik, kalan genişlikten büyük olamaz</value>
+  </data>
+  <data name="TheEnteredLengthCannotBeGreaterThanTheRemainingLength" xml:space="preserve">
+    <value>Girilen uzunluk, kalan uzunluktan büyük olamaz</value>
+  </data>
+  <data name="TheLengthCannotBeLessThanTheWidth" xml:space="preserve">
+    <value>Uzunluk, genişlikten az olamaz</value>
+  </data>
+  <data name="ThereIsNoLengthAvailableForTheDimensionEntered" xml:space="preserve">
+    <value>Girilen boyut için uygun uzunluk bulunmamaktadır</value>
+  </data>
+  <data name="FailedToAddProduct" xml:space="preserve">
+    <value>Ürün eklenemedi</value>
+  </data>
+  <data name="EditItems" xml:space="preserve">
+    <value>Öğeleri düzenle</value>
+  </data>
+  <data name="ConfirmChanges" xml:space="preserve">
+    <value>Değişiklikleri onaylayın</value>
+  </data>
+  <data name="ItemsRemainInDraftModeUntilYouClickConfirm" xml:space="preserve">
+    <value>Öğeler, onay düğmesine tıklayana kadar taslak modunda kalır</value>
+  </data>
+  <data name="QuantitiesAndCustomDimensionsAreRevalidatedBeforeSaving" xml:space="preserve">
+    <value>Miktarlar ve özel boyutlar kaydedilmeden önce yeniden doğrulanır</value>
+  </data>
+  <data name="ItemsCanOnlyBeEditedForActiveOrders" xml:space="preserve">
+    <value>Ürünler yalnızca aktif siparişler için düzenlenebilir</value>
+  </data>
+  <data name="PerMeasureAllocations" xml:space="preserve">
+    <value>Ölçü başına tahsisler</value>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>Kaynak</value>
+  </data>
+  <data name="Cut" xml:space="preserve">
+    <value>Kesmek</value>
+  </data>
+  <data name="ThereAreNoActiveReservationsForThisItem" xml:space="preserve">
+    <value>Bu ürün için aktif rezervasyon bulunmamaktadır</value>
+  </data>
+  <data name="CustomerGoal" xml:space="preserve">
+    <value>Müşteri hedefi</value>
+  </data>
+  <data name="ManuallyAllocateHowManyPiecesYouTakeFromEachAvailableInstance" xml:space="preserve">
+    <value>Mevcut her bir örnekten kaç parça alacağınızı manuel olarak belirleyin</value>
+  </data>
+  <data name="TheSumMustBeExact" xml:space="preserve">
+    <value>Toplamın tam olması gerekir</value>
+  </data>
+  <data name="ThereAreCurrentlyNoOtherValidInstancesForThisPerMeasureAllocation" xml:space="preserve">
+    <value>Şu anda bu özel tahsis için başka geçerli örnek bulunmamaktadır</value>
+  </data>
+  <data name="Instance" xml:space="preserve">
+    <value>Misal</value>
+  </data>
+  <data name="MaxPieces" xml:space="preserve">
+    <value>Maks. adet</value>
+  </data>
+  <data name="Currently" xml:space="preserve">
+    <value>Şu anda</value>
+  </data>
+  <data name="NewQuantity" xml:space="preserve">
+    <value>Yeni miktar</value>
+  </data>
+  <data name="ApplyAllocation" xml:space="preserve">
+    <value>Tahsisat uygulayın</value>
+  </data>
+  <data name="NoInventoryReservationsRecordedForThisOrderYet" xml:space="preserve">
+    <value>Bu sipariş için henüz herhangi bir stok rezervasyonu kaydedilmedi</value>
+  </data>
+  <data name="NoStatusHistoryEntriesYet" xml:space="preserve">
+    <value>Henüz durum geçmişi kaydı yok</value>
+  </data>
+  <data name="AddProductToOrder" xml:space="preserve">
+    <value>Siparişe ürün ekle</value>
+  </data>
+  <data name="AddPerMeasureProduct" xml:space="preserve">
+    <value>Ölçü başına ürün ekleyin</value>
+  </data>
+  <data name="TotalItems" xml:space="preserve">
+    <value>Toplam ürün sayısı</value>
+  </data>
+  <data name="TotalOrderAmount" xml:space="preserve">
+    <value>Toplam sipariş tutarı</value>
+  </data>
+  <data name="AnOrderMustHaveAtLeastOneItem" xml:space="preserve">
+    <value>Bir siparişte en az bir ürün bulunmalıdır</value>
+  </data>
+  <data name="AddNewProductOrCancelTheChanges" xml:space="preserve">
+    <value>Yeni bir ürün ekleyin veya değişiklikleri iptal edin</value>
+  </data>
+  <data name="DeleteItem" xml:space="preserve">
+    <value>Öğeyi sil</value>
+  </data>
+  <data name="ItIsPossibleToOrderMaximumOf" xml:space="preserve">
+    <value>En fazla şu kadar sipariş verilebilir</value>
+  </data>
+  <data name="pieces" xml:space="preserve">
+    <value>parçalar</value>
+  </data>
+  <data name="PMquantityUpdateFailed" xml:space="preserve">
+    <value>PM miktar güncellemesi başarısız oldu</value>
+  </data>
+  <data name="PMamountCheckFailed" xml:space="preserve">
+    <value>PM tutarı kontrolü başarısız oldu</value>
+  </data>
+  <data name="TryAgain" xml:space="preserve">
+    <value>Tekrar deneyin</value>
+  </data>
+  <data name="ProductSearchFailed" xml:space="preserve">
+    <value>Ürün araması başarısız oldu</value>
+  </data>
+  <data name="PiecesForGivenProduct" xml:space="preserve">
+    <value>belirli bir ürün için parçalar</value>
+  </data>
+  <data name="TheProductHasBeenAddedToTheDraftChanges" xml:space="preserve">
+    <value>Ürün, taslak değişiklikler listesine eklendi</value>
+  </data>
+  <data name="PMproductVerificationFailed" xml:space="preserve">
+    <value>PM ürün doğrulama işlemi başarısız oldu</value>
+  </data>
+  <data name="FirstEnterTheCorrectDimensions" xml:space="preserve">
+    <value>Öncelikle doğru boyutları girin</value>
+  </data>
+  <data name="FailedToUpdateItems" xml:space="preserve">
+    <value>Öğeleri güncelleme başarısız oldu</value>
+  </data>
+  <data name="TheAllocationIsReadyToSave" xml:space="preserve">
+    <value>Tahsisat tasarrufa hazır</value>
+  </data>
+  <data name="ItIsNecessaryToAdd" xml:space="preserve">
+    <value>Eklemek gerekiyor</value>
+  </data>
+  <data name="more" xml:space="preserve">
+    <value>Daha</value>
+  </data>
+  <data name="ItIsNecessaryToReduceBy" xml:space="preserve">
+    <value>Azaltılması gerekiyor</value>
+  </data>
+  <data name="QRCodesGrouped" xml:space="preserve">
+    <value>QR Kodları Gruplandırıldı</value>
+  </data>
+  <data name="CreateProductForSelling" xml:space="preserve">
+    <value>Satışa yönelik ürün oluşturun</value>
+  </data>
+  <data name="TemporaryProduct" xml:space="preserve">
+    <value>Geçici ürün</value>
+  </data>
+  <data name="FixedQuantity" xml:space="preserve">
+    <value>Sabit miktar</value>
+  </data>
+  <data name="ReplaceProduct" xml:space="preserve">
+    <value>Ürünü değiştirin</value>
+  </data>
+  <data name="PerUnit" xml:space="preserve">
+    <value>Adet başına</value>
+  </data>
 </root>

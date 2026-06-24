@@ -1,0 +1,219 @@
+﻿@model Inventar.ViewModels.Inventory.GroupedQrCodesViewModel
+@{
+    var isAdminLike = User.IsInRole("admin") || User.IsInRole("superadmin");
+    var isUser = User.IsInRole("user");
+    var canPrintPdf = User.Identity?.IsAuthenticated == true;
+}
+
+<style>
+    @@media (max-width: 768px) {
+        .inventory-mobile-zoom {
+            zoom: 0.38;
+        }
+
+        .container-fluid{
+            padding-right: 0;
+            padding-left: 0;
+        }
+    }
+</style>
+
+<div class="inventory-page-header">
+    <h2>@Inventar.Resources.Resource.QRCodesGrouped</h2>
+</div>
+
+<div class="inventory-mobile-zoom">
+<table id="GroupedQRCodesTable" class="table stripe tabela inventory-table" style="font-weight:500">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>@Inventar.Resources.Resource.ProductNumber</th>
+            <th>@Inventar.Resources.Resource.Name</th>
+            <th>Model</th>
+            <th>@Inventar.Resources.Resource.Color</th>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <th></th>
+        </tr>
+        <tr class="filters">
+            <th><input style="width:2rem" disabled /></th>
+            <th><input style="width:7rem" placeholder="ProductNumber" /></th>
+            <th><input style="width:9rem" placeholder="Name" /></th>
+            <th><input style="width:7rem" placeholder="Model" /></th>
+            <th><input style="width:7rem" placeholder="Color" /></th>
+            <th><input style="width:5rem" placeholder="Qty" /></th>
+            <th><input style="width:4rem" disabled /></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var group in Model.Groups)
+        {
+            var rowClass = group.IsPoMjeriGroup
+                ? "inventory-row--po-mjeri"
+                : group.TotalQuantity < 0
+                    ? "inventory-row--negative"
+                    : group.TotalQuantity == 0
+                        ? "inventory-row--empty"
+                        : group.TotalQuantity <= 2
+                            ? "inventory-row--low"
+                            : "inventory-row--healthy";
+
+            <tr class="inventory-row @rowClass">
+                <td></td>
+                <td>@group.ProductNumber</td>
+                <td>@group.Name</td>
+                <td>@group.Model</td>
+                <td>@group.Color</td>
+                <td>@group.TotalQuantity</td>
+                <td>
+                    <a asp-controller="InventoryItem"
+                       asp-action="QRCodesGroupedDetails"
+                       asp-route-productNumber="@group.RawProductNumber"
+                       asp-route-name="@group.RawName"
+                       asp-route-model="@group.RawModel"
+                       asp-route-color="@group.RawColor">
+                        @Inventar.Resources.Resource.Details
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+</div>
+
+<div class="inventory-summary-bar">
+    <div class="inventory-summary-bar__totals">
+        <span>@Inventar.Resources.Resource.TotalQuantity: <span id="groupedTotalQuantity">0</span></span>
+    </div>
+    <div class="inventory-legend" aria-label="Inventory row colors legend">
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--po-mjeri"></span>@Inventar.Resources.Resource.PerMeasureProduct</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--negative"></span>@Inventar.Resources.Resource.Quantity < 0</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--empty"></span>@Inventar.Resources.Resource.Quantity 0</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--low"></span>@Inventar.Resources.Resource.Quantity 1-2</span>
+        <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--healthy"></span>@Inventar.Resources.Resource.Quantity > 2</span>
+    </div>
+</div>
+
+@if (canPrintPdf)
+{
+    <button id="downloadGroupedInventoryPdf" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const rowNumberColumnIndex = 0;
+            const quantityColumnIndex = 5;
+            const actionColumnIndex = 6;
+
+            var table = $('#GroupedQRCodesTable').DataTable({
+                paging: true,
+                pageLength: 25,
+                order: [[1, "asc"]],
+                orderCellsTop: true,
+                fixedHeader: true,
+                columnDefs: [
+                    { targets: rowNumberColumnIndex, visible: @(isAdminLike ? "true" : "false") },
+                    { targets: 1, visible: @(isUser ? "false" : "true") }
+                ]
+            });
+
+            $('#GroupedQRCodesTable thead tr:eq(1) th').each(function (index) {
+                var input = $('input', this);
+                if (input.length === 0) {
+                    return;
+                }
+
+                input.on('keyup change', function () {
+                    table.column(index).search(this.value).draw();
+                });
+            });
+
+            function updateTotals() {
+                var totalQuantity = 0;
+
+                table.rows({ filter: 'applied' }).data().each(function (value) {
+                    totalQuantity += parseFloat(value[quantityColumnIndex]) || 0;
+                });
+
+                $('#groupedTotalQuantity').text(totalQuantity);
+            }
+            table.on('draw', function () {
+                updateTotals();
+
+                let counter = 1;
+                table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                    table.cell(this.index(), rowNumberColumnIndex).data(counter++);
+                });
+            });
+
+            updateTotals();
+            table.draw();
+
+            @if (canPrintPdf)
+            {
+                <text>
+                $('#downloadGroupedInventoryPdf').on('click', function () {
+                    function getPlainText(value) {
+                        return $('<div>').html(value ?? '').text().trim();
+                    }
+
+                    var visibleColumnIndexes = table
+                        .columns()
+                        .indexes()
+                        .toArray()
+                        .filter(function (columnIndex) {
+                            return table.column(columnIndex).visible() && columnIndex !== actionColumnIndex;
+                        });
+
+                    var data = [];
+                    table.rows({ search: 'applied', order: 'applied' }).every(function () {
+                        var rowDataSource = this.data();
+                        var rowData = [];
+
+                        visibleColumnIndexes.forEach(function (columnIndex) {
+                            rowData.push(getPlainText(rowDataSource[columnIndex]));
+                        });
+
+                        data.push(rowData);
+                    });
+
+                    var filters = {};
+                    visibleColumnIndexes.forEach(function (columnIndex, pdfIndex) {
+                        filters[pdfIndex] = table.column(columnIndex).search() || "";
+                    });
+
+                    var columnHeaders = visibleColumnIndexes.map(function (columnIndex) {
+                        return getPlainText($(table.column(columnIndex).header()).text());
+                    });
+
+                    var totalQuantity = parseInt($('#groupedTotalQuantity').text()) || 0;
+
+                    $.ajax({
+                        url: '@Url.Action("GenerateInventoryPDF", "Pdf")',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            heading: $('h2').text(),
+                            data: data,
+                            filters: filters,
+                            columnHeaders: columnHeaders,
+                            totalQuantity: totalQuantity,
+                            totalM2: null,
+                            includeTotalM2: false
+                        }),
+                        xhrFields: {
+                            responseType: 'blob'
+                        },
+                        success: function (blob) {
+                            var link = document.createElement('a');
+                            link.href = window.URL.createObjectURL(blob);
+                            link.download = 'GroupedQRCodes.pdf';
+                            link.click();
+                        }
+                    });
+                });
+                </text>
+            }
+        });
+    </script>
+}

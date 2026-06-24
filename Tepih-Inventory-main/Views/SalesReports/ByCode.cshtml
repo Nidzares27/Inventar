@@ -1,0 +1,578 @@
+@using System.Globalization
+@using System.Text.Json
+@model Inventar.ViewModels.SalesReports.SalesPrimaryReportPageViewModel
+@{
+    ViewData["Title"] = "Izvjestaj po sifri";
+    var initialGrandTotalM2 = Model.Groups.Sum(group => group.TotalM2);
+    var initialGrandTotalQuantity = Model.Groups.Sum(group => group.TotalQuantity);
+    var activePeriodLabel = Model.StartDate.HasValue && Model.EndDate.HasValue
+        ? $"{Model.StartDate.Value:dd-MM-yyyy} - {Model.EndDate.Value:dd-MM-yyyy}"
+        : Model.StartDate.HasValue
+            ? $"od {Model.StartDate.Value:dd-MM-yyyy}"
+            : Model.EndDate.HasValue
+                ? $"do {Model.EndDate.Value:dd-MM-yyyy}"
+                : "Sve vrijeme";
+
+    var groupsJson = JsonSerializer.Serialize(
+        Model.Groups.Select(group => new
+        {
+            keyLabel = group.KeyLabel,
+            totalM2 = group.TotalM2,
+            totalQuantity = group.TotalQuantity,
+            rowSpan = group.RowSpan,
+            productRows = group.ProductRows.Select(productRow => new
+            {
+                productName = productRow.ProductName,
+                totalM2 = productRow.TotalM2,
+                totalQuantity = productRow.TotalQuantity
+            })
+        }));
+}
+
+<div class="inventory-report-page">
+    <div class="inventory-report-toolbar">
+        <button type="button" id="toggleCustomTable" class="btn btn-primary">@Inventar.Resources.Resource.CreateNewTable</button>
+
+        <div class="inventory-report-toolbar__search">
+            <input type="text"
+                   id="customTableKey"
+                   class="form-control"
+                   list="sales-report-code-options"
+                   placeholder="@Inventar.Resources.Resource.AddProductNumberToNewTable" />
+            <datalist id="sales-report-code-options">
+                @foreach (var option in Model.Options)
+                {
+                    <option value="@option"></option>
+                }
+            </datalist>
+            <button type="button" id="addToCustomTable" class="btn btn-outline-primary" disabled>@Inventar.Resources.Resource.Add</button>
+        </div>
+    </div>
+
+    <form method="get" class="inventory-report-date-filter" id="salesCodeDateFilterForm">
+        <div class="inventory-report-date-filter__field">
+            <label for="salesCodeStartDate">@Inventar.Resources.Resource.StartDate</label>
+            <input type="date"
+                   id="salesCodeStartDate"
+                   name="startDate"
+                   class="form-control"
+                   value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="inventory-report-date-filter__field">
+            <label for="salesCodeEndDate">@Inventar.Resources.Resource.EndDate</label>
+            <input type="date"
+                   id="salesCodeEndDate"
+                   name="endDate"
+                   class="form-control"
+                   value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" />
+        </div>
+        <div class="inventory-report-date-filter__active-period">
+            <span>Aktivni period:</span>
+            <strong>@activePeriodLabel</strong>
+        </div>
+        @if (Model.StartDate.HasValue || Model.EndDate.HasValue)
+        {
+            <a asp-action="ByCode" class="btn btn-outline-secondary inventory-report-date-filter__clear">
+                @Inventar.Resources.Resource.ClearFilters
+            </a>
+        }
+    </form>
+
+    <section id="customTableSection" class="inventory-report-card" hidden>
+        <div class="inventory-report-card__header">
+            <h2 class="inventory-report-card__title">@Inventar.Resources.Resource.NewTable</h2>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered inventory-report-table" id="customCodeReportTable">
+                <thead>
+                    <tr>
+                        <th>@Inventar.Resources.Resource.ProductNumber</th>
+                        <th>@Inventar.Resources.Resource.Name</th>
+                        <th>@Inventar.Resources.Resource.Quantity</th>
+                        <th>@Inventar.Resources.Resource.M2Total</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="inventory-report-actions">
+            <button type="button" id="printCustomPdf" class="btn btn-primary" disabled>@Inventar.Resources.Resource.PrintPDF</button>
+            <button type="button" id="createCustomExcel" class="btn btn-success" disabled>Excel</button>
+        </div>
+    </section>
+
+    <section class="inventory-report-card">
+        <div class="inventory-report-card__header">
+            <h2 class="inventory-report-card__title">@Inventar.Resources.Resource.ReportByProductNumber</h2>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered inventory-report-table" id="codeReportTable">
+                <thead>
+                    <tr>
+                        <th>@Inventar.Resources.Resource.ProductNumber</th>
+                        <th>@Inventar.Resources.Resource.Name</th>
+                        <th>@Inventar.Resources.Resource.Quantity</th>
+                        <th>@Inventar.Resources.Resource.M2Total</th>
+                    </tr>
+                    <tr class="inventory-report-table__filters">
+                        <th>
+                            <div class="inventory-report-filter-stack">
+                                <input type="text"
+                                       id="keyFilter"
+                                       class="form-control"
+                                       placeholder="@Inventar.Resources.Resource.Filter" />
+                                <div class="inventory-report-filter-buttons">
+                                    <button type="button" id="checkAllKeys" class="btn btn-sm btn-outline-success">@Inventar.Resources.Resource.CheckAll</button>
+                                    <button type="button" id="uncheckAllKeys" class="btn btn-sm btn-outline-secondary">@Inventar.Resources.Resource.UncheckAll</button>
+                                </div>
+                            </div>
+                        </th>
+                        <th colspan="3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var group in Model.Groups)
+                    {
+                        var productRows = group.ProductRows.Count == 0
+                            ? new List<Inventar.ViewModels.SalesReports.SalesProductSummaryViewModel>
+                            {
+                                new()
+                                {
+                                    ProductName = "-",
+                                    TotalM2 = group.TotalM2,
+                                    TotalQuantity = group.TotalQuantity
+                                }
+                            }
+                            : group.ProductRows;
+
+                        for (var index = 0; index < productRows.Count; index++)
+                        {
+                            var productRow = productRows[index];
+
+                            <tr class="inventory-report-row"
+                                data-group-name="@group.KeyLabel"
+                                data-group-name-normalized="@group.KeyLabel.ToLowerInvariant()">
+                                @if (index == 0)
+                                {
+                                    <td class="inventory-report-table__name-cell" rowspan="@group.RowSpan">
+                                        <label class="inventory-report-name-option">
+                                            <input type="checkbox"
+                                                   class="form-check-input inventory-report-main-check"
+                                                   data-group-key="@group.KeyLabel"
+                                                   checked />
+                                            <span>@group.KeyLabel</span>
+                                        </label>
+                                    </td>
+                                }
+
+                                <td>@productRow.ProductName</td>
+                                <td>@productRow.TotalQuantity</td>
+                                <td>@productRow.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</td>
+                            </tr>
+                        }
+
+                        <tr class="inventory-report-row inventory-report-row--total"
+                            data-group-name="@group.KeyLabel"
+                            data-group-name-normalized="@group.KeyLabel.ToLowerInvariant()">
+                            <td><strong>@Inventar.Resources.Resource.Total</strong></td>
+                            <td><strong>@group.TotalQuantity</strong></td>
+                            <td><strong>@group.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
+                        </tr>
+                    }
+
+                    <tr class="inventory-report-row inventory-report-row--grand-total">
+                        <td colspan="2"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
+                        <td id="mainGrandTotalQuantity"><strong>@initialGrandTotalQuantity</strong></td>
+                        <td id="mainGrandTotalM2"><strong>@initialGrandTotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="inventory-report-load-more">
+            <button type="button" id="loadMoreMainRows" class="btn btn-outline-primary">@Inventar.Resources.Resource.LoadAnother300Rows</button>
+        </div>
+
+        <div class="inventory-report-actions">
+            <button type="button" id="printSelectedPdf" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+            <button type="button" id="createSelectedExcel" class="btn btn-success">Excel</button>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const reportGroups = @Html.Raw(groupsJson);
+            const groupsByKey = Object.fromEntries(reportGroups.map(group => [group.keyLabel.toLowerCase(), group]));
+
+            const toggleCustomTableButton = document.getElementById('toggleCustomTable');
+            const addToCustomTableButton = document.getElementById('addToCustomTable');
+            const customTableSection = document.getElementById('customTableSection');
+            const customTableBody = document.querySelector('#customCodeReportTable tbody');
+            const customTableInput = document.getElementById('customTableKey');
+            const keyFilter = document.getElementById('keyFilter');
+            const checkAllKeysButton = document.getElementById('checkAllKeys');
+            const uncheckAllKeysButton = document.getElementById('uncheckAllKeys');
+            const printSelectedPdfButton = document.getElementById('printSelectedPdf');
+            const createSelectedExcelButton = document.getElementById('createSelectedExcel');
+            const printCustomPdfButton = document.getElementById('printCustomPdf');
+            const createCustomExcelButton = document.getElementById('createCustomExcel');
+            const mainGrandTotalM2 = document.getElementById('mainGrandTotalM2');
+            const mainGrandTotalQuantity = document.getElementById('mainGrandTotalQuantity');
+            const startDateInput = document.getElementById('salesCodeStartDate');
+            const endDateInput = document.getElementById('salesCodeEndDate');
+            const dateFilterForm = document.getElementById('salesCodeDateFilterForm');
+            const mainRowLoader = window.InventarTableLoadMore.init({
+                rowSelector: '#codeReportTable tbody > tr.inventory-report-row:not(.inventory-report-row--grand-total)',
+                loadMoreButtonId: 'loadMoreMainRows',
+                pageSize: 300
+            });
+
+            let customTableActive = false;
+            let customKeys = [];
+
+            function escapeHtml(value) {
+                return (value ?? '')
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#39;');
+            }
+
+            function formatNumber(value) {
+                return Number(value ?? 0).toFixed(2);
+            }
+
+            function getVisibleGroupRows(groupKey) {
+                return document.querySelectorAll(`[data-group-name="${CSS.escape(groupKey)}"]`);
+            }
+
+            function findGroupByInputValue(rawValue) {
+                return groupsByKey[(rawValue || '').trim().toLowerCase()] ?? null;
+            }
+
+            function applyMainTableFilter() {
+                const filterValue = (keyFilter.value || '').trim().toLowerCase();
+                reportGroups.forEach(group => {
+                    const isVisible = filterValue.length === 0 || group.keyLabel.toLowerCase().includes(filterValue);
+                    getVisibleGroupRows(group.keyLabel).forEach(row => {
+                        row.dataset.filterMatch = isVisible ? 'true' : 'false';
+                    });
+                });
+                mainRowLoader.refresh(true);
+            }
+
+            function getSelectedMainKeys() {
+                return Array.from(document.querySelectorAll('.inventory-report-main-check:checked'))
+                    .map(input => input.getAttribute('data-group-key'))
+                    .filter(Boolean);
+            }
+
+            function calculateTotals(groupKeys) {
+                return groupKeys.reduce((totals, groupKey) => {
+                    const group = groupsByKey[groupKey.toLowerCase()];
+                    if (!group) {
+                        return totals;
+                    }
+
+                    totals.totalM2 += Number(group.totalM2 ?? 0);
+                    totals.totalQuantity += Number(group.totalQuantity ?? 0);
+                    return totals;
+                }, { totalM2: 0, totalQuantity: 0 });
+            }
+
+            function updateMainGrandTotals() {
+                const totals = calculateTotals(getSelectedMainKeys());
+                mainGrandTotalM2.innerHTML = `<strong>${formatNumber(totals.totalM2)}</strong>`;
+                mainGrandTotalQuantity.innerHTML = `<strong>${totals.totalQuantity}</strong>`;
+            }
+
+            function updateCustomTableButtons() {
+                const hasRows = customKeys.length > 0;
+                printCustomPdfButton.disabled = !hasRows;
+                createCustomExcelButton.disabled = !hasRows;
+            }
+
+            function renderCustomTable() {
+                if (!customTableActive) {
+                    customTableBody.innerHTML = '';
+                    updateCustomTableButtons();
+                    return;
+                }
+
+                if (customKeys.length === 0) {
+                    customTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">@Inventar.Resources.Resource.TheNewTableIsEmpty</td></tr>';
+                    updateCustomTableButtons();
+                    return;
+                }
+
+                let totalM2 = 0;
+                let totalQuantity = 0;
+
+                customTableBody.innerHTML = customKeys.map(groupKey => {
+                    const group = groupsByKey[groupKey.toLowerCase()];
+                    if (!group) {
+                        return '';
+                    }
+
+                    totalM2 += Number(group.totalM2 ?? 0);
+                    totalQuantity += Number(group.totalQuantity ?? 0);
+
+                    const productRows = group.productRows && group.productRows.length > 0
+                        ? group.productRows
+                        : [{ productName: '-', totalM2: group.totalM2, totalQuantity: group.totalQuantity }];
+
+                    const productRowsHtml = productRows.map((row, index) => `
+                        <tr>
+                            ${index === 0 ? `
+                                <td class="inventory-report-table__name-cell" rowspan="${productRows.length + 1}">
+                                    <div class="inventory-report-name-delete">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger inventory-report-remove-key"
+                                                data-group-key="${escapeHtml(group.keyLabel)}"
+                                                title="Ukloni iz nove tabele">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <span>${escapeHtml(group.keyLabel)}</span>
+                                    </div>
+                                </td>` : ''}
+                            <td>${escapeHtml(row.productName)}</td>
+                            <td>${row.totalQuantity ?? 0}</td>
+                            <td>${formatNumber(row.totalM2)}</td>
+                        </tr>`).join('');
+
+                    return productRowsHtml + `
+                        <tr class="inventory-report-row--total">
+                            <td><strong>@Inventar.Resources.Resource.Total</strong></td>
+                            <td><strong>${group.totalQuantity ?? 0}</strong></td>
+                            <td><strong>${formatNumber(group.totalM2)}</strong></td>
+                        </tr>`;
+                }).join('') + `
+                    <tr class="inventory-report-row--grand-total">
+                        <td colspan="2"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
+                        <td><strong>${totalQuantity}</strong></td>
+                        <td><strong>${formatNumber(totalM2)}</strong></td>
+                    </tr>`;
+
+                updateCustomTableButtons();
+            }
+
+            function ensureCustomTableActive() {
+                customTableActive = true;
+                customTableSection.hidden = false;
+                toggleCustomTableButton.textContent = '@Inventar.Resources.Resource.DeleteNewTable';
+                addToCustomTableButton.disabled = false;
+            }
+
+            function resetCustomTable() {
+                customTableActive = false;
+                customKeys = [];
+                customTableSection.hidden = true;
+                toggleCustomTableButton.textContent = '@Inventar.Resources.Resource.CreateNewTable';
+                addToCustomTableButton.disabled = true;
+                customTableInput.value = '';
+                renderCustomTable();
+            }
+
+            let dateFilterTimer = null;
+            [startDateInput, endDateInput].forEach(input => {
+                input?.addEventListener('change', function () {
+                    clearTimeout(dateFilterTimer);
+                    dateFilterTimer = setTimeout(() => {
+                        dateFilterForm?.requestSubmit();
+                    }, 120);
+                });
+            });
+
+            function addCurrentInputToCustomTable(showAlertWhenMissing = true) {
+                const rawValue = (customTableInput.value || '').trim();
+                if (!rawValue) {
+                    return false;
+                }
+
+                const group = findGroupByInputValue(rawValue);
+                if (!group) {
+                    if (showAlertWhenMissing) {
+                        alert('Odabrana sifra nije pronadjena.');
+                    }
+                    return false;
+                }
+
+                ensureCustomTableActive();
+
+                if (!customKeys.some(value => value.toLowerCase() === group.keyLabel.toLowerCase())) {
+                    customKeys.push(group.keyLabel);
+                    customKeys.sort((left, right) => left.localeCompare(right));
+                }
+
+                customTableInput.value = '';
+                renderCustomTable();
+                return true;
+            }
+
+            async function downloadReport(url, payload, fileName) {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || 'Export failed.');
+                }
+
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = fileName;
+                link.click();
+                window.URL.revokeObjectURL(blobUrl);
+            }
+
+            toggleCustomTableButton.addEventListener('click', function () {
+                if (customTableActive) {
+                    resetCustomTable();
+                    return;
+                }
+
+                ensureCustomTableActive();
+                renderCustomTable();
+            });
+
+            addToCustomTableButton.addEventListener('click', function () {
+                addCurrentInputToCustomTable(true);
+            });
+
+            customTableInput.addEventListener('input', function () {
+                if (findGroupByInputValue(customTableInput.value)) {
+                    addCurrentInputToCustomTable(false);
+                }
+            });
+
+            customTableInput.addEventListener('change', function () {
+                addCurrentInputToCustomTable(false);
+            });
+
+            customTableInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addCurrentInputToCustomTable(true);
+                }
+            });
+
+            customTableBody.addEventListener('click', function (event) {
+                const button = event.target.closest('.inventory-report-remove-key');
+                if (!button) {
+                    return;
+                }
+
+                const groupKey = button.getAttribute('data-group-key');
+                customKeys = customKeys.filter(value => value !== groupKey);
+                renderCustomTable();
+            });
+
+            keyFilter.addEventListener('input', applyMainTableFilter);
+
+            document.querySelectorAll('.inventory-report-main-check').forEach(checkbox => {
+                checkbox.addEventListener('change', updateMainGrandTotals);
+            });
+
+            checkAllKeysButton.addEventListener('click', function () {
+                document.querySelectorAll('.inventory-report-main-check').forEach(checkbox => checkbox.checked = true);
+                updateMainGrandTotals();
+            });
+
+            uncheckAllKeysButton.addEventListener('click', function () {
+                document.querySelectorAll('.inventory-report-main-check').forEach(checkbox => checkbox.checked = false);
+                updateMainGrandTotals();
+            });
+
+            printSelectedPdfButton.addEventListener('click', async function () {
+                const selectedKeys = getSelectedMainKeys();
+                if (selectedKeys.length === 0) {
+                    alert('Odaberite bar jednu sifru za PDF.');
+                    return;
+                }
+
+                try {
+                    await downloadReport('@Url.Action("ExportCodeReportPdf", "SalesReports")', {
+                        heading: 'Izvjestaj po sifri',
+                        keys: selectedKeys,
+                        useCustomTable: false,
+                        startDate: startDateInput?.value || null,
+                        endDate: endDateInput?.value || null
+                    }, 'Izvjestaj_po_sifri.pdf');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            createSelectedExcelButton.addEventListener('click', async function () {
+                const selectedKeys = getSelectedMainKeys();
+                if (selectedKeys.length === 0) {
+                    alert('Odaberite bar jednu sifru za Excel.');
+                    return;
+                }
+
+                try {
+                    await downloadReport('@Url.Action("ExportCodeReportExcel", "SalesReports")', {
+                        heading: 'Izvjestaj po sifri',
+                        keys: selectedKeys,
+                        useCustomTable: false,
+                        startDate: startDateInput?.value || null,
+                        endDate: endDateInput?.value || null
+                    }, 'Izvjestaj_po_sifri.xlsx');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            printCustomPdfButton.addEventListener('click', async function () {
+                if (customKeys.length === 0) {
+                    return;
+                }
+
+                try {
+                    await downloadReport('@Url.Action("ExportCodeReportPdf", "SalesReports")', {
+                        heading: 'Nova tabela - Izvjestaj po sifri',
+                        keys: customKeys,
+                        useCustomTable: true,
+                        startDate: startDateInput?.value || null,
+                        endDate: endDateInput?.value || null
+                    }, 'NovaTabela_Izvjestaj_po_sifri.pdf');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            createCustomExcelButton.addEventListener('click', async function () {
+                if (customKeys.length === 0) {
+                    return;
+                }
+
+                try {
+                    await downloadReport('@Url.Action("ExportCodeReportExcel", "SalesReports")', {
+                        heading: 'Nova tabela - Izvjestaj po sifri',
+                        keys: customKeys,
+                        useCustomTable: true,
+                        startDate: startDateInput?.value || null,
+                        endDate: endDateInput?.value || null
+                    }, 'NovaTabela_Izvjestaj_po_sifri.xlsx');
+                } catch (error) {
+                    alert(error.message);
+                }
+            });
+
+            applyMainTableFilter();
+            updateMainGrandTotals();
+            renderCustomTable();
+        })();
+    </script>
+}
