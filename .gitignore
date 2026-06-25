@@ -1,0 +1,13 @@
+artifacts/
+tmp-build/
+codex-build-*/
+
+**/bin/
+**/obj/
+**/publish/
+**/publish-output/
+**/codex-build*/
+**/.vs/
+
+**/appsettings.Local.json
+**/appsettings.*.local.json
