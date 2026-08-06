@@ -214,7 +214,10 @@ public static class StorefrontViewModelMapper
     public static string? BuildPrimaryImageUrl(StorefrontProduct product)
     {
         return product.ProductImages
-            .Where(image => !image.Disabled && !IsVideoMediaType(image.MediaType))
+            .Where(image =>
+                !image.Disabled &&
+                ProductMediaFolders.IsStorefrontMedia(image.CloudinaryPublicId) &&
+                !IsVideoMediaType(image.MediaType))
             .OrderByDescending(image => image.IsPrimary)
             .ThenBy(image => image.SortOrder)
             .Select(image => string.IsNullOrWhiteSpace(image.ThumbnailUrl) ? image.Url : image.ThumbnailUrl)
@@ -224,7 +227,7 @@ public static class StorefrontViewModelMapper
     public static string? BuildPrimaryGalleryImageUrl(StorefrontProduct product)
     {
         return product.ProductImages
-            .Where(image => !image.Disabled)
+            .Where(image => !image.Disabled && ProductMediaFolders.IsStorefrontMedia(image.CloudinaryPublicId))
             .OrderByDescending(image => image.IsPrimary)
             .ThenBy(image => image.SortOrder)
             .Select(image => image.Url)

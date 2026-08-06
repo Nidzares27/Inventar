@@ -1,0 +1,364 @@
+﻿@using System.Text.Json
+@model Inventar.ViewModels.Inventory.PairsViewModel
+@{
+    var nameOptionsJson = JsonSerializer.Serialize(Model.NameOptions);
+    var modelOptionsJson = JsonSerializer.Serialize(Model.ModelOptions);
+    var colorOptionsJson = JsonSerializer.Serialize(Model.ColorOptions);
+}
+
+<style>
+    .pairs-filter-card {
+        margin-bottom: 1rem;
+    }
+
+    .pairs-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    .pairs-filter-field label {
+        display: block;
+        margin-bottom: 0.35rem;
+        font-weight: 600;
+    }
+
+    .pairs-filter-field input {
+        width: 100%;
+    }
+
+    .pairs-filter-actions {
+        display: flex;
+        align-items: end;
+        height: 100%;
+    }
+
+    .pairs-filter-actions .btn {
+        width: 100%;
+    }
+
+    .pairs-table {
+        border-collapse: collapse;
+        border-spacing: 0;
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .pairs-table thead th {
+        background: #edf3f9;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .pairs-table th,
+    .pairs-table td {
+        border: 1px solid #b8c7d9 !important;
+        padding: 0.45rem 0.4rem;
+        word-break: break-word;
+    }
+
+    .pairs-table__row--group-start td {
+        border-top: 2px solid #7fa2c6 !important;
+    }
+
+    .pairs-table__group-cell {
+        vertical-align: middle;
+    }
+
+    .pairs-table__group-cell--level-0 {
+        font-weight: 700;
+        min-width: 14rem;
+    }
+
+    .pairs-table__group-cell--level-1 {
+        font-weight: 600;
+        min-width: 10rem;
+    }
+
+    .pairs-table__group-cell--level-2 {
+        min-width: 9rem;
+    }
+
+    .pairs-table td.pairs-table__group-cell--third-column-end {
+        border-bottom: 3px solid #000 !important;
+    }
+
+    .pairs-table__group-cell--level-0.pairs-table__group-cell--tone-a {
+        background: #dff4d7;
+    }
+
+    .pairs-table__group-cell--level-0.pairs-table__group-cell--tone-b {
+        background: #d1ebc7;
+    }
+
+    .pairs-table__group-cell--level-1.pairs-table__group-cell--tone-a {
+        background: #fff5c8;
+    }
+
+    .pairs-table__group-cell--level-1.pairs-table__group-cell--tone-b {
+        background: #f9edb4;
+    }
+
+    .pairs-table__group-cell--level-2.pairs-table__group-cell--tone-a {
+        background: #dfeefe;
+    }
+
+    .pairs-table__group-cell--level-2.pairs-table__group-cell--tone-b {
+        background: #d2e5fb;
+    }
+
+    .pairs-table__size-cell {
+        text-align: center;
+    }
+
+    .pairs-table__quantity-cell {
+        text-align: center;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .pairs-table td.pairs-table__size-cell.pairs-table__detail-cell--tone-a,
+    .pairs-table td.pairs-table__quantity-cell.pairs-table__detail-cell--tone-a {
+        background: #ffffff !important;
+        box-shadow: inset 0 0 0 9999px #ffffff;
+    }
+
+    .pairs-table td.pairs-table__size-cell.pairs-table__detail-cell--tone-b,
+    .pairs-table td.pairs-table__quantity-cell.pairs-table__detail-cell--tone-b {
+        background: #ececec !important;
+        box-shadow: inset 0 0 0 9999px #ececec;
+    }
+
+    .pairs-table td.pairs-table__size-cell.pairs-table__detail-cell--multi-a,
+    .pairs-table td.pairs-table__quantity-cell.pairs-table__detail-cell--multi-a {
+        background: #ffd1d1 !important;
+        box-shadow: inset 0 0 0 9999px #ffd1d1;
+    }
+
+    .pairs-table td.pairs-table__size-cell.pairs-table__detail-cell--multi-b,
+    .pairs-table td.pairs-table__quantity-cell.pairs-table__detail-cell--multi-b {
+        background: #fbd8fd !important;
+        box-shadow: inset 0 0 0 9999px #fbd8fd;
+    }
+
+    .pairs-table td.pairs-table__size-cell.pairs-table__detail-cell--third-column-end,
+    .pairs-table td.pairs-table__quantity-cell.pairs-table__detail-cell--third-column-end {
+        border-bottom: 3px solid #000 !important;
+    }
+
+    .pairs-filter-field input[list]::-webkit-calendar-picker-indicator {
+        display: none !important;
+    }
+
+    .pairs-mobile-zoom {
+        width: 100%;
+    }
+
+    @@media (max-width: 768px) {
+        .pairs-filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pairs-mobile-zoom {
+            zoom: 0.74;
+        }
+
+        .table-responsive {
+            overflow-x: visible;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        .pairs-table th,
+        .pairs-table td {
+            padding: 0.25rem 0.2rem;
+            font-size: 0.78rem;
+            line-height: 1.15;
+        }
+
+        .pairs-table__group-cell--level-0 {
+            min-width: 0;
+        }
+
+        .pairs-table__group-cell--level-1,
+        .pairs-table__group-cell--level-2 {
+            min-width: 0;
+        }
+    }
+</style>
+
+<div class="inventory-page-header">
+    <h2>@Inventar.Resources.Resource.Pairs</h2>
+</div>
+
+<form asp-controller="InventoryItem" asp-action="Pairs" method="get" class="card pairs-filter-card">
+    <div class="card-body">
+        <input type="hidden" name="submitted" value="true" />
+
+        <div class="pairs-filter-grid">
+            <div class="pairs-filter-field">
+                <label for="pairsName">@Inventar.Resources.Resource.Name</label>
+                <input id="pairsName"
+                       name="name"
+                       value="@Model.Filter.Name"
+                       class="form-control"
+                       list="pairsNameOptions"
+                       autocomplete="off" />
+                <datalist id="pairsNameOptions">
+                    @foreach (var option in Model.NameOptions)
+                    {
+                        <option value="@option"></option>
+                    }
+                </datalist>
+            </div>
+
+            <div class="pairs-filter-field">
+                <label for="pairsModel">Model</label>
+                <input id="pairsModel"
+                       name="model"
+                       value="@Model.Filter.Model"
+                       class="form-control"
+                       list="pairsModelOptions"
+                       autocomplete="off" />
+                <datalist id="pairsModelOptions">
+                    @foreach (var option in Model.ModelOptions)
+                    {
+                        <option value="@option"></option>
+                    }
+                </datalist>
+            </div>
+
+            <div class="pairs-filter-field">
+                <label for="pairsColor">@Inventar.Resources.Resource.Color</label>
+                <input id="pairsColor"
+                       name="color"
+                       value="@Model.Filter.Color"
+                       class="form-control"
+                       list="pairsColorOptions"
+                       autocomplete="off" />
+                <datalist id="pairsColorOptions">
+                    @foreach (var option in Model.ColorOptions)
+                    {
+                        <option value="@option"></option>
+                    }
+                </datalist>
+            </div>
+
+            <div class="pairs-filter-actions">
+                <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.Submit</button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ValidationMessage))
+        {
+            <div class="alert alert-warning mt-3 mb-0">@Model.ValidationMessage</div>
+        }
+    </div>
+</form>
+
+@if (Model.Submitted && !Model.Rows.Any() && string.IsNullOrWhiteSpace(Model.ValidationMessage))
+{
+    <div class="alert alert-info">@Inventar.Resources.Resource.NoResultsFound</div>
+}
+
+@if (Model.Rows.Any())
+{
+    <div class="pairs-mobile-zoom">
+    <div class="table-responsive">
+        <table class="table table-bordered stripe tabela inventory-table pairs-table" style="font-weight:500">
+            <thead>
+                <tr>
+                    @foreach (var groupColumn in Model.GroupColumns)
+                    {
+                        <th>@groupColumn.Header</th>
+                    }
+                    <th>@Inventar.Resources.Resource.Size</th>
+                    <th>@Inventar.Resources.Resource.Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (var rowIndex = 0; rowIndex < Model.Rows.Count; rowIndex++)
+                {
+                    var row = Model.Rows[rowIndex];
+                    var detailToneClass = !string.IsNullOrWhiteSpace(row.DetailCssClass)
+                        ? row.DetailCssClass
+                        : (rowIndex % 2 == 0
+                            ? "pairs-table__detail-cell--tone-a"
+                            : "pairs-table__detail-cell--tone-b");
+                    var detailEndClass = row.IsThirdColumnGroupEnd
+                        ? "pairs-table__detail-cell--third-column-end"
+                        : string.Empty;
+
+                    <tr class="@(row.IsTopLevelStart ? "pairs-table__row--group-start" : string.Empty)">
+                        @foreach (var groupCell in row.GroupCells)
+                        {
+                            if (groupCell is null)
+                            {
+                                continue;
+                            }
+
+                            <td class="@groupCell.CssClass" rowspan="@groupCell.RowSpan">@groupCell.Value</td>
+                        }
+
+                        <td class="pairs-table__size-cell @detailToneClass @detailEndClass">@row.Size</td>
+                        <td class="pairs-table__quantity-cell @detailToneClass @detailEndClass">@row.Quantity</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            const optionSets = {
+                name: @Html.Raw(nameOptionsJson),
+                model: @Html.Raw(modelOptionsJson),
+                color: @Html.Raw(colorOptionsJson)
+            };
+
+            function updateDatalist(inputId, datalistId, values) {
+                const input = document.getElementById(inputId);
+                const datalist = document.getElementById(datalistId);
+
+                if (!input || !datalist) {
+                    return;
+                }
+
+                const search = (input.value || '').trim().toLowerCase();
+                const filteredValues = values
+                    .filter(value => !search || value.toLowerCase().includes(search))
+                    .slice(0, 20);
+
+                datalist.innerHTML = '';
+                filteredValues.forEach(value => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    datalist.appendChild(option);
+                });
+            }
+
+            function bindSuggestions(inputId, datalistId, values) {
+                const input = document.getElementById(inputId);
+                if (!input) {
+                    return;
+                }
+
+                const refresh = () => updateDatalist(inputId, datalistId, values);
+                input.addEventListener('input', refresh);
+                input.addEventListener('focus', refresh);
+                refresh();
+            }
+
+            bindSuggestions('pairsName', 'pairsNameOptions', optionSets.name);
+            bindSuggestions('pairsModel', 'pairsModelOptions', optionSets.model);
+            bindSuggestions('pairsColor', 'pairsColorOptions', optionSets.color);
+        })();
+    </script>
+}

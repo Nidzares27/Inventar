@@ -133,28 +133,29 @@
                         <th colspan="3"></th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var group in Model.Groups)
-                    {
-                        var productRows = group.ProductRows.Count == 0
-                            ? new List<Inventar.ViewModels.SalesReports.SalesProductSummaryViewModel>
+                @foreach (var group in Model.Groups)
+                {
+                    var productRows = group.ProductRows.Count == 0
+                        ? new List<Inventar.ViewModels.SalesReports.SalesProductSummaryViewModel>
+                        {
+                            new()
                             {
-                                new()
-                                {
-                                    ProductName = "-",
-                                    TotalM2 = group.TotalM2,
-                                    TotalQuantity = group.TotalQuantity
-                                }
+                                ProductName = "-",
+                                TotalM2 = group.TotalM2,
+                                TotalQuantity = group.TotalQuantity
                             }
-                            : group.ProductRows;
+                        }
+                        : group.ProductRows;
 
-                        for (var index = 0; index < productRows.Count; index++)
+                    <tbody class="inventory-report-section"
+                           data-group-name="@group.KeyLabel"
+                           data-group-name-normalized="@group.KeyLabel.ToLowerInvariant()"
+                           data-section-row-count="@group.RowSpan">
+                        @for (var index = 0; index < productRows.Count; index++)
                         {
                             var productRow = productRows[index];
 
-                            <tr class="inventory-report-row"
-                                data-group-name="@group.KeyLabel"
-                                data-group-name-normalized="@group.KeyLabel.ToLowerInvariant()">
+                            <tr class="inventory-report-row">
                                 @if (index == 0)
                                 {
                                     <td class="inventory-report-table__name-cell" rowspan="@group.RowSpan">
@@ -174,15 +175,14 @@
                             </tr>
                         }
 
-                        <tr class="inventory-report-row inventory-report-row--total"
-                            data-group-name="@group.KeyLabel"
-                            data-group-name-normalized="@group.KeyLabel.ToLowerInvariant()">
+                        <tr class="inventory-report-row inventory-report-row--total">
                             <td><strong>@Inventar.Resources.Resource.Total</strong></td>
                             <td><strong>@group.TotalQuantity</strong></td>
                             <td><strong>@group.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
                         </tr>
-                    }
-
+                    </tbody>
+                }
+                <tbody>
                     <tr class="inventory-report-row inventory-report-row--grand-total">
                         <td colspan="2"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
                         <td id="mainGrandTotalQuantity"><strong>@initialGrandTotalQuantity</strong></td>
@@ -226,10 +226,13 @@
             const startDateInput = document.getElementById('salesCodeStartDate');
             const endDateInput = document.getElementById('salesCodeEndDate');
             const dateFilterForm = document.getElementById('salesCodeDateFilterForm');
-            const mainRowLoader = window.InventarTableLoadMore.init({
-                rowSelector: '#codeReportTable tbody > tr.inventory-report-row:not(.inventory-report-row--grand-total)',
+            const mainRowLoader = window.InventarSectionLoadMore.init({
+                sectionSelector: '#codeReportTable tbody.inventory-report-section',
                 loadMoreButtonId: 'loadMoreMainRows',
-                pageSize: 300
+                pageSize: 300,
+                getSectionRowCount: function (section) {
+                    return Number(section.dataset.sectionRowCount || 1);
+                }
             });
 
             let customTableActive = false;
@@ -248,8 +251,8 @@
                 return Number(value ?? 0).toFixed(2);
             }
 
-            function getVisibleGroupRows(groupKey) {
-                return document.querySelectorAll(`[data-group-name="${CSS.escape(groupKey)}"]`);
+            function getGroupSection(groupKey) {
+                return document.querySelector(`#codeReportTable tbody.inventory-report-section[data-group-name="${CSS.escape(groupKey)}"]`);
             }
 
             function findGroupByInputValue(rawValue) {
@@ -260,9 +263,10 @@
                 const filterValue = (keyFilter.value || '').trim().toLowerCase();
                 reportGroups.forEach(group => {
                     const isVisible = filterValue.length === 0 || group.keyLabel.toLowerCase().includes(filterValue);
-                    getVisibleGroupRows(group.keyLabel).forEach(row => {
-                        row.dataset.filterMatch = isVisible ? 'true' : 'false';
-                    });
+                    const section = getGroupSection(group.keyLabel);
+                    if (section) {
+                        section.dataset.filterMatch = isVisible ? 'true' : 'false';
+                    }
                 });
                 mainRowLoader.refresh(true);
             }

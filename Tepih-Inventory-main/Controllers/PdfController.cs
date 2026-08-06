@@ -24,6 +24,7 @@ using Inventar.ViewModels.Pdf;
 using Inventar.Utils;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
+using ClosedXML.Excel;
 
 namespace Inventar.Controllers
 {
@@ -56,7 +57,7 @@ namespace Inventar.Controllers
             try
             {
                 var pdfBytes = await GenerateQrLabelPdfAsync(new List<Tepih> { tepih });
-                return File(pdfBytes, "application/pdf", "QRCodeLabel.pdf");
+                return File(pdfBytes, "application/pdf", BuildQrLabelPdfFileName(tepih));
             }
             catch (Exception ex)
             {
@@ -99,7 +100,11 @@ namespace Inventar.Controllers
             try
             {
                 var pdfBytes = await GenerateQrLabelPdfAsync(products);
-                return File(pdfBytes, "application/pdf", "QRCodeLabels.pdf");
+                var fileName = products.Count == 1
+                    ? BuildQrLabelPdfFileName(products[0])
+                    : BuildQrLabelPdfFileName(
+                        $"{BuildQrLabelDescription(products[0])}#batch#{products.Count}");
+                return File(pdfBytes, "application/pdf", fileName);
             }
             catch (Exception ex)
             {
@@ -124,7 +129,7 @@ namespace Inventar.Controllers
             pdf.SetDefaultPageSize(pageSize);
 
             using var document = new Document(pdf);
-            document.SetMargins(2, 5, 2, 5);
+            document.SetMargins(3, 4, 3, 4);
 
             string fontPath = Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
             if (!System.IO.File.Exists(fontPath))
@@ -146,29 +151,62 @@ namespace Inventar.Controllers
                 }
 
                 var imageBytes = await LoadQrCodeBytesAsync(tepih);
+                var labelTable = new Table(UnitValue.CreatePercentArray(new float[] { 55, 45 }))
+                    .UseAllAvailableWidth()
+                    .SetBorder(Border.NO_BORDER);
 
-                var description = $"{tepih.Name.ToUpper().Trim() ?? ""}/{tepih.Model.ToUpper().Trim() ?? ""}/" +
-                                  $"{tepih.Width?.ToString("0.##")}/{tepih.Length?.ToString("0.##")}/" +
-                                  $"{tepih.Color.ToUpper().Trim() ?? ""}" +
-                                  $"{(string.IsNullOrWhiteSpace(tepih.UnID) ? string.Empty : $"/{tepih.UnID}")}";
+                var textCell = new Cell()
+                    .SetBorder(Border.NO_BORDER)
+                    .SetPaddingTop(8.0f)
+                    .SetPaddingBottom(2.2f)
+                    .SetPaddingLeft(8.0f)
+                    .SetPaddingRight(0.45f)
+                    .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                    .SetTextAlignment(TextAlignment.LEFT);
 
-                var paragraph = new Paragraph(description)
-                    .SetFontSize(8)
-                    .SimulateBold()
-                    .SetMarginBottom(5)
-                    .SetTextAlignment(TextAlignment.CENTER);
+                var labelLines = BuildQrLabelLines(tepih);
+                var sizeLine = BuildQrLabelSizeLine(tepih);
+                for (var lineIndex = 0; lineIndex < labelLines.Count; lineIndex++)
+                {
+                    var labelFontSize = lineIndex == 0 ? 10.0f : 9.2f;
+                    var valueFontSize = lineIndex == 0 ? 10.0f : 9.2f;
+                    if (!string.IsNullOrWhiteSpace(sizeLine) &&
+                        string.Equals(labelLines[lineIndex], sizeLine, StringComparison.Ordinal))
+                    {
+                        valueFontSize += 1.5f;
+                    }
 
-                document.Add(paragraph);
+                    var paragraph = new Paragraph()
+                        .SetMargin(0)
+                        .SetMarginBottom(lineIndex < labelLines.Count - 1 ? 1.5f : 0)
+                        .SetMultipliedLeading(1.15f);
+
+                    AppendQrLabelLine(paragraph, labelLines[lineIndex], labelFontSize, valueFontSize);
+
+                    textCell.Add(paragraph);
+                }
 
                 var imgData = ImageDataFactory.Create(imageBytes);
                 var image = new Image(imgData)
                     .ScaleToFit(
-                        MmToPt(25),
-                        MmToPt(25)
-                    )
+                        MmToPt(31.5f),
+                        MmToPt(31.5f))
                     .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
-                document.Add(image);
+                var imageCell = new Cell()
+                    .SetBorder(Border.NO_BORDER)
+                    .SetPaddingTop(8.0f)
+                    .SetPaddingBottom(2.2f)
+                    .SetPaddingLeft(0.45f)
+                    .SetPaddingRight(2.2f)
+                    .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                    .SetTextAlignment(TextAlignment.CENTER)
+                    .Add(image);
+
+                labelTable.AddCell(textCell);
+                labelTable.AddCell(imageCell);
+
+                document.Add(labelTable);
 
                 if (index < orderedProducts.Count - 1)
                 {
@@ -207,6 +245,130 @@ namespace Inventar.Controllers
                    $"{tepih.Width?.ToString("0.##")}/{tepih.Length?.ToString("0.##")}/" +
                    $"{tepih.Color.ToUpper().Trim() ?? ""}" +
                    $"{(string.IsNullOrWhiteSpace(tepih.UnID) ? string.Empty : $"/{tepih.UnID}")}";
+        }
+
+        private static string BuildQrLabelDescription(Tepih tepih)
+        {
+            return $"{tepih.Name.ToUpper().Trim() ?? ""}/{tepih.Model.ToUpper().Trim() ?? ""}/" +
+                   $"{tepih.Width?.ToString("0.##")}/{tepih.Length?.ToString("0.##")}/" +
+                   $"{tepih.Color.ToUpper().Trim() ?? ""}" +
+                   $"{(string.IsNullOrWhiteSpace(tepih.UnID) ? string.Empty : $"/{tepih.UnID}")}";
+        }
+
+        private static List<string> BuildQrLabelLines(Tepih tepih)
+        {
+            var lines = new List<string>();
+
+            void AddIfPresent(string? value)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    lines.Add(value.Trim().ToUpperInvariant());
+                }
+            }
+
+            AddIfPresent(tepih.Name);
+
+            if (!string.IsNullOrWhiteSpace(tepih.Model))
+            {
+                lines.Add($"Model: {tepih.Model.Trim().ToUpperInvariant()}");
+            }
+
+            var sizeLine = BuildQrLabelSizeLine(tepih);
+            if (!string.IsNullOrWhiteSpace(sizeLine))
+            {
+                lines.Add(sizeLine);
+            }
+
+            AddIfPresent(tepih.Color);
+
+            if (!string.IsNullOrWhiteSpace(tepih.UnID))
+            {
+                lines.Add($"UnID: {tepih.UnID.Trim().ToUpperInvariant()}");
+            }
+
+            return lines;
+        }
+
+        private static string BuildQrLabelSizeLine(Tepih tepih)
+        {
+            var width = tepih.Width?.ToString("0.##");
+            var length = tepih.Length?.ToString("0.##");
+
+            if (!string.IsNullOrWhiteSpace(width) && !string.IsNullOrWhiteSpace(length))
+            {
+                return $"{width} X {length}";
+            }
+
+            return string.IsNullOrWhiteSpace(width)
+                ? length ?? string.Empty
+                : width;
+        }
+
+        private static void AppendQrLabelLine(Paragraph paragraph, string line, float labelFontSize, float valueFontSize)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                return;
+            }
+
+            var separatorIndex = line.IndexOf(':');
+            if (separatorIndex <= -1)
+            {
+                paragraph.Add(new Text(line)
+                    .SetFontSize(valueFontSize)
+                    .SimulateBold());
+                return;
+            }
+
+            var label = line[..(separatorIndex + 1)];
+            var value = line[(separatorIndex + 1)..].TrimStart();
+
+            paragraph.Add(new Text(label)
+                .SetFontSize(labelFontSize));
+
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                paragraph.Add(new Text($" {value}")
+                    .SetFontSize(valueFontSize)
+                    .SimulateBold());
+            }
+        }
+
+        private static string BuildQrLabelPdfFileName(Tepih tepih)
+        {
+            return BuildQrLabelPdfFileName(BuildQrLabelDescription(tepih));
+        }
+
+        private static string BuildQrLabelPdfFileName(string labelText)
+        {
+            const string fallbackFileName = "QRCodeLabel";
+
+            var sanitized = string.IsNullOrWhiteSpace(labelText)
+                ? fallbackFileName
+                : labelText.Trim();
+
+            sanitized = sanitized
+                .Replace("/", "#", StringComparison.Ordinal)
+                .Replace("\\", "#", StringComparison.Ordinal);
+
+            foreach (var invalidChar in Path.GetInvalidFileNameChars())
+            {
+                sanitized = sanitized.Replace(invalidChar, '_');
+            }
+
+            sanitized = sanitized.Trim();
+            if (string.IsNullOrWhiteSpace(sanitized))
+            {
+                sanitized = fallbackFileName;
+            }
+
+            if (sanitized.Length > 180)
+            {
+                sanitized = sanitized[..180].TrimEnd();
+            }
+
+            return $"{sanitized}.pdf";
         }
 
         [NonAction]
@@ -786,6 +948,79 @@ namespace Inventar.Controllers
         }
 
         [HttpPost]
+        public IActionResult GenerateDetailsExcel([FromBody] DetailsPdfRequest request)
+        {
+            try
+            {
+                if (request == null || request.ColumnHeaders == null || request.Data == null || request.Filters == null)
+                {
+                    _logger.LogError("GenerateDetailsExcel: missing data or headers {req}", request);
+                    return BadRequest("Invalid request data.");
+                }
+
+                int numCols = request.ColumnHeaders.Count;
+                if (numCols == 0 || request.Filters.Count != numCols)
+                {
+                    _logger.LogError("GenerateDetailsExcel: No columns provided {cols}.", numCols);
+                    return BadRequest("Column headers and filters count mismatch.");
+                }
+
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add(@Inventar.Resources.Resource.Sales);
+
+                worksheet.Range(1, 1, 1, numCols).Merge().Value = request.HeadingLeft ?? string.Empty;
+                StyleSimpleExportHeading(worksheet.Range(1, 1, 1, numCols));
+
+                worksheet.Range(2, 1, 2, numCols).Merge().Value = request.HeadingRight ?? string.Empty;
+                StyleSimpleExportSubheading(worksheet.Range(2, 1, 2, numCols));
+
+                var headerRow = 4;
+                for (int columnIndex = 0; columnIndex < numCols; columnIndex++)
+                {
+                    worksheet.Cell(headerRow, columnIndex + 1).Value = request.ColumnHeaders[columnIndex] ?? string.Empty;
+                }
+                StyleSimpleExportRow(worksheet.Range(headerRow, 1, headerRow, numCols), XLColor.LightGray, true);
+
+                var filterRow = headerRow + 1;
+                for (int columnIndex = 0; columnIndex < numCols; columnIndex++)
+                {
+                    worksheet.Cell(filterRow, columnIndex + 1).Value = request.Filters[columnIndex] ?? string.Empty;
+                }
+                StyleSimpleExportRow(worksheet.Range(filterRow, 1, filterRow, numCols), XLColor.FromHtml("#FFF2CC"));
+
+                var currentRow = filterRow + 1;
+                foreach (var row in request.Data)
+                {
+                    for (int columnIndex = 0; columnIndex < numCols; columnIndex++)
+                    {
+                        worksheet.Cell(currentRow, columnIndex + 1).Value = row.ElementAtOrDefault(columnIndex) ?? string.Empty;
+                    }
+
+                    StyleSimpleExportRow(worksheet.Range(currentRow, 1, currentRow, numCols), XLColor.White);
+                    currentRow++;
+                }
+
+                worksheet.Range(currentRow, 1, currentRow, numCols).Merge().Value =
+                    $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity}   |   {@Inventar.Resources.Resource.M2Total}: {request.TotalM2:F2}   |   {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice:F2}€";
+                StyleSimpleExportRow(worksheet.Range(currentRow, 1, currentRow, numCols), XLColor.FromHtml("#D9EAD3"), true);
+
+                FinalizeSimpleExportWorksheet(worksheet, currentRow, numCols);
+
+                using var stream = new MemoryStream();
+                workbook.SaveAs(stream);
+                return File(
+                    stream.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Detaljne_prodaje_kupovine.xlsx");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating detailed Excel.");
+                return StatusCode(500, "An error occurred while generating the Excel file.");
+            }
+        }
+
+        [HttpPost]
         public IActionResult GenerateAllSalesPDF([FromBody] AllSalesPdfRequest request)
         {
             try
@@ -1001,6 +1236,141 @@ namespace Inventar.Controllers
                 _logger.LogError(ex, "Error generating sales PDF.");
                 return StatusCode(500, "An error occurred while generating the PDF.");
             }
+        }
+
+        [HttpPost]
+        public IActionResult GenerateSalesExcel([FromBody] BuysPdfRequest request)
+        {
+            try
+            {
+                if (request == null || request.Data == null || request.Data.Count == 0 || request.ColumnHeaders == null)
+                {
+                    _logger.LogError("GenerateSalesExcel: missing data or headers {req}", request);
+                    return BadRequest("Invalid request: missing data or column headers.");
+                }
+
+                int numColumns = request.Data[0].Length - 1;
+                if (numColumns <= 0 || request.ColumnHeaders.Count < numColumns)
+                {
+                    _logger.LogError("GenerateSalesExcel: Column header count mismatch or insufficient data: {numCols}.", numColumns);
+                    return BadRequest("Column header count mismatch or insufficient data.");
+                }
+
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add(@Inventar.Resources.Resource.SalesGrouped);
+
+                worksheet.Range(1, 1, 1, numColumns).Merge().Value = request.Heading ?? string.Empty;
+                StyleSimpleExportHeading(worksheet.Range(1, 1, 1, numColumns));
+
+                var headerRow = 3;
+                for (int columnIndex = 0; columnIndex < numColumns; columnIndex++)
+                {
+                    worksheet.Cell(headerRow, columnIndex + 1).Value = request.ColumnHeaders[columnIndex] ?? string.Empty;
+                }
+                StyleSimpleExportRow(worksheet.Range(headerRow, 1, headerRow, numColumns), XLColor.LightGray, true);
+
+                var filterRow = headerRow + 1;
+                for (int columnIndex = 0; columnIndex < numColumns; columnIndex++)
+                {
+                    var filterValue = request.Filters?.GetValueOrDefault(columnIndex) ?? string.Empty;
+                    if (columnIndex == 1)
+                    {
+                        filterValue = FormatDateRange(request.MinDate, request.MaxDate, filterValue);
+                    }
+
+                    worksheet.Cell(filterRow, columnIndex + 1).Value = filterValue;
+                }
+                StyleSimpleExportRow(worksheet.Range(filterRow, 1, filterRow, numColumns), XLColor.FromHtml("#FFF2CC"));
+
+                var currentRow = filterRow + 1;
+                foreach (var row in request.Data)
+                {
+                    for (int columnIndex = 0; columnIndex < numColumns; columnIndex++)
+                    {
+                        worksheet.Cell(currentRow, columnIndex + 1).Value = row.ElementAtOrDefault(columnIndex) ?? string.Empty;
+                    }
+
+                    StyleSimpleExportRow(worksheet.Range(currentRow, 1, currentRow, numColumns), XLColor.White);
+                    currentRow++;
+                }
+
+                worksheet.Range(currentRow, 1, currentRow, numColumns).Merge().Value =
+                    $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {request.TotalM2:F2} | {@Inventar.Resources.Resource.PriceTotal}: {request.TotalPrice:F2}€";
+                StyleSimpleExportRow(worksheet.Range(currentRow, 1, currentRow, numColumns), XLColor.FromHtml("#D9EAD3"), true);
+
+                FinalizeSimpleExportWorksheet(worksheet, currentRow, numColumns);
+
+                using var stream = new MemoryStream();
+                workbook.SaveAs(stream);
+                return File(
+                    stream.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Grupisane_prodaje.xlsx");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating sales Excel.");
+                return StatusCode(500, "An error occurred while generating the Excel file.");
+            }
+        }
+
+        private static string FormatDateRange(string? minDate, string? maxDate, string fallback = "")
+        {
+            var hasMin = DateTime.TryParse(minDate, out var parsedMin);
+            var hasMax = DateTime.TryParse(maxDate, out var parsedMax);
+
+            if (hasMin && hasMax)
+            {
+                return $"{parsedMin:dd-MM-yyyy} - {parsedMax:dd-MM-yyyy}";
+            }
+
+            if (hasMin)
+            {
+                return $"{parsedMin:dd-MM-yyyy} -";
+            }
+
+            if (hasMax)
+            {
+                return $"- {parsedMax:dd-MM-yyyy}";
+            }
+
+            return fallback;
+        }
+
+        private static void StyleSimpleExportHeading(IXLRange range)
+        {
+            range.Style.Font.Bold = true;
+            range.Style.Font.FontSize = 14;
+            range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            range.Style.Fill.BackgroundColor = XLColor.LightGray;
+            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        }
+
+        private static void StyleSimpleExportSubheading(IXLRange range)
+        {
+            range.Style.Font.Bold = true;
+            range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            range.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+        }
+
+        private static void StyleSimpleExportRow(IXLRange range, XLColor backgroundColor, bool bold = false)
+        {
+            range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            range.Style.Alignment.WrapText = true;
+            range.Style.Fill.BackgroundColor = backgroundColor;
+            range.Style.Font.Bold = bold;
+            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        }
+
+        private static void FinalizeSimpleExportWorksheet(IXLWorksheet worksheet, int lastRow, int lastColumn)
+        {
+            worksheet.SheetView.FreezeRows(4);
+            worksheet.Columns(1, lastColumn).AdjustToContents();
+            worksheet.Rows(1, lastRow).AdjustToContents();
         }
 
         [HttpPost]
@@ -1560,6 +1930,7 @@ namespace Inventar.Controllers
                 var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
                 document.SetFont(font);
                 document.SetFontSize(10);
+                var canSeeInventoryTotals = User.IsInRole("admin") || User.IsInRole("superadmin");
 
                 var heading = new Paragraph(request.Heading)
                     .SetTextAlignment(TextAlignment.CENTER)
@@ -1601,16 +1972,19 @@ namespace Inventar.Controllers
                     }
                 }
 
-                var summaryText = request.IncludeTotalM2
-                    ? $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {(request.TotalM2 ?? 0):0.##}"
-                    : $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity}";
+                if (canSeeInventoryTotals)
+                {
+                    var summaryText = request.IncludeTotalM2
+                        ? $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity} | {@Inventar.Resources.Resource.M2Total}: {(request.TotalM2 ?? 0):0.##}"
+                        : $"{@Inventar.Resources.Resource.TotalQuantity}: {request.TotalQuantity}";
 
-                table.AddCell(new Cell(1, numColumns)
-                    .Add(new Paragraph(summaryText))
-                    .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
-                    .SetTextAlignment(TextAlignment.CENTER)
-                    .SimulateBold()
-                    .SetPadding(5));
+                    table.AddCell(new Cell(1, numColumns)
+                        .Add(new Paragraph(summaryText))
+                        .SetBackgroundColor(ColorConstants.LIGHT_GRAY)
+                        .SetTextAlignment(TextAlignment.CENTER)
+                        .SimulateBold()
+                        .SetPadding(5));
+                }
 
                 document.Add(table);
                 document.Close();

@@ -3,6 +3,87 @@
 @{
     ViewData["Title"] = "Sales Report";
 }
+<style>
+    #PerProductsTable thead tr.filters th {
+        padding: 1px;
+    }
+
+    #PerProductsTable thead tr.filters input {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    #myForm {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    #myForm label {
+        margin: 0 !important;
+    }
+
+    .sales-per-products__actions {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .sales-per-products__totals {
+        margin-top: 10px;
+        font-weight: bold;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .sales-report-table-zoom {
+        width: 100%;
+    }
+
+    .sales-report-table-zoom table {
+        width: 100% !important;
+    }
+
+    @@media (max-width: 768px) {
+        .sales-report-table-zoom {
+            zoom: 0.36;
+        }
+
+        .sales-per-products__totals {
+            font-size: 2rem;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        #myForm {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        #myForm input[type="date"],
+        #myForm .btn {
+            width: 100%;
+        }
+
+        .sales-per-products__actions {
+            display: flex;
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .sales-per-products__actions .btn {
+            width: 100%;
+        }
+    }
+</style>
 <h2>@Inventar.Resources.Resource.PerProducts</h2>
 <p id="salesReportWithName">
     @Inventar.Resources.Resource.SalesReport: <strong style="font-weight:900">@Model.CustomerFullName</strong>
@@ -32,7 +113,7 @@
     @await Html.PartialAsync("_SalesReportTable", Model)
 </div>
 
-<div style="display:inline-block; margin-right:3rem">
+<div class="sales-per-products__actions">
     <button id="downloadSalesUngroupedPDF" class="btn btn-danger btn-sm" style="margin-top: 10px; display:none;">
         @Inventar.Resources.Resource.UngroupedPDF
     </button>
@@ -94,13 +175,24 @@
                                 "fixedHeader": true,
                                 "columnDefs": columnDefs
                             });
-                            $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
-                                $('input', this).on('keyup change', function () {
-                                    if (table.column(i).search() !== this.value) {
-                                        table.column(i).search(this.value).draw();
+                            $('#PerProductsTable')
+                                .off('keyup change.perProductsFilters', '.per-products-filter-input')
+                                .on('keyup change.perProductsFilters', '.per-products-filter-input', function () {
+                                    var input = $(this);
+
+                                    if (input.is(':disabled')) {
+                                        return;
+                                    }
+
+                                    var columnIndex = parseInt(input.attr('data-column-index'), 10);
+                                    if (Number.isNaN(columnIndex)) {
+                                        return;
+                                    }
+
+                                    if (table.column(columnIndex).search() !== this.value) {
+                                        table.column(columnIndex).search(this.value).draw();
                                     }
                                 });
-                            });
                             function updateTotals() {
                                 var table = $('#PerProductsTable').DataTable();
                                 var totalQuantity = 0;
@@ -124,9 +216,9 @@
 
                                 // Loop through filtered data
                                 table.rows({ filter: 'applied' }).data().each(function (value) {
-                                    totalQuantity += parseFloat(value[indexes.quantity]) || 0;
-                                    totalPrice += parseFloat(value[indexes.price]) || 0;
-                                    totalM2 += parseFloat(value[indexes.m2]) || 0;
+                                    totalQuantity += window.InventarNumber.parseUiNumber(value[indexes.quantity]);
+                                    totalPrice += window.InventarNumber.parseUiNumber(value[indexes.price]);
+                                    totalM2 += window.InventarNumber.parseUiNumber(value[indexes.m2]);
                                 });
 
                                 $('#totalQuantity').text(totalQuantity);
@@ -136,7 +228,7 @@
 
 
                             $('#PerProductsTable').after(`
-                    <div style="margin-top: 10px; font-weight: bold;">
+                    <div class="sales-per-products__totals">
         @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span> |
         @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span> |
         @Inventar.Resources.Resource.PriceTotal: <span id="totalPrice">0.00</span>€
@@ -178,17 +270,6 @@
             });
         });
        </script>
-       <script>
-        $('#PerProductsTable thead tr:eq(1) th').each(function (i) {
-            $('input', this).on('keyup change', function () {
-                if (table.column(i).search() !== this.value) {
-                    table.column(i).search(this.value).draw();
-                }
-            });
-        });
-
-    </script>
-
     <script>
         $(document).ready(function () {
             $('#downloadSalesUngroupedPDF').on('click', function () {
@@ -233,8 +314,8 @@
 
                 // Get totals from your DOM or compute here
                 var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
-                var totalM2 = parseFloat($('#totalM2').text()) || 0;
-                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+                var totalM2 = window.InventarNumber.parseUiNumber($('#totalM2').text());
+                var totalPrice = window.InventarNumber.parseUiNumber($('#totalPrice').text());
 
                 var customerName = '@Model.CustomerFullName';
 
@@ -313,8 +394,8 @@
 
                 // Get totals from your DOM or compute here
                 var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
-                var totalM2 = parseFloat($('#totalM2').text()) || 0;
-                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+                var totalM2 = window.InventarNumber.parseUiNumber($('#totalM2').text());
+                var totalPrice = window.InventarNumber.parseUiNumber($('#totalPrice').text());
 
                 var customerName = '@Model.CustomerFullName';
 

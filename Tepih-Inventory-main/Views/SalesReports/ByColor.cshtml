@@ -36,6 +36,56 @@
         }));
 }
 
+<style>
+    .inventory-report-table__filters th {
+        padding: 1px;
+    }
+
+    .inventory-report-table__filters input.form-control {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .inventory-report-mobile-zoom {
+        width: 100%;
+    }
+
+    @@media (max-width: 768px) {
+        .inventory-report-mobile-zoom {
+            zoom: 0.62;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        .inventory-report-toolbar,
+        .inventory-report-toolbar__search,
+        .inventory-report-actions,
+        .inventory-report-date-filter {
+            gap: 0.4rem;
+        }
+
+        .inventory-report-toolbar,
+        .inventory-report-toolbar__search,
+        .inventory-report-date-filter {
+            flex-wrap: wrap;
+        }
+
+        .inventory-report-toolbar > .btn,
+        .inventory-report-toolbar__search > .form-control,
+        .inventory-report-toolbar__search > .btn,
+        .inventory-report-date-filter__field,
+        .inventory-report-date-filter__active-period,
+        .inventory-report-date-filter__clear,
+        .inventory-report-actions .btn,
+        .inventory-report-load-more .btn {
+            width: 100%;
+        }
+    }
+</style>
+
 <div class="inventory-report-page">
     <div class="inventory-report-toolbar">
         <button type="button" id="toggleCustomTable" class="btn btn-primary">@Inventar.Resources.Resource.CreateNewTable</button>
@@ -90,7 +140,7 @@
             <h2 class="inventory-report-card__title">@Inventar.Resources.Resource.NewTable</h2>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive inventory-report-mobile-zoom">
             <table class="table table-bordered inventory-report-table" id="customColorReportTable">
                 <thead>
                     <tr>
@@ -116,7 +166,7 @@
             <h2 class="inventory-report-card__title">@Inventar.Resources.Resource.ReportByColor</h2>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive inventory-report-mobile-zoom">
             <table class="table table-bordered inventory-report-table" id="colorReportTable">
                 <thead>
                     <tr>
@@ -142,10 +192,13 @@
                         <th colspan="4"></th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var colorGroup in Model.Groups)
-                    {
-                        for (var productIndex = 0; productIndex < colorGroup.ProductGroups.Count; productIndex++)
+                @foreach (var colorGroup in Model.Groups)
+                {
+                    <tbody class="inventory-report-section"
+                           data-group-name="@colorGroup.Color"
+                           data-group-name-normalized="@colorGroup.Color.ToLowerInvariant()"
+                           data-section-row-count="@colorGroup.RowSpan">
+                        @for (var productIndex = 0; productIndex < colorGroup.ProductGroups.Count; productIndex++)
                         {
                             var productGroup = colorGroup.ProductGroups[productIndex];
                             var sizeRows = productGroup.SizeRows.Count == 0
@@ -164,9 +217,7 @@
                             {
                                 var sizeRow = sizeRows[sizeIndex];
 
-                                <tr class="inventory-report-row"
-                                    data-group-name="@colorGroup.Color"
-                                    data-group-name-normalized="@colorGroup.Color.ToLowerInvariant()">
+                                <tr class="inventory-report-row">
                                     @if (productIndex == 0 && sizeIndex == 0)
                                     {
                                         <td class="inventory-report-table__name-cell" rowspan="@colorGroup.RowSpan">
@@ -191,25 +242,21 @@
                                 </tr>
                             }
 
-                            <tr class="inventory-report-row inventory-report-row--subtotal"
-                                data-group-name="@colorGroup.Color"
-                                data-group-name-normalized="@colorGroup.Color.ToLowerInvariant()">
+                            <tr class="inventory-report-row inventory-report-row--subtotal">
                                 <td><strong>@Inventar.Resources.Resource.Total</strong></td>
                                 <td><strong>@productGroup.TotalQuantity</strong></td>
                                 <td><strong>@productGroup.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
                             </tr>
                         }
 
-                        <tr class="inventory-report-row inventory-report-row--total"
-                            data-group-name="@colorGroup.Color"
-                            data-group-name-normalized="@colorGroup.Color.ToLowerInvariant()">
-                            <td><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
-                            <td></td>
+                        <tr class="inventory-report-row inventory-report-row--total">
+                            <td colspan="2"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
                             <td><strong>@colorGroup.TotalQuantity</strong></td>
                             <td><strong>@colorGroup.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
                         </tr>
-                    }
-
+                    </tbody>
+                }
+                <tbody>
                     <tr class="inventory-report-row inventory-report-row--grand-total">
                         <td colspan="3"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
                         <td id="mainGrandTotalQuantity"><strong>@initialGrandTotalQuantity</strong></td>
@@ -253,10 +300,13 @@
             const startDateInput = document.getElementById('salesColorStartDate');
             const endDateInput = document.getElementById('salesColorEndDate');
             const dateFilterForm = document.getElementById('salesColorDateFilterForm');
-            const mainRowLoader = window.InventarTableLoadMore.init({
-                rowSelector: '#colorReportTable tbody > tr.inventory-report-row:not(.inventory-report-row--grand-total)',
+            const mainRowLoader = window.InventarSectionLoadMore.init({
+                sectionSelector: '#colorReportTable tbody.inventory-report-section',
                 loadMoreButtonId: 'loadMoreMainRows',
-                pageSize: 300
+                pageSize: 300,
+                getSectionRowCount: function (section) {
+                    return Number(section.dataset.sectionRowCount || 1);
+                }
             });
 
             let customTableActive = false;
@@ -275,8 +325,8 @@
                 return Number(value ?? 0).toFixed(2);
             }
 
-            function getVisibleGroupRows(groupKey) {
-                return document.querySelectorAll(`[data-group-name="${CSS.escape(groupKey)}"]`);
+            function getGroupSection(groupKey) {
+                return document.querySelector(`#colorReportTable tbody.inventory-report-section[data-group-name="${CSS.escape(groupKey)}"]`);
             }
 
             function findGroupByInputValue(rawValue) {
@@ -287,9 +337,10 @@
                 const filterValue = (colorFilter.value || '').trim().toLowerCase();
                 reportGroups.forEach(group => {
                     const isVisible = filterValue.length === 0 || group.color.toLowerCase().includes(filterValue);
-                    getVisibleGroupRows(group.color).forEach(row => {
-                        row.dataset.filterMatch = isVisible ? 'true' : 'false';
-                    });
+                    const section = getGroupSection(group.color);
+                    if (section) {
+                        section.dataset.filterMatch = isVisible ? 'true' : 'false';
+                    }
                 });
                 mainRowLoader.refresh(true);
             }
@@ -385,8 +436,7 @@
 
                     return rowsHtml + `
                         <tr class="inventory-report-row--total">
-                            <td><strong>@Inventar.Resources.Resource.Total</strong></td>
-                            <td></td>
+                            <td colspan="2"><strong>@Inventar.Resources.Resource.Total</strong></td>
                             <td><strong>${colorGroup.totalQuantity ?? 0}</strong></td>
                             <td><strong>${formatNumber(colorGroup.totalM2)}</strong></td>
                         </tr>`;

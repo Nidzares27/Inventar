@@ -241,6 +241,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enter at least one search parameter..
+        /// </summary>
+        public static string AtLeastOneParam {
+            get {
+                return ResourceManager.GetString("AtLeastOneParam", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Available.
         /// </summary>
         public static string Available {
@@ -336,6 +345,15 @@ namespace Inventar.Resources {
         public static string Cancel {
             get {
                 return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The gallery cannot be loaded at the moment. Try again..
+        /// </summary>
+        public static string CannotLoadGallery {
+            get {
+                return ResourceManager.GetString("CannotLoadGallery", resourceCulture);
             }
         }
         
@@ -761,6 +779,15 @@ namespace Inventar.Resources {
                 return ResourceManager.GetString("DeleteThis", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Detailed PDF.
+        /// </summary>
+        public static string DetailedPDF {
+            get {
+                return ResourceManager.GetString("DetailedPDF", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete this account?.
@@ -889,6 +916,33 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error creating product..
+        /// </summary>
+        public static string ErrorCreatingProduct {
+            get {
+                return ResourceManager.GetString("ErrorCreatingProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while loading similar products..
+        /// </summary>
+        public static string ErrorLoadingSimilarProducts {
+            get {
+                return ResourceManager.GetString("ErrorLoadingSimilarProducts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while processing the QR code..
+        /// </summary>
+        public static string ErrorProcessingQR {
+            get {
+                return ResourceManager.GetString("ErrorProcessingQR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expires.
         /// </summary>
         public static string Expires {
@@ -903,6 +957,15 @@ namespace Inventar.Resources {
         public static string FailedToAddProduct {
             get {
                 return ResourceManager.GetString("FailedToAddProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to load gallery..
+        /// </summary>
+        public static string FailedToLoadGallery {
+            get {
+                return ResourceManager.GetString("FailedToLoadGallery", resourceCulture);
             }
         }
         
@@ -1011,6 +1074,15 @@ namespace Inventar.Resources {
         public static string Home {
             get {
                 return ResourceManager.GetString("Home", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload product photos and videos, sync them across the group, and remove old files as needed..
+        /// </summary>
+        public static string ImgVidUploadTxt {
+            get {
+                return ResourceManager.GetString("ImgVidUploadTxt", resourceCulture);
             }
         }
         
@@ -1186,6 +1258,24 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading gallery....
+        /// </summary>
+        public static string LoadingGallery {
+            get {
+                return ResourceManager.GetString("LoadingGallery", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading similar products....
+        /// </summary>
+        public static string LoadingSimilarProducts {
+            get {
+                return ResourceManager.GetString("LoadingSimilarProducts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Log in.
         /// </summary>
         public static string Log_in {
@@ -1294,7 +1384,7 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name.
+        ///   Looks up a localized string similar to Name Product.
         /// </summary>
         public static string Name {
             get {
@@ -1384,11 +1474,29 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The QR code does not contain any data..
+        /// </summary>
+        public static string NoQRData {
+            get {
+                return ResourceManager.GetString("NoQRData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No results found!.
         /// </summary>
         public static string NoResultsFound {
             get {
                 return ResourceManager.GetString("NoResultsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No similar products found..
+        /// </summary>
+        public static string NoSimilarProductFound {
+            get {
+                return ResourceManager.GetString("NoSimilarProductFound", resourceCulture);
             }
         }
         
@@ -1506,6 +1614,15 @@ namespace Inventar.Resources {
         public static string Paid {
             get {
                 return ResourceManager.GetString("Paid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pairs.
+        /// </summary>
+        public static string Pairs {
+            get {
+                return ResourceManager.GetString("Pairs", resourceCulture);
             }
         }
         
@@ -1796,6 +1913,15 @@ namespace Inventar.Resources {
                 return ResourceManager.GetString("PrintPDF", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Excel.
+        /// </summary>
+        public static string Excel {
+            get {
+                return ResourceManager.GetString("Excel", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Product.
@@ -1803,6 +1929,15 @@ namespace Inventar.Resources {
         public static string Product {
             get {
                 return ResourceManager.GetString("Product", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product gallery.
+        /// </summary>
+        public static string ProductGallery {
+            get {
+                return ResourceManager.GetString("ProductGallery", resourceCulture);
             }
         }
         
@@ -1821,6 +1956,15 @@ namespace Inventar.Resources {
         public static string ProductImages {
             get {
                 return ResourceManager.GetString("ProductImages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product not found..
+        /// </summary>
+        public static string ProductNotFound {
+            get {
+                return ResourceManager.GetString("ProductNotFound", resourceCulture);
             }
         }
         
@@ -1969,6 +2113,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Report by product name.
+        /// </summary>
+        public static string ReportByProductName {
+            get {
+                return ResourceManager.GetString("ReportByProductName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Report by product number.
         /// </summary>
         public static string ReportByProductNumber {
@@ -2104,6 +2257,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scan the QR code to see similar products..
+        /// </summary>
+        public static string ScanToSeeSimilar {
+            get {
+                return ResourceManager.GetString("ScanToSeeSimilar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search.
         /// </summary>
         public static string Search {
@@ -2199,6 +2361,15 @@ namespace Inventar.Resources {
         public static string SignUpForaNewAccount {
             get {
                 return ResourceManager.GetString("SignUpForaNewAccount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Similar products.
+        /// </summary>
+        public static string SimilarProducts {
+            get {
+                return ResourceManager.GetString("SimilarProducts", resourceCulture);
             }
         }
         
@@ -2500,6 +2671,15 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to start QR scanner. Please refresh the page and allow camera access..
+        /// </summary>
+        public static string UnableToStartQRScanner {
+            get {
+                return ResourceManager.GetString("UnableToStartQRScanner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Uncheck all.
         /// </summary>
         public static string UncheckAll {
@@ -2779,6 +2959,663 @@ namespace Inventar.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Camera.
+        /// </summary>
+        public static string Camera {
+            get {
+                return ResourceManager.GetString("Camera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose camera.
+        /// </summary>
+        public static string ChooseCamera {
+            get {
+                return ResourceManager.GetString("ChooseCamera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Close.
+        /// </summary>
+        public static string Close {
+            get {
+                return ResourceManager.GetString("Close", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Decrease quantity.
+        /// </summary>
+        public static string DecreaseQuantity {
+            get {
+                return ResourceManager.GetString("DecreaseQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate fast scan ignored.
+        /// </summary>
+        public static string DuplicateFastScanIgnored {
+            get {
+                return ResourceManager.GetString("DuplicateFastScanIgnored", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter both width and length.
+        /// </summary>
+        public static string EnterBothWidthAndLength {
+            get {
+                return ResourceManager.GetString("EnterBothWidthAndLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter product ID.
+        /// </summary>
+        public static string EnterProductId {
+            get {
+                return ResourceManager.GetString("EnterProductId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while adding the per measure product..
+        /// </summary>
+        public static string ErrorAddingPerMeasureProduct {
+            get {
+                return ResourceManager.GetString("ErrorAddingPerMeasureProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error preparing product.
+        /// </summary>
+        public static string ErrorPreparingProduct {
+            get {
+                return ResourceManager.GetString("ErrorPreparingProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while creating the temporary product..
+        /// </summary>
+        public static string ErrorCreatingTemporaryProduct {
+            get {
+                return ResourceManager.GetString("ErrorCreatingTemporaryProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while updating the product price..
+        /// </summary>
+        public static string ErrorUpdatingProductPrice {
+            get {
+                return ResourceManager.GetString("ErrorUpdatingProductPrice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error updating quantity.
+        /// </summary>
+        public static string ErrorUpdatingQuantity {
+            get {
+                return ResourceManager.GetString("ErrorUpdatingQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Front camera.
+        /// </summary>
+        public static string FrontCamera {
+            get {
+                return ResourceManager.GetString("FrontCamera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantity for the direct-sale product is fixed..
+        /// </summary>
+        public static string FixedQuantityForDirectSaleProduct {
+            get {
+                return ResourceManager.GetString("FixedQuantityForDirectSaleProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Increase quantity.
+        /// </summary>
+        public static string IncreaseQuantity {
+            get {
+                return ResourceManager.GetString("IncreaseQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter valid dimensions.
+        /// </summary>
+        public static string InvalidDimensions {
+            get {
+                return ResourceManager.GetString("InvalidDimensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter a valid length.
+        /// </summary>
+        public static string InvalidLength {
+            get {
+                return ResourceManager.GetString("InvalidLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid price.
+        /// </summary>
+        public static string InvalidPrice {
+            get {
+                return ResourceManager.GetString("InvalidPrice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter valid product data.
+        /// </summary>
+        public static string InvalidProductData {
+            get {
+                return ResourceManager.GetString("InvalidProductData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter a valid product price.
+        /// </summary>
+        public static string InvalidProductPrice {
+            get {
+                return ResourceManager.GetString("InvalidProductPrice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter a valid quantity.
+        /// </summary>
+        public static string InvalidQuantity {
+            get {
+                return ResourceManager.GetString("InvalidQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter a valid width.
+        /// </summary>
+        public static string InvalidWidth {
+            get {
+                return ResourceManager.GetString("InvalidWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max.
+        /// </summary>
+        public static string MaxShort {
+            get {
+                return ResourceManager.GetString("MaxShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to It is possible to order at most {0} pieces for the selected product..
+        /// </summary>
+        public static string MaxPiecesForGivenProduct {
+            get {
+                return ResourceManager.GetString("MaxPiecesForGivenProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Model.
+        /// </summary>
+        public static string Model {
+            get {
+                return ResourceManager.GetString("Model", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product name is required.
+        /// </summary>
+        public static string ProductNameRequired {
+            get {
+                return ResourceManager.GetString("ProductNameRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rear camera.
+        /// </summary>
+        public static string RearCamera {
+            get {
+                return ResourceManager.GetString("RearCamera", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Choose the delete scope for this file..
+        /// </summary>
+        public static string ChooseDeleteScopeForThisFile {
+            get {
+                return ResourceManager.GetString("ChooseDeleteScopeForThisFile", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete file.
+        /// </summary>
+        public static string DeleteFileTitle {
+            get {
+                return ResourceManager.GetString("DeleteFileTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete for the same Name + Model + Color group.
+        /// </summary>
+        public static string DeleteForSameNameModelColorGroup {
+            get {
+                return ResourceManager.GetString("DeleteForSameNameModelColorGroup", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete for the same Name + Model group.
+        /// </summary>
+        public static string DeleteForSameNameModelGroup {
+            get {
+                return ResourceManager.GetString("DeleteForSameNameModelGroup", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete only for this product.
+        /// </summary>
+        public static string DeleteForThisProductOnly {
+            get {
+                return ResourceManager.GetString("DeleteForThisProductOnly", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Image.
+        /// </summary>
+        public static string ImageLabel {
+            get {
+                return ResourceManager.GetString("ImageLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Images and videos.
+        /// </summary>
+        public static string ImagesAndVideos {
+            get {
+                return ResourceManager.GetString("ImagesAndVideos", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to All products in this {0} group already have the selected gallery files..
+        /// </summary>
+        public static string InventoryGalleryAlreadySynced {
+            get {
+                return ResourceManager.GetString("InventoryGalleryAlreadySynced", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cloudinary is not configured. Add a valid ApiSecret before uploading product gallery media..
+        /// </summary>
+        public static string InventoryGalleryCloudinaryNotConfigured {
+            get {
+                return ResourceManager.GetString("InventoryGalleryCloudinaryNotConfigured", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Deleting the file from Cloudinary failed. The record was still removed from the gallery..
+        /// </summary>
+        public static string InventoryGalleryCloudinaryDeleteFailed {
+            get {
+                return ResourceManager.GetString("InventoryGalleryCloudinaryDeleteFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} additional entries have been copied to related products from the same {1} group..
+        /// </summary>
+        public static string InventoryGalleryCopiedToRelatedProducts {
+            get {
+                return ResourceManager.GetString("InventoryGalleryCopiedToRelatedProducts", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The gallery file has been removed from {0} products in the same Name + Model + Color group..
+        /// </summary>
+        public static string InventoryGalleryDeletedColorGroup {
+            get {
+                return ResourceManager.GetString("InventoryGalleryDeletedColorGroup", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The gallery file has been removed from {0} products in the same Name + Model group..
+        /// </summary>
+        public static string InventoryGalleryDeletedGroup {
+            get {
+                return ResourceManager.GetString("InventoryGalleryDeletedGroup", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The gallery file has been removed..
+        /// </summary>
+        public static string InventoryGalleryDeletedSingle {
+            get {
+                return ResourceManager.GetString("InventoryGalleryDeletedSingle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} gallery files have been uploaded..
+        /// </summary>
+        public static string InventoryGalleryManyFilesUploaded {
+            get {
+                return ResourceManager.GetString("InventoryGalleryManyFilesUploaded", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No active gallery files were selected, so nothing was synchronized..
+        /// </summary>
+        public static string InventoryGalleryNoActiveCheckedItems {
+            get {
+                return ResourceManager.GetString("InventoryGalleryNoActiveCheckedItems", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No gallery files were selected, so nothing was synchronized..
+        /// </summary>
+        public static string InventoryGalleryNoCheckedItems {
+            get {
+                return ResourceManager.GetString("InventoryGalleryNoCheckedItems", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No gallery files have been uploaded..
+        /// </summary>
+        public static string InventoryGalleryNoFilesUploaded {
+            get {
+                return ResourceManager.GetString("InventoryGalleryNoFilesUploaded", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to There are no other products yet in this {0} group..
+        /// </summary>
+        public static string InventoryGalleryNoOtherProductsInScope {
+            get {
+                return ResourceManager.GetString("InventoryGalleryNoOtherProductsInScope", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to You can select only one gallery reuse option..
+        /// </summary>
+        public static string InventoryGalleryOnlyOneReuseOption {
+            get {
+                return ResourceManager.GetString("InventoryGalleryOnlyOneReuseOption", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to 1 gallery file has been uploaded..
+        /// </summary>
+        public static string InventoryGalleryOneFileUploaded {
+            get {
+                return ResourceManager.GetString("InventoryGalleryOneFileUploaded", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Inventory gallery selection controls.
+        /// </summary>
+        public static string InventoryGallerySelectionControls {
+            get {
+                return ResourceManager.GetString("InventoryGallerySelectionControls", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Select at least one file for the product gallery..
+        /// </summary>
+        public static string InventoryGallerySelectAtLeastOneFile {
+            get {
+                return ResourceManager.GetString("InventoryGallerySelectAtLeastOneFile", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Selected: {0}.
+        /// </summary>
+        public static string InventoryGallerySelectedCount {
+            get {
+                return ResourceManager.GetString("InventoryGallerySelectedCount", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Name + Model.
+        /// </summary>
+        public static string InventoryGalleryScopeNameModel {
+            get {
+                return ResourceManager.GetString("InventoryGalleryScopeNameModel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Name + Model + Color.
+        /// </summary>
+        public static string InventoryGalleryScopeNameModelColor {
+            get {
+                return ResourceManager.GetString("InventoryGalleryScopeNameModelColor", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} gallery entries were synchronized through this {1} group..
+        /// </summary>
+        public static string InventoryGallerySyncedItems {
+            get {
+                return ResourceManager.GetString("InventoryGallerySyncedItems", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to '{0}' is not a supported file..
+        /// </summary>
+        public static string InventoryGalleryUnsupportedFile {
+            get {
+                return ResourceManager.GetString("InventoryGalleryUnsupportedFile", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while uploading product gallery media..
+        /// </summary>
+        public static string InventoryGalleryUploadError {
+            get {
+                return ResourceManager.GetString("InventoryGalleryUploadError", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while uploading product gallery media. Detail: {0}.
+        /// </summary>
+        public static string InventoryGalleryUploadErrorWithDetail {
+            get {
+                return ResourceManager.GetString("InventoryGalleryUploadErrorWithDetail", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Uploading the file '{0}' failed..
+        /// </summary>
+        public static string InventoryGalleryUploadFailedForFile {
+            get {
+                return ResourceManager.GetString("InventoryGalleryUploadFailedForFile", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The main gallery image has been updated..
+        /// </summary>
+        public static string InventoryGalleryPrimaryUpdated {
+            get {
+                return ResourceManager.GetString("InventoryGalleryPrimaryUpdated", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A video cannot be set as the main gallery image..
+        /// </summary>
+        public static string InventoryGalleryVideoCannotBePrimary {
+            get {
+                return ResourceManager.GetString("InventoryGalleryVideoCannotBePrimary", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No alt text.
+        /// </summary>
+        public static string NoAltText {
+            get {
+                return ResourceManager.GetString("NoAltText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to QR code URL.
+        /// </summary>
+        public static string QRCodeUrlLabel {
+            get {
+                return ResourceManager.GetString("QRCodeUrlLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reuse this file for products with the same Name + Model + Color.
+        /// </summary>
+        public static string ReuseCloudinaryImagesByColor {
+            get {
+                return ResourceManager.GetString("ReuseCloudinaryImagesByColor", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The selected product is not a per measure product.
+        /// </summary>
+        public static string SelectedProductIsNotPerMeasure {
+            get {
+                return ResourceManager.GetString("SelectedProductIsNotPerMeasure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a valid product type.
+        /// </summary>
+        public static string SelectValidProductType {
+            get {
+                return ResourceManager.GetString("SelectValidProductType", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Select media {0}.
+        /// </summary>
+        public static string SelectMediaAria {
+            get {
+                return ResourceManager.GetString("SelectMediaAria", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sync: Name + Model.
+        /// </summary>
+        public static string SyncImagesByNameModel {
+            get {
+                return ResourceManager.GetString("SyncImagesByNameModel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sync: Name + Model + Color.
+        /// </summary>
+        public static string SyncImagesByNameModelColor {
+            get {
+                return ResourceManager.GetString("SyncImagesByNameModelColor", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Start scanning.
+        /// </summary>
+        public static string StartScanning {
+            get {
+                return ResourceManager.GetString("StartScanning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop scanning.
+        /// </summary>
+        public static string StopScanning {
+            get {
+                return ResourceManager.GetString("StopScanning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to change scanner state. Please try again..
+        /// </summary>
+        public static string UnableToChangeScannerState {
+            get {
+                return ResourceManager.GetString("UnableToChangeScannerState", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to switch camera. Please try a different camera..
+        /// </summary>
+        public static string UnableToSwitchCamera {
+            get {
+                return ResourceManager.GetString("UnableToSwitchCamera", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter width and length for the selected product type.
+        /// </summary>
+        public static string WidthAndLengthRequiredForSelectedProductType {
+            get {
+                return ResourceManager.GetString("WidthAndLengthRequiredForSelectedProductType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Width.
         /// </summary>
         public static string Width {
@@ -2786,7 +3623,16 @@ namespace Inventar.Resources {
                 return ResourceManager.GetString("Width", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Video.
+        /// </summary>
+        public static string VideoLabel {
+            get {
+                return ResourceManager.GetString("VideoLabel", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to with your new password.
         /// </summary>

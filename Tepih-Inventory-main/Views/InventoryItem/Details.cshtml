@@ -5,104 +5,121 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>@Inventar.Resources.Resource.Details</h1>
+<div class="details-page">
+    <h1 class="details-page__title">@Inventar.Resources.Resource.Details</h1>
 
-<table class="custom-table">
-    <tr>
-        <th>@Html.DisplayNameFor(model => model.Id)</th>
-        <td>@Html.DisplayFor(model => model.Id)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Name</th>
-        <td>@Html.DisplayFor(model => model.Name)</td>
-    </tr>
-    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-    {
+    <table class="custom-table custom-table--details">
         <tr>
-            <th>@Inventar.Resources.Resource.ProductNumber</th>
-            <td>@Html.DisplayFor(model => model.ProductNumber)</td>
+            <th>@Html.DisplayNameFor(model => model.Id)</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Id)</td>
         </tr>
-    }
-    <tr>
-        <th>@Html.DisplayNameFor(model => model.Model)</th>
-        <td>@Html.DisplayFor(model => model.Model)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.BroaderCategory</th>
-        <td>@Html.DisplayFor(model => model.BroaderCategory)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.NarrowerCategory</th>
-        <td>@Html.DisplayFor(model => model.NarrowerCategory)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.DateTime</th>
-        <td>@Html.DisplayFor(model => model.DateTime)</td>
-    </tr>
-    <tr>
-        <th>@Html.DisplayNameFor(model => model.QRCodeUrl)</th>
-        <td>
-            @Html.DisplayFor(model => model.QRCodeUrl)
-            <div>
-                @if (!string.IsNullOrEmpty(Model.QRCodeUrl))
-                {
-                    <img src="@Model.QRCodeUrl" alt="QR Code" class="img-fluid rounded" style="max-height:150px;" />
-                }
-                else
-                {
-                    <span>N/A</span>
-                }
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Quantity</th>
-        <td>@Html.DisplayFor(model => model.Quantity)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Length</th>
-        <td>@Html.DisplayFor(model => model.Length)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Width</th>
-        <td>@Html.DisplayFor(model => model.Width)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Color</th>
-        <td>@Html.DisplayFor(model => model.Color)</td>
-    </tr>
-    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-    {
         <tr>
-            <th>@Inventar.Resources.Resource.Price</th>
-            <td>@($"{Model.Price:0.00} €")</td>
+            <th>@Inventar.Resources.Resource.Name</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Name)</td>
         </tr>
-    }
-    <tr>
-        <th>@Inventar.Resources.Resource.PerM2</th>
-        <td>@Html.DisplayFor(model => model.PerM2)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.PerMeasure</th>
-        <td>@Html.DisplayFor(model => model.PoMjeri)</td>
-    </tr>
-    @if (Model.PoMjeri)
-    {
+        @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+        {
+            <tr>
+                <th>@Inventar.Resources.Resource.ProductNumber</th>
+                <td class="details-page__value">@Html.DisplayFor(model => model.ProductNumber)</td>
+            </tr>
+        }
         <tr>
-            <th>UnID</th>
-            <td>@Html.DisplayFor(model => model.UnID)</td>
+            <th>@Html.DisplayNameFor(model => model.Model)</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Model)</td>
         </tr>
-    }
-    <tr>
-        <th>@Inventar.Resources.Resource.Description</th>
-        <td>@Html.DisplayFor(model => model.Description)</td>
-    </tr>
-</table>
+        <tr>
+            <th>@Inventar.Resources.Resource.BroaderCategory</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.BroaderCategory)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.NarrowerCategory</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.NarrowerCategory)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.DateTime</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.DateTime)</td>
+        </tr>
+        <tr>
+            <th>
+                <div class="details-page__qr-header">
+                    <span>@Html.DisplayNameFor(model => model.QRCodeUrl)</span>
+                    @if (!string.IsNullOrEmpty(Model.QRCodeUrl))
+                    {
+                        <a asp-controller="Pdf"
+                           asp-action="GenerateCloudinaryImagePdf"
+                           asp-route-id="@Model.Id"
+                           class="details-page__qr-print-link"
+                           title="Print QR PDF"
+                           aria-label="Print QR PDF">
+                            <i class="bi bi-printer"></i>
+                        </a>
+                    }
+                </div>
+            </th>
+            <td class="details-page__value">
+                <span class="details-page__qr-url">@Html.DisplayFor(model => model.QRCodeUrl)</span>
+                <div class="details-page__qr-code">
+                    @if (!string.IsNullOrEmpty(Model.QRCodeUrl))
+                    {
+                        <img src="@Model.QRCodeUrl" alt="QR Code" class="img-fluid rounded" style="max-height:150px;" />
+                    }
+                    else
+                    {
+                        <span>N/A</span>
+                    }
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Quantity)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Length</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Length)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Width</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Width)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Color</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Color)</td>
+        </tr>
+        @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+        {
+            <tr>
+                <th>@Inventar.Resources.Resource.Price</th>
+                <td class="details-page__value">@($"{Model.Price:0.00} €")</td>
+            </tr>
+        }
+        <tr>
+            <th>@Inventar.Resources.Resource.PerM2</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.PerM2)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.PerMeasure</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.PoMjeri)</td>
+        </tr>
+        @if (Model.PoMjeri)
+        {
+            <tr>
+                <th>UnID</th>
+                <td class="details-page__value">@Html.DisplayFor(model => model.UnID)</td>
+            </tr>
+        }
+        <tr>
+            <th>@Inventar.Resources.Resource.Description</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Description)</td>
+        </tr>
+    </table>
 
-<div>
-    <a asp-action="Index" class="btn btn-secondary btn-sm mt-3">@Inventar.Resources.Resource.BackToList</a>
-    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-    {
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm mt-3">@Inventar.Resources.Resource.Edit</a>
-    }
+    <div class="details-page__actions">
+        <a asp-action="Index" class="btn btn-secondary btn-sm">@Inventar.Resources.Resource.BackToList</a>
+        @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm">@Inventar.Resources.Resource.Edit</a>
+        }
+    </div>
 </div>

@@ -276,6 +276,9 @@
   <data name="DeleteThis" xml:space="preserve">
     <value>Bunu silmek istediğinizden emin misiniz?</value>
   </data>
+  <data name="DetailedPDF" xml:space="preserve">
+    <value>Detaylı PDF</value>
+  </data>
   <data name="DeleteUser?" xml:space="preserve">
     <value>Bu hesabı silmek istediğinizden emin misiniz?</value>
   </data>
@@ -385,7 +388,7 @@
     <value>Kimliği manuel olarak girin</value>
   </data>
   <data name="Name" xml:space="preserve">
-    <value>İsim</value>
+    <value>İsim Ürün</value>
   </data>
   <data name="NewPassword" xml:space="preserve">
     <value>Yeni Şifre</value>
@@ -495,6 +498,9 @@
   <data name="PrintPDF" xml:space="preserve">
     <value>PDF'yi yazdır</value>
   </data>
+  <data name="Excel" xml:space="preserve">
+    <value>Excel</value>
+  </data>
   <data name="Product" xml:space="preserve">
     <value>Ürün</value>
   </data>
@@ -566,6 +572,18 @@
   </data>
   <data name="Searching" xml:space="preserve">
     <value>Aramak...</value>
+  </data>
+  <data name="CreatingPdfFile" xml:space="preserve">
+    <value>PDF dosyası oluşturuluyor...</value>
+  </data>
+  <data name="CreatingExcelFile" xml:space="preserve">
+    <value>Excel dosyası oluşturuluyor...</value>
+  </data>
+  <data name="ConfirmPdfWithoutBuyerFullName" xml:space="preserve">
+    <value>Alıcının tam adını girmeden PDF yazdırmak istiyor musunuz?</value>
+  </data>
+  <data name="ConfirmExcelWithoutBuyerFullName" xml:space="preserve">
+    <value>Alıcının tam adını girmeden Excel yazdırmak istiyor musunuz?</value>
   </data>
   <data name="Seller" xml:space="preserve">
     <value>Satıcı</value>
@@ -807,6 +825,9 @@
   <data name="ReportByProductNumber" xml:space="preserve">
     <value>Kod bazında raporla</value>
   </data>
+  <data name="ReportByProductName" xml:space="preserve">
+    <value>Ürün adına göre rapor</value>
+  </data>
   <data name="NewTable" xml:space="preserve">
     <value>Yeni tablo</value>
   </data>
@@ -1034,5 +1055,287 @@
   </data>
   <data name="PerUnit" xml:space="preserve">
     <value>Adet başına</value>
+  </data>
+  <data name="Pairs" xml:space="preserve">
+    <value>Çiftler</value>
+  </data>
+  <data name="SimilarProducts" xml:space="preserve">
+    <value>Benzer ürünler</value>
+  </data>
+  <data name="ScanToSeeSimilar" xml:space="preserve">
+    <value>Benzer ürünleri görmek için QR kodunu tarayın.</value>
+  </data>
+  <data name="LoadingSimilarProducts" xml:space="preserve">
+    <value>Benzer ürünler yükleniyor...</value>
+  </data>
+  <data name="ErrorProcessingQR" xml:space="preserve">
+    <value>QR kodunun işlenmesi sırasında bir hata oluştu.</value>
+  </data>
+  <data name="AtLeastOneParam" xml:space="preserve">
+    <value>Lütfen en az bir arama parametresi girin.</value>
+  </data>
+  <data name="NoSimilarProductFound" xml:space="preserve">
+    <value>Benzer ürün bulunamadı.</value>
+  </data>
+  <data name="ProductNotFound" xml:space="preserve">
+    <value>Ürün bulunamadı.</value>
+  </data>
+  <data name="NoQRData" xml:space="preserve">
+    <value>QR kodu herhangi bir veri içermez.</value>
+  </data>
+  <data name="ErrorLoadingSimilarProducts" xml:space="preserve">
+    <value>Benzer ürünler yüklenirken bir hata oluştu.</value>
+  </data>
+  <data name="ImgVidUploadTxt" xml:space="preserve">
+    <value>Ürün fotoğraflarını ve videolarını yükleyin, bunları grup genelinde senkronize edin ve gerektiğinde eski dosyaları silin.</value>
+  </data>
+  <data name="ProductGallery" xml:space="preserve">
+    <value>Ürün galerisi</value>
+  </data>
+  <data name="CannotLoadGallery" xml:space="preserve">
+    <value>Galeri şu anda yüklenemiyor. Lütfen tekrar deneyin.</value>
+  </data>
+  <data name="FailedToLoadGallery" xml:space="preserve">
+    <value>Galeri yüklenemedi.</value>
+  </data>
+  <data name="LoadingGallery" xml:space="preserve">
+    <value>Galeri yükleniyor...</value>
+  </data>
+  <data name="UnableToStartQRScanner" xml:space="preserve">
+    <value>QR tarayıcı başlatılamadı. Lütfen sayfayı yenileyin ve kamera erişimine izin verin.</value>
+  </data>
+  <data name="ErrorCreatingProduct" xml:space="preserve">
+    <value>Ürün oluşturulurken hata oluştu.</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Camera" xml:space="preserve">
+    <value>Kamera</value>
+  </data>
+  <data name="FrontCamera" xml:space="preserve">
+    <value>Ön kamera</value>
+  </data>
+  <data name="RearCamera" xml:space="preserve">
+    <value>Arka kamera</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="ChooseCamera" xml:space="preserve">
+    <value>Kamera seçin</value>
+  </data>
+  <data name="StopScanning" xml:space="preserve">
+    <value>Taramayı durdur</value>
+  </data>
+  <data name="StartScanning" xml:space="preserve">
+    <value>Taramayı başlat</value>
+  </data>
+  <data name="DecreaseQuantity" xml:space="preserve">
+    <value>Miktarı azalt</value>
+  </data>
+  <data name="IncreaseQuantity" xml:space="preserve">
+    <value>Miktarı artır</value>
+  </data>
+  <data name="MaxShort" xml:space="preserve">
+    <value>Maks</value>
+  </data>
+  <data name="EnterProductId" xml:space="preserve">
+    <value>Ürün kimliğini girin.</value>
+  </data>
+  <data name="ErrorUpdatingQuantity" xml:space="preserve">
+    <value>Miktar güncellenirken hata oluştu.</value>
+  </data>
+  <data name="ErrorPreparingProduct" xml:space="preserve">
+    <value>Ürün hazırlanırken hata oluştu.</value>
+  </data>
+  <data name="ProductNameRequired" xml:space="preserve">
+    <value>Ürün adı zorunludur.</value>
+  </data>
+  <data name="InvalidQuantity" xml:space="preserve">
+    <value>Geçerli bir miktar girin.</value>
+  </data>
+  <data name="InvalidProductPrice" xml:space="preserve">
+    <value>Geçerli bir ürün fiyatı girin.</value>
+  </data>
+  <data name="InvalidPrice" xml:space="preserve">
+    <value>Geçersiz fiyat.</value>
+  </data>
+  <data name="InvalidWidth" xml:space="preserve">
+    <value>Geçerli bir genişlik girin.</value>
+  </data>
+  <data name="InvalidLength" xml:space="preserve">
+    <value>Geçerli bir uzunluk girin.</value>
+  </data>
+  <data name="WidthAndLengthRequiredForSelectedProductType" xml:space="preserve">
+    <value>Seçilen ürün türü için genişlik ve uzunluk girin.</value>
+  </data>
+  <data name="EnterBothWidthAndLength" xml:space="preserve">
+    <value>Ölçü giriyorsanız hem genişlik hem uzunluk girin.</value>
+  </data>
+  <data name="UnableToSwitchCamera" xml:space="preserve">
+    <value>Kamera değiştirilemiyor. Lütfen farklı bir kamera deneyin.</value>
+  </data>
+  <data name="UnableToChangeScannerState" xml:space="preserve">
+    <value>Tarayıcı durumu değiştirilemiyor. Lütfen tekrar deneyin.</value>
+  </data>
+  <data name="DuplicateFastScanIgnored" xml:space="preserve">
+    <value>Yinelenen hızlı tarama yok sayıldı.</value>
+  </data>
+  <data name="InvalidProductData" xml:space="preserve">
+    <value>Geçerli ürün bilgileri girin.</value>
+  </data>
+  <data name="SelectValidProductType" xml:space="preserve">
+    <value>Geçerli bir ürün türü seçin.</value>
+  </data>
+  <data name="ErrorCreatingTemporaryProduct" xml:space="preserve">
+    <value>Geçici ürün oluşturulurken bir hata oluştu.</value>
+  </data>
+  <data name="InvalidDimensions" xml:space="preserve">
+    <value>Geçerli ölçüler girin.</value>
+  </data>
+  <data name="SelectedProductIsNotPerMeasure" xml:space="preserve">
+    <value>Seçilen ürün ölçüye göre satılan bir ürün değildir.</value>
+  </data>
+  <data name="ErrorAddingPerMeasureProduct" xml:space="preserve">
+    <value>Ölçüye göre ürün eklenirken bir hata oluştu.</value>
+  </data>
+  <data name="ErrorUpdatingProductPrice" xml:space="preserve">
+    <value>Ürün fiyatı güncellenirken bir hata oluştu.</value>
+  </data>
+  <data name="FixedQuantityForDirectSaleProduct" xml:space="preserve">
+    <value>Doğrudan satış ürünü için miktar sabittir.</value>
+  </data>
+  <data name="MaxPiecesForGivenProduct" xml:space="preserve">
+    <value>Seçilen ürün için en fazla {0} adet sipariş verilebilir.</value>
+  </data>
+  <data name="QRCodeUrlLabel" xml:space="preserve">
+    <value>QR kodu URL'si</value>
+  </data>
+  <data name="ImagesAndVideos" xml:space="preserve">
+    <value>Resimler ve videolar</value>
+  </data>
+  <data name="ReuseCloudinaryImagesByColor" xml:space="preserve">
+    <value>Aynı İsim + Model + Renge sahip ürünler için bu dosyayı tekrar kullanın</value>
+  </data>
+  <data name="SyncImagesByNameModel" xml:space="preserve">
+    <value>Eşitle: İsim + Model</value>
+  </data>
+  <data name="SyncImagesByNameModelColor" xml:space="preserve">
+    <value>Eşitle: İsim + Model + Renk</value>
+  </data>
+  <data name="InventoryGallerySelectedCount" xml:space="preserve">
+    <value>Seçilen: {0}</value>
+  </data>
+  <data name="SelectMediaAria" xml:space="preserve">
+    <value>Medyayı seç {0}</value>
+  </data>
+  <data name="VideoLabel" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="NoAltText" xml:space="preserve">
+    <value>Alt metin yok</value>
+  </data>
+  <data name="DeleteFileTitle" xml:space="preserve">
+    <value>Dosyayı sil</value>
+  </data>
+  <data name="ChooseDeleteScopeForThisFile" xml:space="preserve">
+    <value>Bu dosya için silme kapsamını seçin.</value>
+  </data>
+  <data name="DeleteForThisProductOnly" xml:space="preserve">
+    <value>Yalnızca bu ürün için sil</value>
+  </data>
+  <data name="DeleteForSameNameModelGroup" xml:space="preserve">
+    <value>Aynı İsim + Model grubu için sil</value>
+  </data>
+  <data name="DeleteForSameNameModelColorGroup" xml:space="preserve">
+    <value>Aynı İsim + Model + Renk grubu için sil</value>
+  </data>
+  <data name="InventoryGallerySelectionControls" xml:space="preserve">
+    <value>Ürün galerisi seçim kontrolleri</value>
+  </data>
+  <data name="ImageLabel" xml:space="preserve">
+    <value>Resim</value>
+  </data>
+  <data name="InventoryGalleryOnlyOneReuseOption" xml:space="preserve">
+    <value>Galeri paylaşımı için yalnızca bir seçenek işaretleyebilirsiniz.</value>
+  </data>
+  <data name="InventoryGallerySelectAtLeastOneFile" xml:space="preserve">
+    <value>Ürün galerisi için en az bir dosya seçin.</value>
+  </data>
+  <data name="InventoryGalleryUnsupportedFile" xml:space="preserve">
+    <value>'{0}' desteklenen bir dosya değil.</value>
+  </data>
+  <data name="InventoryGalleryUploadFailedForFile" xml:space="preserve">
+    <value>'{0}' dosyasının yüklenmesi başarısız oldu.</value>
+  </data>
+  <data name="InventoryGalleryOneFileUploaded" xml:space="preserve">
+    <value>1 galeri dosyası yüklendi.</value>
+  </data>
+  <data name="InventoryGalleryManyFilesUploaded" xml:space="preserve">
+    <value>{0} galeri dosyası yüklendi.</value>
+  </data>
+  <data name="InventoryGalleryCopiedToRelatedProducts" xml:space="preserve">
+    <value>Aynı {1} grubundaki ilgili ürünlere {0} ek kayıt daha kopyalandı.</value>
+  </data>
+  <data name="InventoryGalleryNoFilesUploaded" xml:space="preserve">
+    <value>Hiçbir galeri dosyası yüklenmedi.</value>
+  </data>
+  <data name="InventoryGalleryCloudinaryNotConfigured" xml:space="preserve">
+    <value>Cloudinary yapılandırılmamış. Ürün galerisi medyasını yüklemeden önce geçerli bir ApiSecret ekleyin.</value>
+  </data>
+  <data name="InventoryGalleryUploadError" xml:space="preserve">
+    <value>Ürün galerisi medyası yüklenirken bir hata oluştu.</value>
+  </data>
+  <data name="InventoryGalleryUploadErrorWithDetail" xml:space="preserve">
+    <value>Ürün galerisi medyası yüklenirken bir hata oluştu. Ayrıntı: {0}</value>
+  </data>
+  <data name="InventoryGalleryNoCheckedItems" xml:space="preserve">
+    <value>Hiçbir galeri dosyası seçilmediği için eşitleme yapılmadı.</value>
+  </data>
+  <data name="InventoryGalleryNoOtherProductsInScope" xml:space="preserve">
+    <value>Bu {0} grubunda henüz başka ürün yok.</value>
+  </data>
+  <data name="InventoryGalleryNoActiveCheckedItems" xml:space="preserve">
+    <value>Hiçbir etkin galeri dosyası seçilmediği için eşitleme yapılmadı.</value>
+  </data>
+  <data name="InventoryGallerySyncedItems" xml:space="preserve">
+    <value>Bu {1} grubu üzerinden {0} galeri kaydı eşitlendi.</value>
+  </data>
+  <data name="InventoryGalleryAlreadySynced" xml:space="preserve">
+    <value>Bu {0} grubundaki tüm ürünlerde seçilen galeri dosyaları zaten mevcut.</value>
+  </data>
+  <data name="InventoryGalleryVideoCannotBePrimary" xml:space="preserve">
+    <value>Bir video ana galeri görseli olarak ayarlanamaz.</value>
+  </data>
+  <data name="InventoryGalleryPrimaryUpdated" xml:space="preserve">
+    <value>Ana galeri görseli güncellendi.</value>
+  </data>
+  <data name="InventoryGalleryCloudinaryDeleteFailed" xml:space="preserve">
+    <value>Dosyanın Cloudinary'den silinmesi başarısız oldu. Kayıt yine de galeriden kaldırıldı.</value>
+  </data>
+  <data name="InventoryGalleryDeletedSingle" xml:space="preserve">
+    <value>Galeri dosyası kaldırıldı.</value>
+  </data>
+  <data name="InventoryGalleryDeletedGroup" xml:space="preserve">
+    <value>Galeri dosyası aynı İsim + Model grubundaki {0} üründen kaldırıldı.</value>
+  </data>
+  <data name="InventoryGalleryDeletedColorGroup" xml:space="preserve">
+    <value>Galeri dosyası aynı İsim + Model + Renk grubundaki {0} üründen kaldırıldı.</value>
+  </data>
+  <data name="InventoryGalleryScopeNameModel" xml:space="preserve">
+    <value>İsim + Model</value>
+  </data>
+  <data name="InventoryGalleryScopeNameModelColor" xml:space="preserve">
+    <value>İsim + Model + Renk</value>
+  </data>
+  <data name="NoProductsToExport" xml:space="preserve">
+    <value>Dışa aktarılacak ürün yok.</value>
+  </data>
+  <data name="ErrorExportingPdf" xml:space="preserve">
+    <value>PDF dışa aktarılırken bir hata oluştu.</value>
+  </data>
+  <data name="ErrorExportingExcel" xml:space="preserve">
+    <value>Excel dışa aktarılırken bir hata oluştu.</value>
   </data>
 </root>

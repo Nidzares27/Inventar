@@ -1,9 +1,58 @@
 ﻿@using Inventar.ViewModels.Shared
 @model IEnumerable<SummaryViewModel>
 
+<style>
+    #SalesTable thead tr.filters th {
+        padding: 1px;
+    }
+
+    #SalesTable thead tr.filters input[type="text"],
+    #SalesTable thead tr.filters input[type="date"] {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .sales-index__totals {
+        margin-top: 10px;
+        margin-left: 5px;
+        font-weight: bold;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .sales-index__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .sales-mobile-zoom {
+            zoom: 0.40;
+        }
+
+        .sales-index__totals {
+            font-size: 2rem;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        .sales-index__actions button {
+            width: 100%;
+            margin-top: 0.35rem;
+        }
+    }
+</style>
+
 <div id="pdfContent">
     <h2>@Inventar.Resources.Resource.SalesGrouped</h2>
 
+    <div class="sales-mobile-zoom">
     <table id="SalesTable" class="display tabela" style="width:100%; font-weight:500">
         <thead>
             <tr>
@@ -18,7 +67,7 @@
                 <th></th>
             </tr>
             <tr class="filters">
-                <th><input style="width:2rem" type="text" placeholder="" disabled></th>
+                <th><input type="text" placeholder="" disabled></th>
                 <th>
                     <input type="date" id="minDate" placeholder="From">
                     <input type="date" id="maxDate" placeholder="To">
@@ -44,7 +93,7 @@
                     <td></td>
                     <td data-order="@item.VrijemeProdaje.ToString("yyyy-MM-dd")">@item.VrijemeProdaje.ToString("dd-MM-yyyy")</td>
                     <td>@item.CustomerFullName</td>
-                    <td>@(item.M2Total > 0 ? Math.Round((decimal)item.M2Total, 2) : "" )
+                    <td>@(item.M2Total > 0 ? Math.Round((decimal)item.M2Total, 2) : "" )</td>
                     <td>@Math.Round(item.TotalPrice, 2)€</td>
                     <td>@item.TotalQuantity</td>
                     <td>@item.Prodavac</td>
@@ -56,8 +105,12 @@
             }
         </tbody>
     </table>
+    </div>
 </div>
-<button id="downloadGroupedSalesPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+<div class="sales-index__actions">
+    <button id="downloadGroupedSalesPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+    <button id="downloadGroupedSalesExcel" class="btn btn-success">@Inventar.Resources.Resource.Excel</button>
+</div>
 
 
 @section Scripts {
@@ -162,8 +215,8 @@
                 var totalQuantity = 0;
 
                 table.rows({ filter: 'applied' }).data().each(function (value, index) {
-                    totalM2 += parseFloat(value[m2ColumnIndex]) || 0;
-                    totalPrice += parseFloat(value[priceColumnIndex]) || 0;
+                    totalM2 += window.InventarNumber.parseUiNumber(value[m2ColumnIndex]);
+                    totalPrice += window.InventarNumber.parseUiNumber(value[priceColumnIndex]);
                     totalQuantity += parseInt(value[quantityColumnIndex]) || 0;
                 });
 
@@ -174,7 +227,7 @@
             }
 
             $('#SalesTable').after(`
-                                <div style="margin-top: 10px; font-weight: bold;">
+                                <div class="sales-index__totals">
         @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span>   |
         @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span>   |
         @Inventar.Resources.Resource.PriceTotal: <span id="totalPrice">0.00</span>€
@@ -198,9 +251,8 @@
 
     <script>
         $(document).ready(function () {
-            $('#downloadGroupedSalesPDF').on('click', function () {
+            function collectGroupedSalesExportPayload() {
                 var table = $('#SalesTable').DataTable();
-
                 var data = [];
 
                 table.rows({ search: 'applied' }).every(function () {
@@ -238,35 +290,48 @@
 
                 // Get totals from your DOM or compute here
                 var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
-                var totalM2 = parseFloat($('#totalM2').text()) || 0;
-                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+                var totalM2 = window.InventarNumber.parseUiNumber($('#totalM2').text());
+                var totalPrice = window.InventarNumber.parseUiNumber($('#totalPrice').text());
 
-                // Send data to server
+                return {
+                    heading: heading,
+                    data: data,
+                    filters: filters,
+                    minDate: minDate,
+                    maxDate: maxDate,
+                    columnHeaders: columnHeaders,
+                    totalQuantity: totalQuantity,
+                    totalM2: totalM2,
+                    totalPrice: totalPrice
+                };
+            }
+
+            function downloadGroupedSalesExport(url, fileName) {
+                var payload = collectGroupedSalesExportPayload();
+
                 $.ajax({
-                    url: '@Url.Action("GenerateSalesPdf", "Pdf")',
+                    url: url,
                     method: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({
-                        heading: heading,
-                        data: data,
-                        filters: filters,
-                        minDate: minDate,
-                        maxDate: maxDate,
-                        columnHeaders: columnHeaders,
-                        totalQuantity: totalQuantity,
-                        totalM2: totalM2,
-                        totalPrice: totalPrice
-                    }),
+                    data: JSON.stringify(payload),
                     xhrFields: {
                         responseType: 'blob'
                     },
                     success: function (blob) {
                         var link = document.createElement('a');
                         link.href = window.URL.createObjectURL(blob);
-                        link.download = 'Grupisane_prodaje.pdf';
+                        link.download = fileName;
                         link.click();
                     }
                 });
+            }
+
+            $('#downloadGroupedSalesPDF').on('click', function () {
+                downloadGroupedSalesExport('@Url.Action("GenerateSalesPDF", "Pdf")', 'Grupisane_prodaje.pdf');
+            });
+
+            $('#downloadGroupedSalesExcel').on('click', function () {
+                downloadGroupedSalesExport('@Url.Action("GenerateSalesExcel", "Pdf")', 'Grupisane_prodaje.xlsx');
             });
 
         });

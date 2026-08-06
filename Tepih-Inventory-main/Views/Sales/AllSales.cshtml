@@ -1,8 +1,50 @@
 ﻿@using Inventar.ViewModels.Shared
 @model IEnumerable<ProdajaViewModel>
 
+<style>
+    #SalesTable thead tr.filters th {
+        padding: 1px;
+    }
+
+    #SalesTable thead tr.filters input[type="text"],
+    #SalesTable thead tr.filters input[type="date"] {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .sales-all__totals {
+        margin-top: 10px;
+        margin-left: 5px;
+        font-weight: bold;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    @@media (max-width: 768px) {
+        .sales-mobile-zoom--all {
+            zoom: 0.28;
+        }
+
+        .sales-all__totals {
+            font-size: 2rem;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        #downloadAllSalesPDF {
+            width: 100%;
+            margin-top: 0.35rem;
+        }
+    }
+</style>
+
 <h2>@Inventar.Resources.Resource.Sales</h2>
 
+<div class="sales-mobile-zoom--all">
 <table id="SalesTable" class="table stripe tabela" style="font-weight:500">
     <thead>
         <tr>
@@ -92,6 +134,7 @@
         }
     </tbody>
 </table>
+</div>
 
 <button id="downloadAllSalesPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
 
@@ -174,9 +217,9 @@
                 var totalM2 = 0;
 
                 table.rows({ filter: 'applied' }).data().each(function (value, index) {
-                    totalQuantity += parseFloat(value[quantityColumnIndex]) || 0;
-                    totalPrice += parseFloat(value[priceColumnIndex]) || 0;
-                    totalM2 += parseFloat(value[m2ColumnIndex]) || 0;
+                    totalQuantity += window.InventarNumber.parseUiNumber(value[quantityColumnIndex]);
+                    totalPrice += window.InventarNumber.parseUiNumber(value[priceColumnIndex]);
+                    totalM2 += window.InventarNumber.parseUiNumber(value[m2ColumnIndex]);
                 });
 
                 $('#totalQuantity').text(totalQuantity);
@@ -186,7 +229,7 @@
             }
 
             $('#SalesTable').after(`
-                        <div style="margin-top: 10px; font-weight: bold;">
+                        <div class="sales-all__totals">
         @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span>   |
         @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span>   |
         @Inventar.Resources.Resource.PriceTotal: <span id="totalPrice">0.00</span>€
@@ -244,8 +287,8 @@
                 });
 
                 var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
-                var totalM2 = parseFloat($('#totalM2').text()) || 0;
-                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+                var totalM2 = window.InventarNumber.parseUiNumber($('#totalM2').text());
+                var totalPrice = window.InventarNumber.parseUiNumber($('#totalPrice').text());
 
                 $.ajax({
                     url: '@Url.Action("GenerateAllSalesPDF", "Pdf")',

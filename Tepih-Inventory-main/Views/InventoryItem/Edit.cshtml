@@ -1,10 +1,20 @@
 ﻿@using Inventar.ViewModels.Inventory
 @model EditTepihViewModel
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = Inventar.Resources.Resource.Edit;
 }
 
 <h1>@Inventar.Resources.Resource.EditProduct</h1>
+
+@if (TempData["InventoryGallerySuccessMessage"] is string gallerySuccessMessage)
+{
+    <div class="alert alert-success">@gallerySuccessMessage</div>
+}
+
+@if (TempData["InventoryGalleryErrorMessage"] is string galleryErrorMessage)
+{
+    <div class="alert alert-warning">@galleryErrorMessage</div>
+}
 
 <hr />
 
@@ -26,7 +36,7 @@
     </div>
 
     <div class="col-sm-3">
-        <label asp-for="Model" class="control-label">Model</label>
+        <label asp-for="Model" class="control-label">@Inventar.Resources.Resource.Model</label>
         <input asp-for="Model" class="form-control" readonly />
         <span asp-validation-for="Model" class="text-danger"></span>
     </div>
@@ -55,7 +65,7 @@
     </div>
 
     <div class="col-sm-6">
-        <label asp-for="QRCodeUrl" class="control-label">QR Code Url</label>
+        <label asp-for="QRCodeUrl" class="control-label">@Inventar.Resources.Resource.QRCodeUrlLabel</label>
         <input asp-for="QRCodeUrl" class="form-control" readonly />
     </div>
 
@@ -90,7 +100,7 @@
     </div>
 
     <div class="col-sm-3">
-        <label asp-for="RemainingSize" class="control-label">Remaining size</label>
+        <label asp-for="RemainingSize" class="control-label">@Inventar.Resources.Resource.RemainingSize</label>
         <input asp-for="RemainingSize" class="form-control" readonly />
     </div>
 
@@ -102,7 +112,7 @@
     </div>
 
     <div class="col-sm-2">
-        <label asp-for="PoMjeri" class="control-label">Po mjeri</label>
+        <label asp-for="PoMjeri" class="control-label">@Inventar.Resources.Resource.PerMeasure</label>
         <div class="checkbox-field">
             <input asp-for="PoMjeri" disabled />
         </div>
@@ -131,8 +141,204 @@
     </div>
 </form>
 
+@{
+    var hasGalleryMedia = Model.ProductImages.Count > 0;
+}
+
+<div class="card storefront-card mt-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h4 class="mb-1">@Inventar.Resources.Resource.ProductGallery</h4>
+                <small class="text-muted">@Inventar.Resources.Resource.ImgVidUploadTxt</small>
+            </div>
+        </div>
+
+        <form asp-action="UploadInventoryGalleryMedia" method="post" enctype="multipart/form-data" class="row g-3 mt-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" asp-for="Id" />
+            <div class="col-md-5">
+                <label class="control-label" for="galleryFiles">@Inventar.Resources.Resource.ImagesAndVideos</label>
+                <input id="galleryFiles" name="files" class="form-control" type="file" accept="image/*,video/*" multiple />
+            </div>
+
+            <div class="col-md-5">
+                <label class="control-label" for="galleryAltText">@Inventar.Resources.Resource.AltText</label>
+                <input id="galleryAltText" name="altText" class="form-control" type="text" placeholder="@Inventar.Resources.Resource.OptionalSharedAltText" />
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-check storefront-reuse-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="reuseGalleryForGroup"
+                           data-reuse-scope
+                           name="reuseForGroup"
+                           value="true" />
+                    <label class="form-check-label" for="reuseGalleryForGroup">
+                        @Inventar.Resources.Resource.ReuseCloudinaryImages
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-check storefront-reuse-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="reuseGalleryForColorGroup"
+                           data-reuse-scope
+                           name="reuseForColorGroup"
+                           value="true" />
+                    <label class="form-check-label" for="reuseGalleryForColorGroup">
+                        @Inventar.Resources.Resource.ReuseCloudinaryImagesByColor
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-lg-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary w-100">@Inventar.Resources.Resource.Upload</button>
+            </div>
+        </form>
+
+        @if (hasGalleryMedia)
+        {
+            <div class="inventory-gallery-toolbar mt-3">
+                <div class="btn-group btn-group-sm" role="group" aria-label="@Inventar.Resources.Resource.InventoryGallerySelectionControls">
+                    <button type="button" class="btn btn-outline-secondary" id="inventoryGalleryCheckAll">@Inventar.Resources.Resource.CheckAll</button>
+                    <button type="button" class="btn btn-outline-secondary" id="inventoryGalleryUncheckAll">@Inventar.Resources.Resource.UncheckAll</button>
+                </div>
+
+                <form asp-action="SyncInventoryGalleryMedia" method="post" id="inventoryGallerySyncForm" class="inventory-gallery-sync-form d-none">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div id="inventoryGallerySelectedInputs"></div>
+                    <span class="small text-muted fw-semibold" id="inventoryGallerySelectedCount"></span>
+                    <button type="submit"
+                            name="scope"
+                            value="group"
+                            class="btn btn-outline-secondary btn-sm"
+                            style="background:repeating-linear-gradient(45deg, lightgreen, transparent 100px)">
+                        @Inventar.Resources.Resource.SyncImagesByNameModel
+                    </button>
+                    <button type="submit"
+                            name="scope"
+                            value="colorGroup"
+                            class="btn btn-outline-secondary btn-sm"
+                            style="background:repeating-linear-gradient(45deg, lightblue, transparent 100px)">
+                        @Inventar.Resources.Resource.SyncImagesByNameModelColor
+                    </button>
+                </form>
+            </div>
+        }
+
+        @if (Model.ProductImages.Count == 0)
+        {
+            <div class="alert alert-light border mt-3 mb-0">@Inventar.Resources.Resource.NoImagesUploadedYet</div>
+        }
+        else
+        {
+            <div class="row g-3 mt-2 inventory-gallery-grid" id="inventoryGalleryGrid">
+                @foreach (var image in Model.ProductImages)
+                {
+                    <div class="col-md-4 col-lg-3">
+                        <div class="card h-100 image-card inventory-gallery-card" data-media-card>
+                            <div class="inventory-gallery-selector">
+                                <input class="form-check-input inventory-gallery-checkbox"
+                                       type="checkbox"
+                                       value="@image.Id"
+                                       data-media-checkbox
+                                       aria-label="@string.Format(Inventar.Resources.Resource.SelectMediaAria, image.SortOrder)" />
+                            </div>
+
+                            @if (image.IsVideo)
+                            {
+                                <div class="storefront-media-frame storefront-media-frame--video">
+                                    <video class="card-img-top storefront-thumb"
+                                           controls
+                                           preload="metadata"
+                                           playsinline>
+                                        <source src="@image.Url" />
+                                    </video>
+                                    <span class="storefront-media-badge">@Inventar.Resources.Resource.VideoLabel</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <img src="@(image.ThumbnailUrl ?? image.Url)" alt="@(image.AltText ?? Model.Name)" class="card-img-top storefront-thumb" />
+                            }
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <strong>#@image.SortOrder</strong>
+                                    @if (image.IsPrimary && !image.IsVideo)
+                                    {
+                                        <span class="badge bg-success">@Inventar.Resources.Resource.Primary</span>
+                                    }
+                                    else if (image.IsVideo)
+                                    {
+                                        <span class="badge bg-secondary">@Inventar.Resources.Resource.VideoLabel</span>
+                                    }
+                                </div>
+                                <div class="small text-muted mt-2">@(image.AltText ?? Inventar.Resources.Resource.NoAltText)</div>
+                            </div>
+                            <div class="card-footer bg-white border-0 d-grid gap-2">
+                                @if (!image.IsPrimary && !image.IsVideo)
+                                {
+                                    <form asp-action="SetPrimaryInventoryGalleryMedia" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="imageId" value="@image.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success w-100">@Inventar.Resources.Resource.SetPrimary</button>
+                                    </form>
+                                }
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger w-100"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#inventoryGalleryDeleteModal"
+                                        data-image-id="@image.Id"
+                                        data-image-label="@(image.AltText ?? Model.Name)"
+                                        data-media-type="@(image.IsVideo ? "video" : "image")">
+                                    @Inventar.Resources.Resource.DeleteImage
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
 <div>
     <a asp-action="Index" class="btn btn-secondary btn-sm mt-3">@Inventar.Resources.Resource.BackToList</a>
+</div>
+
+<div class="modal fade" id="inventoryGalleryDeleteModal" tabindex="-1" aria-labelledby="inventoryGalleryDeleteModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="inventoryGalleryDeleteModalTitle">@Inventar.Resources.Resource.DeleteFileTitle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@Inventar.Resources.Resource.Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">@Inventar.Resources.Resource.ChooseDeleteScopeForThisFile</p>
+                <div class="small text-muted" id="inventoryGalleryDeleteModalLabel"></div>
+            </div>
+            <div class="modal-footer flex-column align-items-stretch gap-2">
+                <form asp-action="DeleteInventoryGalleryMedia" method="post" class="d-grid gap-2 w-100">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="imageId" id="inventoryGalleryDeleteImageId" />
+
+                    <button type="submit" name="scope" value="single" class="btn btn-outline-danger">@Inventar.Resources.Resource.DeleteForThisProductOnly</button>
+                    <button type="submit" name="scope" value="group" class="btn btn-outline-warning">@Inventar.Resources.Resource.DeleteForSameNameModelGroup</button>
+                    <button type="submit" name="scope" value="colorGroup" class="btn btn-danger">@Inventar.Resources.Resource.DeleteForSameNameModelColorGroup</button>
+                </form>
+
+                <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">@Inventar.Resources.Resource.Cancel</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -156,4 +362,248 @@
         width: 1.4rem;
         height: 1.4rem;
     }
+
+    .storefront-card {
+        border: 1px solid #ded1ff;
+        box-shadow: 0 8px 20px rgba(80, 40, 140, 0.08);
+    }
+
+    .storefront-thumb {
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-bottom: 1px solid #eee;
+        width: 100%;
+        background: #f7f4ff;
+    }
+
+    .image-card {
+        border-color: #ece3ff;
+    }
+
+    .inventory-gallery-card {
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .inventory-gallery-card.is-selected {
+        border-color: #7b4de3;
+        box-shadow: 0 0 0 3px rgba(123, 77, 227, 0.14);
+        transform: translateY(-1px);
+    }
+
+    .inventory-gallery-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .inventory-gallery-sync-form {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .inventory-gallery-selector {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: 3;
+        opacity: 0;
+        transform: translateY(-2px);
+        transition: opacity 0.16s ease, transform 0.16s ease;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 0.45rem;
+        padding: 0.25rem;
+        box-shadow: 0 3px 10px rgba(16, 24, 40, 0.18);
+    }
+
+    .inventory-gallery-card:hover .inventory-gallery-selector,
+    .inventory-gallery-grid.inventory-gallery-grid--selection-active .inventory-gallery-selector,
+    .inventory-gallery-card.is-selected .inventory-gallery-selector {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .inventory-gallery-checkbox {
+        width: 1.2rem;
+        height: 1.2rem;
+        cursor: pointer;
+    }
+
+    .storefront-media-frame {
+        position: relative;
+    }
+
+    .storefront-media-frame--video {
+        background: #f4f6fb;
+    }
+
+    .storefront-media-badge {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: rgba(25, 32, 56, 0.8);
+        color: #fff;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .storefront-reuse-check {
+        padding: 0.85rem 1rem;
+        border: 1px solid #ece3ff;
+        border-radius: 0.5rem;
+        background: blanchedalmond;
+    }
+
+    .storefront-reuse-check .form-check-input {
+        margin-top: 0;
+        margin-right: 1rem;
+        width: 2em;
+        height: 2em;
+        border-color: black;
+    }
+
+    @@media (hover: none), (pointer: coarse) {
+        .inventory-gallery-selector {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .inventory-gallery-toolbar,
+        .inventory-gallery-sync-form {
+            align-items: stretch;
+        }
+
+        .inventory-gallery-sync-form {
+            width: 100%;
+        }
+
+        .inventory-gallery-sync-form .btn,
+        .inventory-gallery-sync-form .small {
+            width: 100%;
+            text-align: center;
+        }
+    }
 </style>
+
+<script>
+    (() => {
+        const inventoryGalleryStrings = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+        {
+            selectedCount = Inventar.Resources.Resource.InventoryGallerySelectedCount,
+            video = Inventar.Resources.Resource.VideoLabel,
+            image = Inventar.Resources.Resource.ImageLabel
+        }));
+
+        const reuseScopeCheckboxes = Array.from(document.querySelectorAll('[data-reuse-scope]'));
+        reuseScopeCheckboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', () => {
+                if (!checkbox.checked) {
+                    return;
+                }
+
+                reuseScopeCheckboxes.forEach((otherCheckbox) => {
+                    if (otherCheckbox !== checkbox) {
+                        otherCheckbox.checked = false;
+                    }
+                });
+            });
+        });
+
+        const mediaCheckboxes = Array.from(document.querySelectorAll('[data-media-checkbox]'));
+        const galleryGrid = document.getElementById('inventoryGalleryGrid');
+        const selectedInputsHost = document.getElementById('inventoryGallerySelectedInputs');
+        const syncForm = document.getElementById('inventoryGallerySyncForm');
+        const selectedCountLabel = document.getElementById('inventoryGallerySelectedCount');
+        const checkAllButton = document.getElementById('inventoryGalleryCheckAll');
+        const uncheckAllButton = document.getElementById('inventoryGalleryUncheckAll');
+
+        const updateSelectedMediaState = () => {
+            const selectedCheckboxes = mediaCheckboxes.filter((checkbox) => checkbox.checked);
+
+            if (galleryGrid) {
+                galleryGrid.classList.toggle('inventory-gallery-grid--selection-active', selectedCheckboxes.length > 0);
+            }
+
+            mediaCheckboxes.forEach((checkbox) => {
+                checkbox.closest('[data-media-card]')?.classList.toggle('is-selected', checkbox.checked);
+            });
+
+            if (selectedInputsHost) {
+                selectedInputsHost.innerHTML = selectedCheckboxes
+                    .map((checkbox) => `<input type="hidden" name="selectedImageIds" value="${checkbox.value}" />`)
+                    .join('');
+            }
+
+            if (syncForm) {
+                syncForm.classList.toggle('d-none', selectedCheckboxes.length === 0);
+            }
+
+            if (selectedCountLabel) {
+                selectedCountLabel.textContent = selectedCheckboxes.length > 0
+                    ? inventoryGalleryStrings.selectedCount.replace('{0}', selectedCheckboxes.length)
+                    : '';
+            }
+        };
+
+        mediaCheckboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', updateSelectedMediaState);
+        });
+
+        checkAllButton?.addEventListener('click', () => {
+            mediaCheckboxes.forEach((checkbox) => {
+                checkbox.checked = true;
+            });
+
+            updateSelectedMediaState();
+        });
+
+        uncheckAllButton?.addEventListener('click', () => {
+            mediaCheckboxes.forEach((checkbox) => {
+                checkbox.checked = false;
+            });
+
+            updateSelectedMediaState();
+        });
+
+        updateSelectedMediaState();
+
+        const deleteModal = document.getElementById('inventoryGalleryDeleteModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', (event) => {
+                const trigger = event.relatedTarget;
+                if (!(trigger instanceof HTMLElement)) {
+                    return;
+                }
+
+                const imageId = trigger.getAttribute('data-image-id') ?? '';
+                const mediaLabel = trigger.getAttribute('data-image-label') ?? '';
+                const mediaType = trigger.getAttribute('data-media-type') === 'video'
+                    ? inventoryGalleryStrings.video
+                    : inventoryGalleryStrings.image;
+                const imageIdInput = document.getElementById('inventoryGalleryDeleteImageId');
+                const labelHost = document.getElementById('inventoryGalleryDeleteModalLabel');
+
+                if (imageIdInput) {
+                    imageIdInput.value = imageId;
+                }
+
+                if (labelHost) {
+                    labelHost.textContent = mediaLabel
+                        ? `${mediaType}: ${mediaLabel}`
+                        : mediaType;
+                }
+            });
+        }
+    })();
+</script>

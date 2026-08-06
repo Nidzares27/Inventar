@@ -276,6 +276,9 @@
   <data name="DeleteThis" xml:space="preserve">
     <value>Da li si siguran da želiš da obrišeš ovo?</value>
   </data>
+  <data name="DetailedPDF" xml:space="preserve">
+    <value>Detaljni PDF</value>
+  </data>
   <data name="DeleteUser?" xml:space="preserve">
     <value>Da li ste sigurni da želite da izbrišete ovaj nalog?</value>
   </data>
@@ -385,7 +388,7 @@
     <value>Ručno unesi Id</value>
   </data>
   <data name="Name" xml:space="preserve">
-    <value>Ime</value>
+    <value>Ime Roba</value>
   </data>
   <data name="NewPassword" xml:space="preserve">
     <value>Nova šifra</value>
@@ -495,6 +498,9 @@
   <data name="PrintPDF" xml:space="preserve">
     <value>Odštampaj PDF</value>
   </data>
+  <data name="Excel" xml:space="preserve">
+    <value>Excel</value>
+  </data>
   <data name="Product" xml:space="preserve">
     <value>Proizvod</value>
   </data>
@@ -566,6 +572,18 @@
   </data>
   <data name="Searching" xml:space="preserve">
     <value>Pretraga...</value>
+  </data>
+  <data name="CreatingPdfFile" xml:space="preserve">
+    <value>Kreira se PDF fajl...</value>
+  </data>
+  <data name="CreatingExcelFile" xml:space="preserve">
+    <value>Kreira se Excel fajl...</value>
+  </data>
+  <data name="ConfirmPdfWithoutBuyerFullName" xml:space="preserve">
+    <value>Da li želite da odštampate PDF bez unosa punog imena kupca?</value>
+  </data>
+  <data name="ConfirmExcelWithoutBuyerFullName" xml:space="preserve">
+    <value>Da li želite da odštampate Excel bez unosa punog imena kupca?</value>
   </data>
   <data name="Seller" xml:space="preserve">
     <value>Prodavac</value>
@@ -807,6 +825,9 @@
   <data name="ReportByProductNumber" xml:space="preserve">
     <value>Izvještaj po šifri</value>
   </data>
+  <data name="ReportByProductName" xml:space="preserve">
+    <value>Izvještaj po nazivu proizvoda</value>
+  </data>
   <data name="NewTable" xml:space="preserve">
     <value>Nova tabela</value>
   </data>
@@ -1034,5 +1055,287 @@
   </data>
   <data name="PerUnit" xml:space="preserve">
     <value>Po komadu</value>
+  </data>
+  <data name="Pairs" xml:space="preserve">
+    <value>Parovi</value>
+  </data>
+  <data name="SimilarProducts" xml:space="preserve">
+    <value>Slični proizvodi</value>
+  </data>
+  <data name="ScanToSeeSimilar" xml:space="preserve">
+    <value>Skenirajte QR kod kako biste vidjeli slične proizvode.</value>
+  </data>
+  <data name="LoadingSimilarProducts" xml:space="preserve">
+    <value>Učitavanje sličnih proizvoda...</value>
+  </data>
+  <data name="ErrorProcessingQR" xml:space="preserve">
+    <value>Došlo je do greške prilikom obrade QR koda.</value>
+  </data>
+  <data name="AtLeastOneParam" xml:space="preserve">
+    <value>Unesite barem jedan parametar za pretragu.</value>
+  </data>
+  <data name="NoSimilarProductFound" xml:space="preserve">
+    <value>Nema pronađenih sličnih proizvoda.</value>
+  </data>
+  <data name="ProductNotFound" xml:space="preserve">
+    <value>Proizvod nije pronađen.</value>
+  </data>
+  <data name="NoQRData" xml:space="preserve">
+    <value>QR kod ne sadrži podatke.</value>
+  </data>
+  <data name="ErrorLoadingSimilarProducts" xml:space="preserve">
+    <value>Došlo je do greške prilikom učitavanja sličnih proizvoda.</value>
+  </data>
+  <data name="ImgVidUploadTxt" xml:space="preserve">
+    <value>Otpremite fotografije i video snimke proizvoda, sinhronizujte ih kroz grupu i po potrebi uklonite stare fajlove.</value>
+  </data>
+  <data name="ProductGallery" xml:space="preserve">
+    <value>Galerija proizvoda</value>
+  </data>
+  <data name="CannotLoadGallery" xml:space="preserve">
+    <value>Galeriju trenutno nije moguće učitati. Pokušajte ponovo.</value>
+  </data>
+  <data name="FailedToLoadGallery" xml:space="preserve">
+    <value>Neuspješno učitavanje galerije.</value>
+  </data>
+  <data name="LoadingGallery" xml:space="preserve">
+    <value>Učitavanje galerije...</value>
+  </data>
+  <data name="UnableToStartQRScanner" xml:space="preserve">
+    <value>Nije moguće pokrenuti QR skener. Osvežite stranicu i dozvolite pristup kameri.</value>
+  </data>
+  <data name="ErrorCreatingProduct" xml:space="preserve">
+    <value>Greška prilikom kreiranja proizvoda.</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Camera" xml:space="preserve">
+    <value>Kamera</value>
+  </data>
+  <data name="FrontCamera" xml:space="preserve">
+    <value>Prednja kamera</value>
+  </data>
+  <data name="RearCamera" xml:space="preserve">
+    <value>Zadnja kamera</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Zatvori</value>
+  </data>
+  <data name="ChooseCamera" xml:space="preserve">
+    <value>Izaberite kameru</value>
+  </data>
+  <data name="StopScanning" xml:space="preserve">
+    <value>Zaustavi skeniranje</value>
+  </data>
+  <data name="StartScanning" xml:space="preserve">
+    <value>Pokreni skeniranje</value>
+  </data>
+  <data name="DecreaseQuantity" xml:space="preserve">
+    <value>Smanji količinu</value>
+  </data>
+  <data name="IncreaseQuantity" xml:space="preserve">
+    <value>Povećaj količinu</value>
+  </data>
+  <data name="MaxShort" xml:space="preserve">
+    <value>Maks</value>
+  </data>
+  <data name="EnterProductId" xml:space="preserve">
+    <value>Unesite ID proizvoda.</value>
+  </data>
+  <data name="ErrorUpdatingQuantity" xml:space="preserve">
+    <value>Greška prilikom ažuriranja količine.</value>
+  </data>
+  <data name="ErrorPreparingProduct" xml:space="preserve">
+    <value>Greška prilikom pripreme proizvoda.</value>
+  </data>
+  <data name="ProductNameRequired" xml:space="preserve">
+    <value>Naziv proizvoda je obavezan.</value>
+  </data>
+  <data name="InvalidQuantity" xml:space="preserve">
+    <value>Unesite ispravnu količinu.</value>
+  </data>
+  <data name="InvalidProductPrice" xml:space="preserve">
+    <value>Unesite ispravnu cijenu proizvoda.</value>
+  </data>
+  <data name="InvalidPrice" xml:space="preserve">
+    <value>Neispravna cijena.</value>
+  </data>
+  <data name="InvalidWidth" xml:space="preserve">
+    <value>Unesite ispravnu širinu.</value>
+  </data>
+  <data name="InvalidLength" xml:space="preserve">
+    <value>Unesite ispravnu dužinu.</value>
+  </data>
+  <data name="WidthAndLengthRequiredForSelectedProductType" xml:space="preserve">
+    <value>Za izabrani tip proizvoda morate unijeti širinu i dužinu.</value>
+  </data>
+  <data name="EnterBothWidthAndLength" xml:space="preserve">
+    <value>Ako unosite dimenziju, unesite i širinu i dužinu.</value>
+  </data>
+  <data name="UnableToSwitchCamera" xml:space="preserve">
+    <value>Nije moguće promijeniti kameru. Pokušajte drugu kameru.</value>
+  </data>
+  <data name="UnableToChangeScannerState" xml:space="preserve">
+    <value>Nije moguće promijeniti stanje skenera. Pokušajte ponovo.</value>
+  </data>
+  <data name="DuplicateFastScanIgnored" xml:space="preserve">
+    <value>Duplirano brzo skeniranje je ignorisano.</value>
+  </data>
+  <data name="InvalidProductData" xml:space="preserve">
+    <value>Unesite ispravne podatke za proizvod.</value>
+  </data>
+  <data name="SelectValidProductType" xml:space="preserve">
+    <value>Izaberite ispravan tip proizvoda.</value>
+  </data>
+  <data name="ErrorCreatingTemporaryProduct" xml:space="preserve">
+    <value>Došlo je do greške prilikom kreiranja privremenog proizvoda.</value>
+  </data>
+  <data name="InvalidDimensions" xml:space="preserve">
+    <value>Unesite ispravne dimenzije.</value>
+  </data>
+  <data name="SelectedProductIsNotPerMeasure" xml:space="preserve">
+    <value>Izabrani proizvod nije po mjeri.</value>
+  </data>
+  <data name="ErrorAddingPerMeasureProduct" xml:space="preserve">
+    <value>Došlo je do greške prilikom dodavanja proizvoda po mjeri.</value>
+  </data>
+  <data name="ErrorUpdatingProductPrice" xml:space="preserve">
+    <value>Došlo je do greške prilikom ažuriranja cijene proizvoda.</value>
+  </data>
+  <data name="FixedQuantityForDirectSaleProduct" xml:space="preserve">
+    <value>Količina za proizvod kreiran za direktnu prodaju je fiksna.</value>
+  </data>
+  <data name="MaxPiecesForGivenProduct" xml:space="preserve">
+    <value>Moguće je naručiti najviše {0} komada za dati proizvod.</value>
+  </data>
+  <data name="QRCodeUrlLabel" xml:space="preserve">
+    <value>QR kod URL</value>
+  </data>
+  <data name="ImagesAndVideos" xml:space="preserve">
+    <value>Slike i video</value>
+  </data>
+  <data name="ReuseCloudinaryImagesByColor" xml:space="preserve">
+    <value>Ponovo koristite ovaj fajl za proizvode sa istim Nazivom + Modelom + Bojom</value>
+  </data>
+  <data name="SyncImagesByNameModel" xml:space="preserve">
+    <value>Sinhronizuj: Naziv + Model</value>
+  </data>
+  <data name="SyncImagesByNameModelColor" xml:space="preserve">
+    <value>Sinhronizuj: Naziv + Model + Boja</value>
+  </data>
+  <data name="InventoryGallerySelectedCount" xml:space="preserve">
+    <value>Označeno: {0}</value>
+  </data>
+  <data name="SelectMediaAria" xml:space="preserve">
+    <value>Označi fajl {0}</value>
+  </data>
+  <data name="VideoLabel" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="NoAltText" xml:space="preserve">
+    <value>Nema alt teksta</value>
+  </data>
+  <data name="DeleteFileTitle" xml:space="preserve">
+    <value>Brisanje fajla</value>
+  </data>
+  <data name="ChooseDeleteScopeForThisFile" xml:space="preserve">
+    <value>Odaberite opseg brisanja za ovaj fajl.</value>
+  </data>
+  <data name="DeleteForThisProductOnly" xml:space="preserve">
+    <value>Obriši samo za ovaj proizvod</value>
+  </data>
+  <data name="DeleteForSameNameModelGroup" xml:space="preserve">
+    <value>Obriši za istu grupu Naziv + Model</value>
+  </data>
+  <data name="DeleteForSameNameModelColorGroup" xml:space="preserve">
+    <value>Obriši za istu grupu Naziv + Model + Boja</value>
+  </data>
+  <data name="InventoryGallerySelectionControls" xml:space="preserve">
+    <value>Kontrole izbora galerije proizvoda</value>
+  </data>
+  <data name="ImageLabel" xml:space="preserve">
+    <value>Slika</value>
+  </data>
+  <data name="InventoryGalleryOnlyOneReuseOption" xml:space="preserve">
+    <value>Možete označiti samo jednu opciju za dijeljenje galerije.</value>
+  </data>
+  <data name="InventoryGallerySelectAtLeastOneFile" xml:space="preserve">
+    <value>Odaberite makar jedan fajl za galeriju proizvoda.</value>
+  </data>
+  <data name="InventoryGalleryUnsupportedFile" xml:space="preserve">
+    <value>Fajl '{0}' nije podržan.</value>
+  </data>
+  <data name="InventoryGalleryUploadFailedForFile" xml:space="preserve">
+    <value>Otpremanje fajla '{0}' nije uspjelo.</value>
+  </data>
+  <data name="InventoryGalleryOneFileUploaded" xml:space="preserve">
+    <value>1 galerijski fajl je otpremljen.</value>
+  </data>
+  <data name="InventoryGalleryManyFilesUploaded" xml:space="preserve">
+    <value>{0} galerijska fajla su otpremljena.</value>
+  </data>
+  <data name="InventoryGalleryCopiedToRelatedProducts" xml:space="preserve">
+    <value>Kopirano je još {0} unosa na srodne proizvode iz iste {1} grupe.</value>
+  </data>
+  <data name="InventoryGalleryNoFilesUploaded" xml:space="preserve">
+    <value>Nijedan galerijski fajl nije otpremljen.</value>
+  </data>
+  <data name="InventoryGalleryCloudinaryNotConfigured" xml:space="preserve">
+    <value>Cloudinary nije konfigurisan. Dodajte ispravan ApiSecret prije otpremanja galerijskog medija.</value>
+  </data>
+  <data name="InventoryGalleryUploadError" xml:space="preserve">
+    <value>Došlo je do greške prilikom otpremanja galerijskog medija proizvoda.</value>
+  </data>
+  <data name="InventoryGalleryUploadErrorWithDetail" xml:space="preserve">
+    <value>Došlo je do greške prilikom otpremanja galerijskog medija proizvoda. Detalj: {0}</value>
+  </data>
+  <data name="InventoryGalleryNoCheckedItems" xml:space="preserve">
+    <value>Nijedan galerijski fajl nije označen, pa ništa nije sinhronizovano.</value>
+  </data>
+  <data name="InventoryGalleryNoOtherProductsInScope" xml:space="preserve">
+    <value>Za ovu grupu {0} još nema drugih proizvoda.</value>
+  </data>
+  <data name="InventoryGalleryNoActiveCheckedItems" xml:space="preserve">
+    <value>Nijedan aktivni galerijski fajl nije označen, pa ništa nije sinhronizovano.</value>
+  </data>
+  <data name="InventoryGallerySyncedItems" xml:space="preserve">
+    <value>Sinhronizovano je {0} galerijskih unosa kroz ovu grupu {1}.</value>
+  </data>
+  <data name="InventoryGalleryAlreadySynced" xml:space="preserve">
+    <value>Svi proizvodi iz ove grupe {0} već imaju označene galerijske fajlove.</value>
+  </data>
+  <data name="InventoryGalleryVideoCannotBePrimary" xml:space="preserve">
+    <value>Video ne može biti postavljen kao glavna galerijska fotografija.</value>
+  </data>
+  <data name="InventoryGalleryPrimaryUpdated" xml:space="preserve">
+    <value>Glavna galerijska fotografija je ažurirana.</value>
+  </data>
+  <data name="InventoryGalleryCloudinaryDeleteFailed" xml:space="preserve">
+    <value>Brisanje fajla sa Cloudinary-ja nije uspjelo. Zapis je ipak uklonjen iz galerije.</value>
+  </data>
+  <data name="InventoryGalleryDeletedSingle" xml:space="preserve">
+    <value>Galerijski fajl je uklonjen.</value>
+  </data>
+  <data name="InventoryGalleryDeletedGroup" xml:space="preserve">
+    <value>Galerijski fajl je uklonjen sa {0} proizvoda iz iste grupe Naziv + Model.</value>
+  </data>
+  <data name="InventoryGalleryDeletedColorGroup" xml:space="preserve">
+    <value>Galerijski fajl je uklonjen sa {0} proizvoda iz iste grupe Naziv + Model + Boja.</value>
+  </data>
+  <data name="InventoryGalleryScopeNameModel" xml:space="preserve">
+    <value>Naziv + Model</value>
+  </data>
+  <data name="InventoryGalleryScopeNameModelColor" xml:space="preserve">
+    <value>Naziv + Model + Boja</value>
+  </data>
+  <data name="NoProductsToExport" xml:space="preserve">
+    <value>Nema proizvoda za izvoz.</value>
+  </data>
+  <data name="ErrorExportingPdf" xml:space="preserve">
+    <value>Došlo je do greške prilikom izvoza PDF-a.</value>
+  </data>
+  <data name="ErrorExportingExcel" xml:space="preserve">
+    <value>Došlo je do greške prilikom izvoza Excel fajla.</value>
   </data>
 </root>

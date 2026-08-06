@@ -403,6 +403,7 @@ namespace Inventar.Controllers
 
                 ViewBag.CustomerFullName = customer;
                 ViewBag.SaleTime = saleTime.ToString("dd-MM-yyyy HH:mm:ss");
+                ViewBag.SaleTimeIso = saleTime.ToString("o");
                 var referer = Request.Scheme.ToString() + "://" + Request.Host.Value.ToString() + Request.Path.Value.ToString() + Request.QueryString.Value.ToString();
                 ViewBag.ReturnFromDetails = returnFromDetails;
                 ViewBag.ReturnUrl = referer;
@@ -416,6 +417,77 @@ namespace Inventar.Controllers
                 return StatusCode(500, "An error occurred while loading data! Please try again.");
             }
 
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteGroupedSale(string customer, DateTime saleTime, string? returnFromDetails)
+        {
+            try
+            {
+                var sales = await _context.Prodaje
+                    .Include(sale => sale.Tepih)
+                    .Where(sale => sale.CustomerFullName == customer && sale.VrijemeProdaje == saleTime)
+                    .ToListAsync();
+
+                if (sales.Count == 0)
+                {
+                    _logger.LogError("Sales Controller - DeleteGroupedSale: Couldn't find grouped sale for customer {customer} at {saleTime}", customer, saleTime);
+                    return NotFound("Grouped sale not found.");
+                }
+
+                var directSaleProductIds = new HashSet<int>();
+
+                foreach (var sale in sales)
+                {
+                    var product = sale.Tepih;
+                    if (product == null)
+                    {
+                        _logger.LogError("Sales Controller - DeleteGroupedSale: Couldn't find a product with an ID: {id}", sale.TepihId);
+                        return NotFound("Product not found for this grouped sale.");
+                    }
+
+                    if (!product.PoMjeri && !product.CreatedForDirectSale)
+                    {
+                        product.Quantity += sale.Quantity;
+                    }
+
+                    if (product.CreatedForDirectSale)
+                    {
+                        directSaleProductIds.Add(product.Id);
+                    }
+
+                    _context.Prodaje.Remove(sale);
+                }
+
+                await _context.SaveChangesAsync();
+
+                foreach (var productId in directSaleProductIds)
+                {
+                    await RemoveDirectSaleProductIfUnusedAsync(productId);
+                }
+
+                var splited = returnFromDetails?.Split("/") ?? Array.Empty<string>();
+
+                if (splited.LastOrDefault() == "AllSales")
+                {
+                    return RedirectToAction("AllSales", "Sales");
+                }
+
+                if (splited.Length >= 2 && splited[splited.Length - 2] == "ShowBuys")
+                {
+                    var buyerId = splited.LastOrDefault();
+                    return RedirectToAction("Index", "Buyer", new { id = buyerId });
+                }
+
+                return RedirectToAction("Index", "Sales");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Sales Controller - DeleteGroupedSale: Error deleting grouped sale for customer {customer} at {saleTime}", customer, saleTime);
+                ModelState.AddModelError("", "Došlo je do greške prilikom brisanja prodaje.");
+                return StatusCode(500, "An error occurred while deleting grouped sale! Please try again.");
+            }
         }
 
         public async Task<IActionResult> Delete(int id, string returnUrl, string returnFromDetails)
@@ -1037,8 +1109,8 @@ namespace Inventar.Controllers
                         ProductNumber = productNumber,
                         Name = name,
                         Size = FormatSize(labelWidth, labelLength),
-                        M2PerProduct = labelWidth.HasValue && labelLength.HasValue
-                            ? Math.Round((labelLength.Value * labelWidth.Value) / 10000m, 2)
+                        M2PerProduct = entries.FirstOrDefault()?.PerM2 == true
+                            ? PoMjeriHelper.CalculateM2PerUnit(true, labelWidth, labelLength)
                             : null,
                         CustName = buyer ?? null
                     }
@@ -1090,13 +1162,15 @@ namespace Inventar.Controllers
                     .Select(grouped => new PerDayCustomersPurchaseSummary
                     {
                         CustomerName = grouped.Key,
-                        M2Total = grouped.Sum(g => g.PerM2
-                            ? (((g.Length ?? 0) * (g.Width ?? 0)) / 10000m) * g.Quantity
-                            : 0m),
+                        M2Total = grouped.Sum(g => PoMjeriHelper.CalculateM2Total(g.PerM2, g.Width, g.Length, g.Quantity) ?? 0m),
                         TotalQuantity = grouped.Sum(g => g.Quantity),
-                        TotalSpent = grouped.Sum(g => g.PerM2
-                            ? (((g.Length ?? 0) * (g.Width ?? 0)) / 10000m) * g.Quantity * g.Price
-                            : g.Price * g.Quantity)
+                        TotalSpent = grouped.Sum(g =>
+                        {
+                            var m2Total = PoMjeriHelper.CalculateM2Total(g.PerM2, g.Width, g.Length, g.Quantity);
+                            return g.PerM2
+                                ? (m2Total ?? 0m) * g.Price
+                                : g.Price * g.Quantity;
+                        })
                     })
                     .ToList();
 

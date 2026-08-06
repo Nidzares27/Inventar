@@ -4,6 +4,36 @@
     ViewData["Title"] = "Web Customers";
 }
 
+<style>
+    .web-customer-table__filters th {
+        padding: 1px;
+    }
+
+    .web-customer-table__filters input.form-control {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .web-customer-mobile-zoom {
+        width: 100%;
+    }
+
+    @@media (max-width: 768px) {
+        .web-customer-mobile-zoom {
+            zoom: 0.50;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        .web-customer-table__load-more .btn {
+            width: 100%;
+        }
+    }
+</style>
+
 <h2>@Inventar.Resources.Resource.WebCustomer</h2>
 
 @if (Model.EmailGroups.Count == 0)
@@ -14,6 +44,7 @@
 }
 else
 {
+    <div class="web-customer-mobile-zoom">
     <div class="table-responsive">
         <table class="table align-middle web-customer-table" id="webCustomerTable">
             <thead>
@@ -84,6 +115,7 @@ else
                 }
             </tbody>
         </table>
+    </div>
     </div>
 
     <div class="web-customer-table__load-more">

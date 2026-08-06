@@ -1,0 +1,1172 @@
+﻿@{
+    ViewData["Title"] = "Similar products";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="~/css/QRCodeScanning.css" asp-append-version="true" />
+
+<style>
+    .similar-products-page {
+        width: 100%;
+    }
+
+    .similar-products-page #leftDiv {
+        max-width: 100%;
+    }
+
+    .similar-products-result {
+        margin-top: 1rem;
+    }
+
+    .similar-products-placeholder {
+        margin: 0 auto;
+        max-width: 44rem;
+    }
+
+    .similar-products-mobile-zoom {
+        width: 100%;
+    }
+
+    .similar-products-summary {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        margin: 0 0 0.85rem;
+        padding: 0.7rem 0.8rem;
+        border: 1px solid #d8e1ea;
+        border-radius: 0.75rem;
+        background: #f9fbfd;
+        font-size: larger;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    .similar-products-summary__separator {
+        color: #7a8898;
+        font-weight: 600;
+    }
+
+    .similar-products-summary__value {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .similar-products-summary__value--emphasis {
+        font-weight: 700;
+    }
+
+    .similar-products-table-wrap {
+        width: 100%;
+    }
+
+    .similar-products-table {
+        width: 100%;
+        table-layout: fixed;
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+
+    .similar-products-table th,
+    .similar-products-table td {
+        padding: 0.42rem 0.28rem;
+        border: 1px solid #bfcddd !important;
+        vertical-align: middle;
+        word-break: break-word;
+    }
+
+    .similar-products-table thead th {
+        background: #edf3f9;
+    }
+
+    .similar-products-table__row--group-start td {
+        border-top: 2px solid #8aa8c7 !important;
+    }
+
+    .similar-products-table__color-cell {
+        background: #dfeefe;
+        font-weight: 700;
+    }
+
+    .similar-products-table__totals-row td {
+        background: #dff3da;
+        font-weight: 700;
+        border-top: 2px solid #7fb06a !important;
+    }
+
+    .similar-products-table__totals-label {
+        text-align: right;
+    }
+
+    .similar-products-table__product-number-col,
+    .similar-products-table__product-number-cell {
+        width: 5.85rem;
+        max-width: 5.85rem;
+    }
+
+    .similar-products-table__price-col,
+    .similar-products-table__price-cell {
+        width: 4.9rem;
+        max-width: 4.9rem;
+        white-space: nowrap;
+    }
+
+    .similar-products-table__color-col,
+    .similar-products-table__color-cell {
+        width: 5.4rem;
+        max-width: 5.4rem;
+    }
+
+    .similar-products-table__size-col,
+    .similar-products-table__size-cell {
+        width: 5.7rem;
+        max-width: 5.7rem;
+        white-space: nowrap;
+    }
+
+    .similar-products-table__quantity-col,
+    .similar-products-table__quantity-cell,
+    .similar-products-table__m2total-col,
+    .similar-products-table__m2total-cell {
+        width: 4.4rem;
+        max-width: 4.4rem;
+        white-space: nowrap;
+    }
+
+    .similar-products-toolbar {
+        display: flex;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+
+    .similar-products-toolbar__button {
+        min-width: 10rem;
+    }
+
+    @@media (max-width: 768px) {
+        .similar-products-mobile-zoom {
+            zoom: 0.67;
+        }
+
+        .similar-products-table-wrap.table-responsive {
+            overflow-x: visible;
+        }
+
+        .similar-products-summary {
+            padding: 0.55rem 0.6rem;
+        }
+
+        .similar-products-table {
+            font-size: 0.83rem;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .similar-products-mobile-zoom {
+            zoom: 0.58;
+        }
+
+        .similar-products-table th,
+        .similar-products-table td {
+            padding: 0.26rem 0.16rem;
+        }
+    }
+</style>
+
+<div class="similar-products-page">
+    <div id="leftDiv">
+        <div id="cameraControls" class="scan-camera-controls" hidden>
+            <div id="cameraPickerGroup" class="scan-camera-controls__group" hidden>
+                <select id="cameraSelect" class="form-select form-select-sm scan-camera-controls__select" aria-label="Choose camera"></select>
+            </div>
+            <button id="scanToggleButton" type="button" class="btn btn-outline-secondary btn-sm scan-camera-controls__toggle" hidden>
+                <i class="fa-solid fa-circle-stop" aria-hidden="true"></i>
+                <span>Stop scanning</span>
+            </button>
+        </div>
+
+        <div id="qr-reader"></div>
+        <div id="result"></div>
+
+        <div class="similar-products-toolbar">
+            <button id="openSimilarProductPickerModal" type="button" class="btn btn-primary manual-entry-button similar-products-toolbar__button">
+                @Inventar.Resources.Resource.AddProduct
+            </button>
+        </div>
+
+        <div id="similarProductPickerModal" class="product-picker-modal" hidden>
+            <div id="similarProductPickerModalBackdrop" class="product-picker-modal__backdrop"></div>
+            <div class="product-picker-modal__panel">
+                <button type="button" id="closeSimilarProductPickerModal" class="product-picker-modal__close" aria-label="Close">×</button>
+                <h5 class="product-picker-modal__title">@Inventar.Resources.Resource.AddProduct</h5>
+
+                <div class="scan-search-layout scan-search-layout--modal">
+                    <div id="midDiv">
+                        <form id="similarProductsFormByParameters" class="manual-entry-form" onsubmit="return false;">
+                            <div class="parameter-grid">
+                                <div>
+                                    <input id="similarSearchName" type="text" class="form-control parameter-input" placeholder="@Inventar.Resources.Resource.Name" />
+                                </div>
+
+                                <div>
+                                    <input id="similarSearchModel" type="text" class="form-control parameter-input" placeholder="Model" />
+                                </div>
+                            </div>
+
+                            <div class="parameter-actions">
+                                <button id="clearSimilarInputs" type="button" class="btn btn-warning btn-sm parameter-clear-button">
+                                    @Inventar.Resources.Resource.ClearInputs
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="product-picker-modal__manual">
+                            <div class="product-picker-modal__manual-title">@Inventar.Resources.Resource.ManuallyEnterId</div>
+                            <form id="similarProductsManualForm" class="manual-entry-form">
+                                <input type="number" id="similarManualId" name="id" class="form-control manual-entry-input" />
+                                <button type="submit" class="btn btn-outline-secondary manual-entry-button">@Inventar.Resources.Resource.AddProduct</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="similarRightDiv"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="similarProductsContainer" class="similar-products-result">
+            <div class="alert alert-info similar-products-placeholder mb-0">
+                @Inventar.Resources.Resource.ScanToSeeSimilar
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+    let lastScan = "";
+    let lastScanTime = 0;
+    let activeQrScanner = null;
+    let scannerRunning = false;
+    let scannerSwitchInProgress = false;
+    let availableCameras = [];
+    let currentCameraSelection = "";
+    let appleQrStream = null;
+    let appleQrVideo = null;
+    let appleQrCanvas = null;
+    let appleQrCanvasContext = null;
+    let appleQrAnimationFrameId = 0;
+    let appleQrDetectionInFlight = false;
+    let appleQrDecodePaused = false;
+    let appleBarcodeDetector = null;
+
+    const cameraControls = document.getElementById("cameraControls");
+    const cameraPickerGroup = document.getElementById("cameraPickerGroup");
+    const cameraSelect = document.getElementById("cameraSelect");
+    const scanToggleButton = document.getElementById("scanToggleButton");
+    const qrReaderElement = document.getElementById("qr-reader");
+    const scanResultElement = document.getElementById("result");
+    const similarProductsContainer = document.getElementById("similarProductsContainer");
+    const similarProductPickerModal = document.getElementById("similarProductPickerModal");
+    const similarSearchNameInput = document.getElementById("similarSearchName");
+    const similarSearchModelInput = document.getElementById("similarSearchModel");
+    const similarRightDiv = document.getElementById("similarRightDiv");
+
+    function openSimilarProductPickerModal() {
+        if (!similarProductPickerModal) {
+            return;
+        }
+
+        similarProductPickerModal.hidden = false;
+        similarSearchNameInput?.focus();
+    }
+
+    function closeSimilarProductPickerModal() {
+        if (!similarProductPickerModal) {
+            return;
+        }
+
+        similarProductPickerModal.hidden = true;
+    }
+
+    if (cameraPickerGroup) {
+        cameraPickerGroup.hidden = true;
+    }
+
+    function isAppleMobileDevice() {
+        return /iP(hone|ad|od)/i.test(navigator.userAgent)
+            || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    function isMobileDevice() {
+        return isAppleMobileDevice() || /android/i.test(navigator.userAgent);
+    }
+
+    if (isAppleMobileDevice() && qrReaderElement) {
+        qrReaderElement.classList.add("qr-reader--apple");
+        qrReaderElement.hidden = true;
+    }
+
+    function updateScanToggleButton() {
+        if (!scanToggleButton) {
+            return;
+        }
+
+        const controlsHidden = !cameraControls || cameraControls.hidden;
+        scanToggleButton.hidden = controlsHidden;
+        scanToggleButton.disabled = scannerSwitchInProgress;
+        scanToggleButton.innerHTML = scannerRunning
+            ? '<i class="fa-solid fa-circle-stop" aria-hidden="true"></i><span>Stop scanning</span>'
+            : '<i class="fa-solid fa-play" aria-hidden="true"></i><span>Start scanning</span>';
+    }
+
+    function updateQrReaderVisibility() {
+        if (!qrReaderElement) {
+            return;
+        }
+
+        qrReaderElement.hidden = isAppleMobileDevice() && !scannerRunning;
+    }
+
+    function renderErrorMessage(message) {
+        scanResultElement.innerHTML = `
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+    }
+
+    function clearErrorMessage() {
+        scanResultElement.innerHTML = "";
+    }
+
+    function renderLoadingState() {
+        similarProductsContainer.innerHTML = `
+            <div class="alert alert-secondary similar-products-placeholder mb-0">
+                @Inventar.Resources.Resource.LoadingSimilarProducts
+            </div>`;
+    }
+
+    function renderLookupResult(qrCodeMessage) {
+        clearErrorMessage();
+        renderLoadingState();
+
+        fetch(`/InventoryItem/SimilarProductsLookup?data=${encodeURIComponent(qrCodeMessage)}`)
+            .then(response => response.text())
+            .then(html => {
+                similarProductsContainer.innerHTML = html;
+            })
+            .catch(error => {
+                console.error("Similar products lookup failed.", error);
+                renderErrorMessage("@Inventar.Resources.Resource.ErrorProcessingQR");
+            });
+    }
+
+    function renderLookupResultByProductId(productId) {
+        clearErrorMessage();
+        renderLoadingState();
+
+        fetch(`/InventoryItem/SimilarProductsLookupById?id=${encodeURIComponent(productId)}`)
+            .then(response => response.text())
+            .then(html => {
+                similarProductsContainer.innerHTML = html;
+            })
+            .catch(error => {
+                console.error("Similar products lookup by id failed.", error);
+                renderErrorMessage("@Inventar.Resources.Resource.ErrorProcessingQR");
+            });
+    }
+
+    function onScanSuccess(qrCodeMessage) {
+        const now = Date.now();
+
+        if (qrCodeMessage === lastScan && (now - lastScanTime) < 800) {
+            return;
+        }
+
+        lastScan = qrCodeMessage;
+        lastScanTime = now;
+        renderLookupResult(qrCodeMessage);
+    }
+
+    function onScanError(errorMessage) {
+        console.warn(`QR Code scan error: ${errorMessage}`);
+    }
+
+    function ensureAppleQrElements() {
+        if (!qrReaderElement) {
+            return;
+        }
+
+        if (appleQrVideo && appleQrCanvas && qrReaderElement.contains(appleQrVideo) && qrReaderElement.contains(appleQrCanvas)) {
+            return;
+        }
+
+        qrReaderElement.innerHTML = "";
+
+        appleQrVideo = document.createElement("video");
+        appleQrVideo.className = "apple-qr-video";
+        appleQrVideo.setAttribute("autoplay", "autoplay");
+        appleQrVideo.setAttribute("muted", "muted");
+        appleQrVideo.setAttribute("playsinline", "true");
+        appleQrVideo.playsInline = true;
+        appleQrVideo.muted = true;
+
+        appleQrCanvas = document.createElement("canvas");
+        appleQrCanvas.className = "apple-qr-canvas";
+        appleQrCanvas.hidden = true;
+        appleQrCanvasContext = appleQrCanvas.getContext("2d", { willReadFrequently: true });
+
+        qrReaderElement.appendChild(appleQrVideo);
+        qrReaderElement.appendChild(appleQrCanvas);
+    }
+
+    function buildQrBox(viewfinderWidth, viewfinderHeight) {
+        const smallestEdge = Math.min(viewfinderWidth, viewfinderHeight);
+        const scale = isAppleMobileDevice() ? 0.92 : 0.9;
+        const edge = Math.max(isAppleMobileDevice() ? 220 : 180, Math.floor(smallestEdge * scale));
+
+        return {
+            width: edge,
+            height: edge
+        };
+    }
+
+    function getPreferredCamera(cameras) {
+        if (!Array.isArray(cameras) || cameras.length === 0) {
+            return null;
+        }
+
+        if (!cameras.some(camera => `${camera.label || ""}`.trim().length > 0)) {
+            return isMobileDevice()
+                ? cameras[cameras.length - 1]
+                : cameras[0];
+        }
+
+        const rankedCameras = cameras
+            .map(camera => {
+                const label = `${camera.label || ""}`.toLowerCase();
+                let score = 0;
+
+                if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
+                    score += 100;
+                }
+
+                if (label.includes("wide")) {
+                    score += 10;
+                }
+
+                if (label.includes("ultra")) {
+                    score -= 40;
+                }
+
+                if (label.includes("macro")) {
+                    score -= 25;
+                }
+
+                if (label.includes("front")
+                    || label.includes("facetime")
+                    || label.includes("truedepth")
+                    || label.includes("selfie")) {
+                    score -= 100;
+                }
+
+                return { camera, score };
+            })
+            .sort((left, right) => right.score - left.score);
+
+        return rankedCameras[0]?.camera ?? null;
+    }
+
+    function getCameraOptionLabel(camera, index, total) {
+        const rawLabel = `${camera.label || ""}`.trim();
+
+        if (rawLabel.length > 0) {
+            return rawLabel;
+        }
+
+        if (isMobileDevice() && total === 2) {
+            return index === 0 ? "Prednja kamera" : "Zadnja kamera";
+        }
+
+        if (isMobileDevice() && index === total - 1) {
+            return `Kamera ${index + 1} (zadnja)`;
+        }
+
+        return `Kamera ${index + 1}`;
+    }
+
+    function renderCameraOptions(cameras, selectedValue) {
+        if (!cameraSelect) {
+            return;
+        }
+
+        cameraSelect.innerHTML = "";
+
+        cameras.forEach((camera, index) => {
+            const option = document.createElement("option");
+            option.value = camera.id;
+            option.textContent = getCameraOptionLabel(camera, index, cameras.length);
+
+            if (camera.id === selectedValue) {
+                option.selected = true;
+            }
+
+            cameraSelect.appendChild(option);
+        });
+
+        if (cameraPickerGroup) {
+            cameraPickerGroup.hidden = cameras.length <= 1;
+        }
+
+        if (cameraControls) {
+            cameraControls.hidden = cameras.length === 0;
+        }
+
+        updateScanToggleButton();
+    }
+
+    async function loadAvailableCameras() {
+        availableCameras = await Html5Qrcode.getCameras();
+        return availableCameras;
+    }
+
+    function getScannerConfig() {
+        const scannerConfig = {
+            fps: isAppleMobileDevice() ? 6 : 10
+        };
+
+        if (!isAppleMobileDevice()) {
+            scannerConfig.qrbox = buildQrBox;
+        } else {
+            scannerConfig.disableFlip = true;
+        }
+
+        if (typeof Html5QrcodeSupportedFormats !== "undefined") {
+            scannerConfig.formatsToSupport = [Html5QrcodeSupportedFormats.QR_CODE];
+        }
+
+        return scannerConfig;
+    }
+
+    function buildAppleVideoConstraints(cameraSource) {
+        const constraints = {
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+        };
+
+        if (typeof cameraSource === "string" && cameraSource.length > 0) {
+            constraints.deviceId = { exact: cameraSource };
+            return constraints;
+        }
+
+        if (cameraSource && typeof cameraSource === "object") {
+            return {
+                ...cameraSource,
+                width: cameraSource.width ?? constraints.width,
+                height: cameraSource.height ?? constraints.height
+            };
+        }
+
+        return constraints;
+    }
+
+    function getAppleBarcodeDetector() {
+        if (appleBarcodeDetector !== null) {
+            return appleBarcodeDetector;
+        }
+
+        if (typeof BarcodeDetector === "undefined") {
+            appleBarcodeDetector = null;
+            return null;
+        }
+
+        try {
+            appleBarcodeDetector = new BarcodeDetector({ formats: ["qr_code"] });
+        } catch (barcodeDetectorError) {
+            console.warn("BarcodeDetector is unavailable for QR scanning on this device.", barcodeDetectorError);
+            appleBarcodeDetector = null;
+        }
+
+        return appleBarcodeDetector;
+    }
+
+    async function detectAppleQrCode() {
+        if (!appleQrVideo || !appleQrCanvas || !appleQrCanvasContext) {
+            return "";
+        }
+
+        const sourceWidth = appleQrVideo.videoWidth;
+        const sourceHeight = appleQrVideo.videoHeight;
+
+        if (!sourceWidth || !sourceHeight) {
+            return "";
+        }
+
+        const maxDimension = 1280;
+        const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+        const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
+        const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
+
+        if (appleQrCanvas.width !== targetWidth || appleQrCanvas.height !== targetHeight) {
+            appleQrCanvas.width = targetWidth;
+            appleQrCanvas.height = targetHeight;
+        }
+
+        appleQrCanvasContext.drawImage(appleQrVideo, 0, 0, targetWidth, targetHeight);
+
+        const barcodeDetector = getAppleBarcodeDetector();
+
+        if (barcodeDetector) {
+            try {
+                const detectedCodes = await barcodeDetector.detect(appleQrCanvas);
+                const detectedValue = detectedCodes.find(code => typeof code.rawValue === "string" && code.rawValue.length > 0)?.rawValue;
+
+                if (detectedValue) {
+                    return detectedValue;
+                }
+            } catch (barcodeDetectError) {
+                console.warn("BarcodeDetector failed while scanning QR frame.", barcodeDetectError);
+            }
+        }
+
+        if (typeof jsQR !== "function") {
+            return "";
+        }
+
+        const imageData = appleQrCanvasContext.getImageData(0, 0, targetWidth, targetHeight);
+        const jsQrResult = jsQR(imageData.data, targetWidth, targetHeight, {
+            inversionAttempts: "dontInvert"
+        });
+
+        return jsQrResult?.data || "";
+    }
+
+    async function tickAppleQrScanner() {
+        if (!scannerRunning || !appleQrVideo) {
+            return;
+        }
+
+        if (!appleQrDecodePaused
+            && !appleQrDetectionInFlight
+            && appleQrVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+            appleQrDetectionInFlight = true;
+
+            try {
+                const qrCodeMessage = await detectAppleQrCode();
+
+                if (qrCodeMessage) {
+                    appleQrDecodePaused = true;
+                    onScanSuccess(qrCodeMessage);
+                    window.setTimeout(() => {
+                        appleQrDecodePaused = false;
+                    }, 900);
+                }
+            } finally {
+                appleQrDetectionInFlight = false;
+            }
+        }
+
+        appleQrAnimationFrameId = window.requestAnimationFrame(() => {
+            tickAppleQrScanner();
+        });
+    }
+
+    async function stopAppleQrScanner() {
+        if (appleQrAnimationFrameId) {
+            window.cancelAnimationFrame(appleQrAnimationFrameId);
+            appleQrAnimationFrameId = 0;
+        }
+
+        if (appleQrVideo) {
+            try {
+                appleQrVideo.pause();
+                appleQrVideo.srcObject = null;
+            } catch (appleVideoStopError) {
+                console.warn("Unable to fully stop Apple QR video stream.", appleVideoStopError);
+            }
+        }
+
+        if (appleQrStream) {
+            appleQrStream.getTracks().forEach(track => track.stop());
+            appleQrStream = null;
+        }
+
+        appleQrDetectionInFlight = false;
+        appleQrDecodePaused = false;
+        scannerRunning = false;
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+    }
+
+    async function startAppleQrScannerWithSource(cameraSource, selectedValue) {
+        ensureAppleQrElements();
+        await stopAppleQrScanner();
+        updateQrReaderVisibility();
+
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: buildAppleVideoConstraints(cameraSource),
+            audio: false
+        });
+
+        appleQrStream = mediaStream;
+        appleQrVideo.srcObject = mediaStream;
+        await appleQrVideo.play();
+
+        scannerRunning = true;
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+        appleQrAnimationFrameId = window.requestAnimationFrame(() => {
+            tickAppleQrScanner();
+        });
+
+        if (typeof selectedValue === "string" && selectedValue.length > 0) {
+            currentCameraSelection = selectedValue;
+            renderCameraOptions(availableCameras, selectedValue);
+        }
+    }
+
+    function clampConstraintValue(range, preferredValue) {
+        if (!range || typeof range !== "object") {
+            return preferredValue;
+        }
+
+        let value = preferredValue;
+
+        if (typeof range.min === "number") {
+            value = Math.max(range.min, value);
+        }
+
+        if (typeof range.max === "number") {
+            value = Math.min(range.max, value);
+        }
+
+        return value;
+    }
+
+    function buildCameraTuningConstraints(capabilities, settings) {
+        if (!capabilities) {
+            return null;
+        }
+
+        const constraints = {};
+        const advanced = [];
+
+        if (capabilities.width || capabilities.height) {
+            constraints.width = {
+                ideal: clampConstraintValue(capabilities.width, isAppleMobileDevice() ? 1920 : 1280)
+            };
+            constraints.height = {
+                ideal: clampConstraintValue(capabilities.height, isAppleMobileDevice() ? 1080 : 720)
+            };
+        }
+
+        if (Array.isArray(capabilities.focusMode)) {
+            if (capabilities.focusMode.includes("continuous")) {
+                advanced.push({ focusMode: "continuous" });
+            } else if (capabilities.focusMode.includes("single-shot")) {
+                advanced.push({ focusMode: "single-shot" });
+            }
+        }
+
+        if (Array.isArray(capabilities.exposureMode) && capabilities.exposureMode.includes("continuous")) {
+            advanced.push({ exposureMode: "continuous" });
+        }
+
+        if (Array.isArray(capabilities.whiteBalanceMode) && capabilities.whiteBalanceMode.includes("continuous")) {
+            advanced.push({ whiteBalanceMode: "continuous" });
+        }
+
+        if (capabilities.zoom) {
+            const preferredZoom = typeof settings?.zoom === "number"
+                ? Math.min(settings.zoom, 1)
+                : 1;
+            advanced.push({ zoom: clampConstraintValue(capabilities.zoom, preferredZoom) });
+        }
+
+        if (advanced.length > 0) {
+            constraints.advanced = advanced;
+        }
+
+        return Object.keys(constraints).length > 0 ? constraints : null;
+    }
+
+    async function tuneActiveQrCamera() {
+        if (!activeQrScanner || typeof activeQrScanner.applyVideoConstraints !== "function") {
+            return;
+        }
+
+        try {
+            const capabilities = typeof activeQrScanner.getRunningTrackCapabilities === "function"
+                ? activeQrScanner.getRunningTrackCapabilities()
+                : null;
+            const settings = typeof activeQrScanner.getRunningTrackSettings === "function"
+                ? activeQrScanner.getRunningTrackSettings()
+                : null;
+            const constraints = buildCameraTuningConstraints(capabilities, settings);
+
+            if (!constraints) {
+                return;
+            }
+
+            await activeQrScanner.applyVideoConstraints(constraints);
+        } catch (cameraTuneError) {
+            console.warn("Unable to tune active QR camera stream.", cameraTuneError);
+        }
+    }
+
+    function scheduleCameraTuning() {
+        tuneActiveQrCamera();
+        window.setTimeout(() => tuneActiveQrCamera(), 450);
+        window.setTimeout(() => tuneActiveQrCamera(), 1200);
+    }
+
+    async function stopQrScanner() {
+        if (isAppleMobileDevice()) {
+            await stopAppleQrScanner();
+            return;
+        }
+
+        if (!activeQrScanner || !scannerRunning) {
+            return;
+        }
+
+        await activeQrScanner.stop();
+        scannerRunning = false;
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+    }
+
+    async function startQrScannerWithSource(cameraSource, selectedValue) {
+        if (isAppleMobileDevice()) {
+            await startAppleQrScannerWithSource(cameraSource, selectedValue);
+            return;
+        }
+
+        if (!activeQrScanner) {
+            activeQrScanner = new Html5Qrcode("qr-reader");
+        }
+
+        await activeQrScanner.start(
+            cameraSource,
+            getScannerConfig(),
+            onScanSuccess,
+            onScanError);
+
+        scannerRunning = true;
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+        scheduleCameraTuning();
+
+        if (typeof selectedValue === "string" && selectedValue.length > 0) {
+            currentCameraSelection = selectedValue;
+            renderCameraOptions(availableCameras, selectedValue);
+        }
+    }
+
+    async function startQrScanner() {
+        let cameras = [];
+
+        try {
+            cameras = await loadAvailableCameras();
+            const preferredCamera = getPreferredCamera(cameras);
+
+            if (cameraControls) {
+                cameraControls.hidden = false;
+            }
+
+            if (cameraPickerGroup) {
+                cameraPickerGroup.hidden = cameras.length <= 1;
+            }
+
+            if (isAppleMobileDevice()) {
+                renderCameraOptions(cameras, preferredCamera?.id ?? "");
+            }
+
+            updateScanToggleButton();
+
+            if (isAppleMobileDevice()) {
+                const appleFallbackSources = [
+                    { facingMode: { exact: "environment" } },
+                    { facingMode: "environment" },
+                    { facingMode: { ideal: "environment" } }
+                ];
+
+                for (const appleSource of appleFallbackSources) {
+                    try {
+                        await startQrScannerWithSource(appleSource, "");
+                        return;
+                    } catch (appleStartError) {
+                        console.warn("Apple camera start attempt failed.", appleStartError);
+                    }
+                }
+            }
+
+            if (preferredCamera) {
+                renderCameraOptions(cameras, preferredCamera.id);
+                await startQrScannerWithSource(preferredCamera.id, preferredCamera.id);
+                return;
+            }
+        } catch (cameraError) {
+            console.warn("Unable to enumerate cameras, falling back to facingMode.", cameraError);
+        }
+
+        const fallbackSources = [
+            { facingMode: { exact: "environment" } },
+            { facingMode: "environment" },
+            { facingMode: { ideal: "environment" } }
+        ];
+
+        let lastStartError = null;
+
+        for (const fallbackSource of fallbackSources) {
+            try {
+                await startQrScannerWithSource(fallbackSource, "");
+                return;
+            } catch (startError) {
+                lastStartError = startError;
+            }
+        }
+
+        try {
+            const cameras = availableCameras.length > 0
+                ? availableCameras
+                : await loadAvailableCameras();
+
+            if (cameras.length > 0) {
+                const fallbackCamera = cameras[cameras.length - 1];
+                renderCameraOptions(cameras, fallbackCamera.id);
+                await startQrScannerWithSource(fallbackCamera.id, fallbackCamera.id);
+                return;
+            }
+        } catch (cameraListError) {
+            lastStartError = cameraListError;
+        }
+
+        console.error("Unable to start QR scanner.", lastStartError);
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+        renderErrorMessage("Unable to start QR scanner. Please refresh the page and allow camera access.");
+    }
+
+    async function switchQrCamera(cameraId) {
+        if (!cameraId || scannerSwitchInProgress || currentCameraSelection === cameraId) {
+            return;
+        }
+
+        scannerSwitchInProgress = true;
+        updateScanToggleButton();
+
+        try {
+            await stopQrScanner();
+            await startQrScannerWithSource(cameraId, cameraId);
+        } catch (switchError) {
+            console.error("Unable to switch QR camera.", switchError);
+            renderErrorMessage("Unable to switch camera. Please try a different camera.");
+        } finally {
+            scannerSwitchInProgress = false;
+            updateScanToggleButton();
+        }
+    }
+
+    async function toggleQrScanner() {
+        if (scannerSwitchInProgress) {
+            return;
+        }
+
+        scannerSwitchInProgress = true;
+        updateScanToggleButton();
+
+        try {
+            if (scannerRunning) {
+                await stopQrScanner();
+                return;
+            }
+
+            const selectedCameraId = cameraSelect?.value || currentCameraSelection;
+
+            if (selectedCameraId) {
+                await startQrScannerWithSource(selectedCameraId, selectedCameraId);
+                return;
+            }
+
+            await startQrScanner();
+        } catch (toggleError) {
+            console.error("Unable to toggle QR scanner.", toggleError);
+            renderErrorMessage("Unable to change scanner state. Please try again.");
+        } finally {
+            scannerSwitchInProgress = false;
+            updateScanToggleButton();
+        }
+    }
+
+    if (cameraSelect) {
+        cameraSelect.addEventListener("change", function () {
+            switchQrCamera(this.value);
+        });
+    }
+
+    if (scanToggleButton) {
+        scanToggleButton.addEventListener("click", function () {
+            toggleQrScanner();
+        });
+    }
+
+    document.getElementById("openSimilarProductPickerModal")?.addEventListener("click", function () {
+        openSimilarProductPickerModal();
+    });
+
+    document.getElementById("closeSimilarProductPickerModal")?.addEventListener("click", function () {
+        closeSimilarProductPickerModal();
+    });
+
+    document.getElementById("similarProductPickerModalBackdrop")?.addEventListener("click", function () {
+        closeSimilarProductPickerModal();
+    });
+
+    function searchSimilarTepisi() {
+        const filters = {
+            name: similarSearchNameInput?.value || "",
+            model: similarSearchModelInput?.value || "",
+            color: "",
+            size: ""
+        };
+
+        if (!filters.name && !filters.model) {
+            if (similarRightDiv) {
+                similarRightDiv.innerHTML = "";
+                similarRightDiv.style.display = "none";
+            }
+
+            return;
+        }
+
+        $.ajax({
+            url: "/InventoryItem/SearchTepisi",
+            type: "GET",
+            data: filters,
+            success: function (result) {
+                if (!similarRightDiv) {
+                    return;
+                }
+
+                similarRightDiv.innerHTML = "";
+
+                if (result.length === 0) {
+                    similarRightDiv.innerHTML = "<p>@Inventar.Resources.Resource.NoResultsFound</p>";
+                    similarRightDiv.style.display = "block";
+                    return;
+                }
+
+                let html = "<ul class='list-group'>";
+
+                result.forEach(item => {
+                    let sizeText = "";
+                    if (item.width != null && item.length != null) {
+                        sizeText = ` - ${item.width}X${item.length}`;
+                    }
+
+                    let poMjeriText = "";
+                    if (item.poMjeri) {
+                        let remainingSize = "";
+                        if (item.remainingWidth != null && item.remainingLength != null) {
+                            remainingSize = `${item.remainingWidth}X${item.remainingLength}`;
+                        }
+
+                        poMjeriText = ` - ${remainingSize}`;
+                        if (item.unId) {
+                            poMjeriText += ` / ${item.unId}`;
+                        }
+                    }
+
+                    html += `
+                        <li class="list-group-item list-group-item-action similar-add-item" data-id="${item.id}">
+                            <strong>${item.productNumber}</strong> -
+                            ${item.name} -
+                            ${item.model} -
+                            ${item.color}
+                            ${sizeText}
+                            ${poMjeriText}
+                        </li>
+                    `;
+                });
+
+                html += "</ul>";
+                similarRightDiv.innerHTML = html;
+                similarRightDiv.style.display = "block";
+            }
+        });
+    }
+
+    similarSearchNameInput?.addEventListener("input", searchSimilarTepisi);
+    similarSearchModelInput?.addEventListener("input", searchSimilarTepisi);
+
+    document.getElementById("clearSimilarInputs")?.addEventListener("click", function () {
+        if (similarSearchNameInput) {
+            similarSearchNameInput.value = "";
+        }
+
+        if (similarSearchModelInput) {
+            similarSearchModelInput.value = "";
+        }
+
+        if (similarRightDiv) {
+            similarRightDiv.innerHTML = "";
+            similarRightDiv.style.display = "none";
+        }
+    });
+
+    document.addEventListener("click", function (event) {
+        const target = event.target instanceof Element
+            ? event.target.closest(".similar-add-item")
+            : null;
+
+        if (!target) {
+            return;
+        }
+
+        const productId = target.getAttribute("data-id");
+        if (!productId) {
+            return;
+        }
+
+        closeSimilarProductPickerModal();
+        renderLookupResultByProductId(productId);
+    });
+
+    document.getElementById("similarProductsManualForm")?.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const manualIdInput = document.getElementById("similarManualId");
+        const productId = manualIdInput?.value?.trim();
+
+        if (!productId) {
+            renderErrorMessage("Unesite ID proizvoda.");
+            return;
+        }
+
+        closeSimilarProductPickerModal();
+        renderLookupResultByProductId(productId);
+    });
+
+    window.addEventListener("load", function () {
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+        setTimeout(() => {
+            startQrScanner();
+        }, 100);
+    });
+
+    window.addEventListener("beforeunload", function () {
+        if (!activeQrScanner && !appleQrStream) {
+            return;
+        }
+
+        stopQrScanner().catch(() => {
+            // Ignore cleanup errors during page navigation.
+        });
+    });
+</script>

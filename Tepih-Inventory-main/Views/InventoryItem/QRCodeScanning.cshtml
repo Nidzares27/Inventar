@@ -1,7 +1,7 @@
 ﻿@using Inventar.ViewModels.Inventory
 @model IEnumerable<ScannedProductViewModel>
 @{
-    ViewData["Title"] = "Scan QR Code";
+    ViewData["Title"] = Inventar.Resources.Resource.ScanQRCode;
 }
 <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -13,13 +13,23 @@
 {
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
         @TempData["ProductNotFound"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@Inventar.Resources.Resource.Close"></button>
     </div>
 }
 
 <div id="outterDiv" class="scan-layout">
     <!-- LEFT DIV -->
     <div id="leftDiv">
+        <div id="cameraControls" class="scan-camera-controls" hidden>
+            <div id="cameraPickerGroup" class="scan-camera-controls__group" hidden>
+@*                 <label for="cameraSelect" class="scan-camera-controls__label">Kamera</label>
+ *@                <select id="cameraSelect" class="form-select form-select-sm scan-camera-controls__select" aria-label="@Inventar.Resources.Resource.ChooseCamera"></select>
+            </div>
+            <button id="scanToggleButton" type="button" class="btn btn-outline-secondary btn-sm scan-camera-controls__toggle" hidden>
+                <i class="fa-solid fa-circle-stop" aria-hidden="true"></i>
+                <span>@Inventar.Resources.Resource.StopScanning</span>
+            </button>
+        </div>
         <div id="qr-reader"></div>
         <div id="result"></div>
     </div>
@@ -31,19 +41,19 @@
                 <thead>
                     <tr>
                         <th scope="col">@Inventar.Resources.Resource.Name</th>
-                        <th scope="col">Model</th>
-                        <th scope="col">@Inventar.Resources.Resource.Size</th>
+                        <th scope="col" class="product-table__model-col">@Inventar.Resources.Resource.Model</th>
+                        <th scope="col" class="product-table__size-col">@Inventar.Resources.Resource.Size</th>
                         <th scope="col">@Inventar.Resources.Resource.Color</th>
                         @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
                         {
-                            <th scope="col">@Inventar.Resources.Resource.Price</th>
+                            <th scope="col" class="product-table__price-col">@Inventar.Resources.Resource.Price</th>
                         }
                         else
                         {
-                            <th style="display:none" scope="col">@Inventar.Resources.Resource.Price</th>
+                            <th style="display:none" scope="col" class="product-table__price-col">@Inventar.Resources.Resource.Price</th>
                         }
-                        <th scope="col">@Inventar.Resources.Resource.Quantity</th>
-                        <th scope="col"></th>
+                        <th scope="col" class="product-table__quantity-col">@Inventar.Resources.Resource.Quantity</th>
+                        <th scope="col" class="product-table__actions-col"></th>
 
                     </tr>
                 </thead>
@@ -62,35 +72,35 @@
                                     <div class="small text-muted">@item.UnID</div>
                                 }
                             </td>
-                            <td>
+                            <td class="product-table__model-cell">
                                 @item.Model
                             </td>
                             @if (item.PerM2 || (!item.PerM2 && (item.Width != null && item.Length != null)))
                             {
-                                <td style="white-space: nowrap">
+                                <td class="product-table__size-cell" style="white-space: nowrap">
                                     @($"{item.Width}X{item.Length}")
                                 </td>
                             }
                             @if (!item.PerM2 && (item.Width == null || item.Length == null))
                             {
-                                <td style="white-space: nowrap"></td>
+                                <td class="product-table__size-cell" style="white-space: nowrap"></td>
                             }
                             <td>
                                 @item.Color
                             </td>
                             @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
                             {
-                                <td>
+                                <td class="product-table__price-cell">
                                     @item.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) €
                                 </td>
                             }
                             else
                             {
-                                <td style="display:none">
+                                <td style="display:none" class="product-table__price-cell">
                                     @item.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) €
                                 </td>
                             }
-                            <td class="quantity-cell">
+                            <td class="quantity-cell product-table__quantity-cell">
                                 @if (item.IsDirectSaleProduct)
                                 {
                                     <div class="quantity-stepper quantity-stepper--locked">
@@ -101,20 +111,20 @@
                                 else
                                 {
                                     <div class="quantity-stepper">
-                                        <button type="button" class="btn btn-primary btn-sm update-quantity quantity-stepper__button" data-line-id="@item.LineId" data-action="increase" aria-label="Increase quantity">+</button>
+                                        <button type="button" class="btn btn-primary btn-sm update-quantity quantity-stepper__button" data-line-id="@item.LineId" data-action="decrease" aria-label="@Inventar.Resources.Resource.DecreaseQuantity">-</button>
                                         <span id="quantity-@item.LineId" class="quantity-stepper__value">@item.Quantity</span>
-                                        <button type="button" class="btn btn-primary btn-sm update-quantity quantity-stepper__button" data-line-id="@item.LineId" data-action="decrease" aria-label="Decrease quantity">-</button>
+                                        <button type="button" class="btn btn-primary btn-sm update-quantity quantity-stepper__button" data-line-id="@item.LineId" data-action="increase" aria-label="@Inventar.Resources.Resource.IncreaseQuantity">+</button>
                                     </div>
                                 }
                                 @if (item.PoMjeri && item.MaxAvailableQuantity > 0)
                                 {
-                                    <div class="small text-muted">max @item.MaxAvailableQuantity</div>
+                                    <div class="small text-muted">@Inventar.Resources.Resource.MaxShort @item.MaxAvailableQuantity</div>
                                 }
                             </td>
-                            <td>
+                            <td class="product-table__actions-cell">
                                 <form asp-action="DeleteScannedProduct" method="post">
                                     <input type="hidden" name="lineId" value="@item.LineId" />
-                                    <button type="submit" class="btn btn-danger">
+                                    <button type="submit" class="btn btn-danger product-table__delete-button" aria-label="@Inventar.Resources.Resource.DeleteProduct">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -123,7 +133,19 @@
                     }
                 </tbody>
             </table>
-            <a class="btn btn-secondary @(Model.Any() ? "" : "disabled-link")" href="/InventoryItem/ScannedProductsToBePurchased">@Inventar.Resources.Resource.Complete</a>
+            <div class="d-flex flex-wrap gap-2 mt-2 qr-product-actions">
+                <a class="btn btn-secondary @(Model.Any() ? "" : "disabled-link")" href="/InventoryItem/ScannedProductsToBePurchased">@Inventar.Resources.Resource.Complete</a>
+                @if (Model.Any())
+                {
+                    <button id="printQrScanPdfButton" type="button" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+                    <button id="exportQrScanExcelButton" type="button" class="btn btn-success">@Inventar.Resources.Resource.Excel</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary" disabled>@Inventar.Resources.Resource.PrintPDF</button>
+                    <button type="button" class="btn btn-success" disabled>@Inventar.Resources.Resource.Excel</button>
+                }
+            </div>
         }
     </div>
 
@@ -140,7 +162,7 @@
 <div id="productPickerModal" class="product-picker-modal" hidden>
     <div id="productPickerModalBackdrop" class="product-picker-modal__backdrop"></div>
     <div class="product-picker-modal__panel">
-        <button type="button" id="closeProductPickerModal" class="product-picker-modal__close" aria-label="Close">×</button>
+        <button type="button" id="closeProductPickerModal" class="product-picker-modal__close" aria-label="@Inventar.Resources.Resource.Close">×</button>
         <h5 class="product-picker-modal__title">@Inventar.Resources.Resource.AddProduct</h5>
 
         <div class="scan-search-layout scan-search-layout--modal">
@@ -152,7 +174,7 @@
                         </div>
 
                         <div>
-                            <input id="searchModel" type="text" class="form-control parameter-input" placeholder="Model" />
+                            <input id="searchModel" type="text" class="form-control parameter-input" placeholder="@Inventar.Resources.Resource.Model" />
                         </div>
 
                         <div>
@@ -187,7 +209,7 @@
 <div id="createProductModal" class="product-picker-modal" hidden>
     <div id="createProductModalBackdrop" class="product-picker-modal__backdrop"></div>
     <div class="product-picker-modal__panel product-picker-modal__panel--compact">
-        <button type="button" id="closeCreateProductModal" class="product-picker-modal__close" aria-label="Close">×</button>
+        <button type="button" id="closeCreateProductModal" class="product-picker-modal__close" aria-label="@Inventar.Resources.Resource.Close">×</button>
         <h5 class="product-picker-modal__title">@Inventar.Resources.Resource.CreateProductForSelling</h5>
 
         <div class="product-picker-modal__manual product-picker-modal__manual--standalone product-picker-modal__direct-sale">
@@ -241,7 +263,7 @@
 <div id="poMjeriModal" class="po-mjeri-modal" hidden>
     <div class="po-mjeri-modal__backdrop"></div>
     <div class="po-mjeri-modal__panel">
-        <button type="button" id="closePoMjeriModal" class="po-mjeri-modal__close" aria-label="Close">×</button>
+        <button type="button" id="closePoMjeriModal" class="po-mjeri-modal__close" aria-label="@Inventar.Resources.Resource.Close">×</button>
         <h5 id="poMjeriModalTitle">@Inventar.Resources.Resource.PerMeasureProduct</h5>
         <input type="hidden" id="poMjeriProductId" />
         <div class="po-mjeri-modal__meta">
@@ -269,9 +291,146 @@
         </div>
     </div>
 </div>
+<script>
+    const qrScanResources = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+    {
+        close = Inventar.Resources.Resource.Close,
+        chooseCamera = Inventar.Resources.Resource.ChooseCamera,
+        startScanning = Inventar.Resources.Resource.StartScanning,
+        stopScanning = Inventar.Resources.Resource.StopScanning,
+        camera = Inventar.Resources.Resource.Camera,
+        frontCamera = Inventar.Resources.Resource.FrontCamera,
+        rearCamera = Inventar.Resources.Resource.RearCamera,
+        unableToSwitchCamera = Inventar.Resources.Resource.UnableToSwitchCamera,
+        unableToChangeScannerState = Inventar.Resources.Resource.UnableToChangeScannerState,
+        errorUpdatingQuantity = Inventar.Resources.Resource.ErrorUpdatingQuantity,
+        enterProductId = Inventar.Resources.Resource.EnterProductId,
+        errorPreparingProduct = Inventar.Resources.Resource.ErrorPreparingProduct,
+        errorCreatingTemporaryProduct = Inventar.Resources.Resource.ErrorCreatingTemporaryProduct,
+        productSearchFailed = Inventar.Resources.Resource.ProductSearchFailed,
+        productNameRequired = Inventar.Resources.Resource.ProductNameRequired,
+        invalidQuantity = Inventar.Resources.Resource.InvalidQuantity,
+        invalidProductPrice = Inventar.Resources.Resource.InvalidProductPrice,
+        invalidWidth = Inventar.Resources.Resource.InvalidWidth,
+        invalidLength = Inventar.Resources.Resource.InvalidLength,
+        widthAndLengthRequiredForSelectedProductType = Inventar.Resources.Resource.WidthAndLengthRequiredForSelectedProductType,
+        enterBothWidthAndLength = Inventar.Resources.Resource.EnterBothWidthAndLength,
+        noProductsToExport = Inventar.Resources.Resource.ResourceManager.GetString("NoProductsToExport") ?? "No products to export.",
+        errorExportingPdf = Inventar.Resources.Resource.ResourceManager.GetString("ErrorExportingPdf") ?? "An error occurred while exporting PDF.",
+        errorExportingExcel = Inventar.Resources.Resource.ResourceManager.GetString("ErrorExportingExcel") ?? "An error occurred while exporting Excel."
+    }));
+</script>
 @* <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
  *@<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
+    function buildQrScanExportPayload() {
+        const table = document.getElementById("productTable");
+        if (!table) {
+            return null;
+        }
+
+        const visibleHeaderIndexes = [];
+        const columnHeaders = [];
+
+        table.querySelectorAll("thead th").forEach((headerCell, index) => {
+            const isVisible = window.getComputedStyle(headerCell).display !== "none";
+            const headerText = headerCell.textContent.trim();
+
+            if (isVisible && headerText.length > 0) {
+                visibleHeaderIndexes.push(index);
+                columnHeaders.push(headerText);
+            }
+        });
+
+        const rows = Array.from(table.querySelectorAll("tbody tr")).map((row) => {
+            return visibleHeaderIndexes.map((columnIndex) => {
+                const cell = row.children[columnIndex];
+                if (!cell) {
+                    return "";
+                }
+
+                if (cell.classList.contains("product-table__quantity-cell")) {
+                    return cell.querySelector(".quantity-stepper__value")?.textContent.trim() ?? "";
+                }
+
+                return cell.innerText
+                    .split("\n")
+                    .map(value => value.trim())
+                    .filter(Boolean)
+                    .join(" / ");
+            });
+        });
+
+        if (rows.length === 0 || columnHeaders.length === 0) {
+            return null;
+        }
+
+        const now = new Date();
+        const safeTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}.${String(now.getMinutes()).padStart(2, "0")}`;
+
+        return {
+            heading: "@Inventar.Resources.Resource.ScanQRCode",
+            fileNameBase: `QR Scan ${safeTimestamp}`,
+            columnHeaders: columnHeaders,
+            rows: rows
+        };
+    }
+
+    async function exportQrScanTable(url, fallbackFileName, errorMessage) {
+        const payload = buildQrScanExportPayload();
+        if (!payload) {
+            alert(qrScanResources.noProductsToExport);
+            return;
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const message = await response.text();
+                alert(message || errorMessage);
+                return;
+            }
+
+            let fileName = fallbackFileName;
+            const contentDisposition = response.headers.get("content-disposition");
+            if (contentDisposition && contentDisposition.includes("filename=")) {
+                const match = /filename\*?=(?:UTF-8'')?[\"']?([^;\"']+)[\"']?/i.exec(contentDisposition);
+                if (match && match[1]) {
+                    fileName = decodeURIComponent(match[1]);
+                }
+            }
+
+            const blob = await response.blob();
+            const objectUrl = window.URL.createObjectURL(blob);
+            const downloadLink = document.createElement("a");
+            downloadLink.href = objectUrl;
+            downloadLink.download = fileName;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            downloadLink.remove();
+            window.URL.revokeObjectURL(objectUrl);
+        } catch (error) {
+            console.error(error);
+            alert(errorMessage);
+        }
+    }
+
+    document.getElementById("printQrScanPdfButton")?.addEventListener("click", function () {
+        exportQrScanTable("/InventoryItem/ExportScannedProductsTableToPdf", "qr-scan.pdf", qrScanResources.errorExportingPdf);
+    });
+
+    document.getElementById("exportQrScanExcelButton")?.addEventListener("click", function () {
+        exportQrScanTable("/InventoryItem/ExportScannedProductsTableToExcel", "qr-scan.xlsx", qrScanResources.errorExportingExcel);
+    });
+
     let audioUnlocked = false;
 
     function unlockAudio() {
@@ -442,7 +601,7 @@
         document.getElementById('result').innerHTML = `
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
                 ${result.message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="${qrScanResources.close}"></button>
             </div>`;
     }
 
@@ -464,7 +623,7 @@
             .catch(error => {
                 console.error('Fetch error:', error);
                 document.getElementById('result').innerHTML = `
-                    <div class="alert alert-danger">Error processing QR code.</div>`;
+                    <div class="alert alert-danger">@Inventar.Resources.Resource.ErrorProcessingQR</div>`;
             });
     }
 
@@ -472,26 +631,713 @@
         console.warn(`QR Code scan error: ${errorMessage}`);
     }
 
-    // Delay scanner initialization after page load
-    window.addEventListener("load", function () {
-        setTimeout(() => {
-            const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
-                fps: 10,
-                aspectRatio: 1.3333333,
-                qrbox: function (viewfinderWidth, viewfinderHeight) {
-                    const edge = Math.floor(Math.min(viewfinderWidth * 0.94, viewfinderHeight * 0.98));
-                    return {
-                        width: edge,
-                        height: edge
-                    };
+    let activeQrScanner = null;
+    let scannerRunning = false;
+    let scannerSwitchInProgress = false;
+    let availableCameras = [];
+    let currentCameraSelection = "";
+    let appleQrStream = null;
+    let appleQrVideo = null;
+    let appleQrCanvas = null;
+    let appleQrCanvasContext = null;
+    let appleQrAnimationFrameId = 0;
+    let appleQrDetectionInFlight = false;
+    let appleQrDecodePaused = false;
+    let appleBarcodeDetector = null;
+
+    const cameraControls = document.getElementById("cameraControls");
+    const cameraPickerGroup = document.getElementById("cameraPickerGroup");
+    const cameraSelect = document.getElementById("cameraSelect");
+    const scanToggleButton = document.getElementById("scanToggleButton");
+    const qrReaderElement = document.getElementById("qr-reader");
+
+    if (cameraPickerGroup) {
+        cameraPickerGroup.hidden = true;
+    }
+
+    function updateScanToggleButton() {
+        if (!scanToggleButton) {
+            return;
+        }
+
+        const isControlsHidden = !cameraControls || cameraControls.hidden;
+        scanToggleButton.hidden = isControlsHidden;
+        scanToggleButton.disabled = scannerSwitchInProgress;
+        scanToggleButton.innerHTML = scannerRunning
+            ? `<i class="fa-solid fa-circle-stop" aria-hidden="true"></i><span>${qrScanResources.stopScanning}</span>`
+            : `<i class="fa-solid fa-play" aria-hidden="true"></i><span>${qrScanResources.startScanning}</span>`;
+    }
+
+    function updateQrReaderVisibility() {
+        if (!qrReaderElement) {
+            return;
+        }
+
+        qrReaderElement.hidden = isAppleMobileDevice() && !scannerRunning;
+    }
+
+    function isAppleMobileDevice() {
+        return /iP(hone|ad|od)/i.test(navigator.userAgent)
+            || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    function isMobileDevice() {
+        return isAppleMobileDevice() || /android/i.test(navigator.userAgent);
+    }
+
+    if (isAppleMobileDevice() && qrReaderElement) {
+        qrReaderElement.classList.add("qr-reader--apple");
+        qrReaderElement.hidden = true;
+    }
+
+    function ensureAppleQrElements() {
+        if (!qrReaderElement) {
+            return;
+        }
+
+        if (appleQrVideo && appleQrCanvas && qrReaderElement.contains(appleQrVideo) && qrReaderElement.contains(appleQrCanvas)) {
+            return;
+        }
+
+        qrReaderElement.innerHTML = "";
+
+        appleQrVideo = document.createElement("video");
+        appleQrVideo.className = "apple-qr-video";
+        appleQrVideo.setAttribute("autoplay", "autoplay");
+        appleQrVideo.setAttribute("muted", "muted");
+        appleQrVideo.setAttribute("playsinline", "true");
+        appleQrVideo.playsInline = true;
+        appleQrVideo.muted = true;
+
+        appleQrCanvas = document.createElement("canvas");
+        appleQrCanvas.className = "apple-qr-canvas";
+        appleQrCanvas.hidden = true;
+        appleQrCanvasContext = appleQrCanvas.getContext("2d", { willReadFrequently: true });
+
+        qrReaderElement.appendChild(appleQrVideo);
+        qrReaderElement.appendChild(appleQrCanvas);
+    }
+
+    function buildQrBox(viewfinderWidth, viewfinderHeight) {
+        const smallestEdge = Math.min(viewfinderWidth, viewfinderHeight);
+        const scale = isAppleMobileDevice() ? 0.92 : 0.9;
+        const edge = Math.max(isAppleMobileDevice() ? 220 : 180, Math.floor(smallestEdge * scale));
+
+        return {
+            width: edge,
+            height: edge
+        };
+    }
+
+    function getPreferredCamera(cameras) {
+        if (!Array.isArray(cameras) || cameras.length === 0) {
+            return null;
+        }
+
+        if (!cameras.some(camera => `${camera.label || ""}`.trim().length > 0)) {
+            return isMobileDevice()
+                ? cameras[cameras.length - 1]
+                : cameras[0];
+        }
+
+        const rankedCameras = cameras
+            .map(camera => {
+                const label = `${camera.label || ""}`.toLowerCase();
+                let score = 0;
+
+                if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
+                    score += 100;
                 }
-            });
-            html5QrcodeScanner.render(onScanSuccess, onScanError);
-        }, 100); // Delay by 3 seconds (adjust as needed)
+
+                if (label.includes("wide")) {
+                    score += 10;
+                }
+
+                if (label.includes("ultra")) {
+                    score -= 40;
+                }
+
+                if (label.includes("macro")) {
+                    score -= 25;
+                }
+
+                if (label.includes("front")
+                    || label.includes("facetime")
+                    || label.includes("truedepth")
+                    || label.includes("selfie")) {
+                    score -= 100;
+                }
+
+                return { camera, score };
+            })
+            .sort((left, right) => right.score - left.score);
+
+        return rankedCameras[0]?.camera ?? null;
+    }
+
+    function getCameraOptionLabel(camera, index, total) {
+        const rawLabel = `${camera.label || ""}`.trim();
+
+        if (rawLabel.length > 0) {
+            return rawLabel;
+        }
+
+        if (isMobileDevice() && total === 2) {
+            return index === 0 ? qrScanResources.frontCamera : qrScanResources.rearCamera;
+        }
+
+        if (isMobileDevice() && index === total - 1) {
+            return `${qrScanResources.rearCamera} ${index + 1}`;
+        }
+
+        return `${qrScanResources.camera} ${index + 1}`;
+    }
+
+    function renderCameraOptions(cameras, selectedValue) {
+        if (!cameraSelect) {
+            return;
+        }
+
+        cameraSelect.innerHTML = "";
+
+        cameras.forEach((camera, index) => {
+            const option = document.createElement("option");
+            option.value = camera.id;
+            option.textContent = getCameraOptionLabel(camera, index, cameras.length);
+
+            if (camera.id === selectedValue) {
+                option.selected = true;
+            }
+
+            cameraSelect.appendChild(option);
+        });
+
+        if (cameraPickerGroup) {
+            cameraPickerGroup.hidden = cameras.length <= 1;
+        }
+
+        if (cameraControls) {
+            cameraControls.hidden = cameras.length === 0;
+        }
+
+        updateScanToggleButton();
+    }
+
+    async function loadAvailableCameras() {
+        availableCameras = await Html5Qrcode.getCameras();
+        return availableCameras;
+    }
+
+    function getScannerConfig() {
+        const scannerConfig = {
+            fps: isAppleMobileDevice() ? 6 : 10
+        };
+
+        if (!isAppleMobileDevice()) {
+            scannerConfig.qrbox = buildQrBox;
+        } else {
+            scannerConfig.disableFlip = true;
+        }
+
+        if (typeof Html5QrcodeSupportedFormats !== "undefined") {
+            scannerConfig.formatsToSupport = [Html5QrcodeSupportedFormats.QR_CODE];
+        }
+
+        return scannerConfig;
+    }
+
+    function buildAppleVideoConstraints(cameraSource) {
+        const constraints = {
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+        };
+
+        if (typeof cameraSource === "string" && cameraSource.length > 0) {
+            constraints.deviceId = { exact: cameraSource };
+            return constraints;
+        }
+
+        if (cameraSource && typeof cameraSource === "object") {
+            return {
+                ...cameraSource,
+                width: cameraSource.width ?? constraints.width,
+                height: cameraSource.height ?? constraints.height
+            };
+        }
+
+        return constraints;
+    }
+
+    function getAppleBarcodeDetector() {
+        if (appleBarcodeDetector !== null) {
+            return appleBarcodeDetector;
+        }
+
+        if (typeof BarcodeDetector === "undefined") {
+            appleBarcodeDetector = null;
+            return null;
+        }
+
+        try {
+            appleBarcodeDetector = new BarcodeDetector({ formats: ["qr_code"] });
+        } catch (barcodeDetectorError) {
+            console.warn("BarcodeDetector is unavailable for QR scanning on this device.", barcodeDetectorError);
+            appleBarcodeDetector = null;
+        }
+
+        return appleBarcodeDetector;
+    }
+
+    async function detectAppleQrCode() {
+        if (!appleQrVideo || !appleQrCanvas || !appleQrCanvasContext) {
+            return "";
+        }
+
+        const sourceWidth = appleQrVideo.videoWidth;
+        const sourceHeight = appleQrVideo.videoHeight;
+
+        if (!sourceWidth || !sourceHeight) {
+            return "";
+        }
+
+        const maxDimension = 1280;
+        const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+        const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
+        const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
+
+        if (appleQrCanvas.width !== targetWidth || appleQrCanvas.height !== targetHeight) {
+            appleQrCanvas.width = targetWidth;
+            appleQrCanvas.height = targetHeight;
+        }
+
+        appleQrCanvasContext.drawImage(appleQrVideo, 0, 0, targetWidth, targetHeight);
+
+        const barcodeDetector = getAppleBarcodeDetector();
+
+        if (barcodeDetector) {
+            try {
+                const detectedCodes = await barcodeDetector.detect(appleQrCanvas);
+                const detectedValue = detectedCodes.find(code => typeof code.rawValue === "string" && code.rawValue.length > 0)?.rawValue;
+
+                if (detectedValue) {
+                    return detectedValue;
+                }
+            } catch (barcodeDetectError) {
+                console.warn("BarcodeDetector failed while scanning QR frame.", barcodeDetectError);
+            }
+        }
+
+        if (typeof jsQR !== "function") {
+            return "";
+        }
+
+        const imageData = appleQrCanvasContext.getImageData(0, 0, targetWidth, targetHeight);
+        const jsQrResult = jsQR(imageData.data, targetWidth, targetHeight, {
+            inversionAttempts: "dontInvert"
+        });
+
+        return jsQrResult?.data || "";
+    }
+
+    async function tickAppleQrScanner() {
+        if (!scannerRunning || !appleQrVideo) {
+            return;
+        }
+
+        if (!appleQrDecodePaused
+            && !appleQrDetectionInFlight
+            && appleQrVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+            appleQrDetectionInFlight = true;
+
+            try {
+                const qrCodeMessage = await detectAppleQrCode();
+
+                if (qrCodeMessage) {
+                    appleQrDecodePaused = true;
+                    onScanSuccess(qrCodeMessage);
+                    window.setTimeout(() => {
+                        appleQrDecodePaused = false;
+                    }, 900);
+                }
+            } finally {
+                appleQrDetectionInFlight = false;
+            }
+        }
+
+        appleQrAnimationFrameId = window.requestAnimationFrame(() => {
+            tickAppleQrScanner();
+        });
+    }
+
+    async function stopAppleQrScanner() {
+        if (appleQrAnimationFrameId) {
+            window.cancelAnimationFrame(appleQrAnimationFrameId);
+            appleQrAnimationFrameId = 0;
+        }
+
+        if (appleQrVideo) {
+            try {
+                appleQrVideo.pause();
+                appleQrVideo.srcObject = null;
+            } catch (appleVideoStopError) {
+                console.warn("Unable to fully stop Apple QR video stream.", appleVideoStopError);
+            }
+        }
+
+        if (appleQrStream) {
+            appleQrStream.getTracks().forEach(track => track.stop());
+            appleQrStream = null;
+        }
+
+        appleQrDetectionInFlight = false;
+        appleQrDecodePaused = false;
+        scannerRunning = false;
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+    }
+
+    async function startAppleQrScannerWithSource(cameraSource, selectedValue) {
+        ensureAppleQrElements();
+        await stopAppleQrScanner();
+        updateQrReaderVisibility();
+
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: buildAppleVideoConstraints(cameraSource),
+            audio: false
+        });
+
+        appleQrStream = mediaStream;
+        appleQrVideo.srcObject = mediaStream;
+        await appleQrVideo.play();
+
+        scannerRunning = true;
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+        appleQrAnimationFrameId = window.requestAnimationFrame(() => {
+            tickAppleQrScanner();
+        });
+
+        if (typeof selectedValue === "string" && selectedValue.length > 0) {
+            currentCameraSelection = selectedValue;
+            renderCameraOptions(availableCameras, selectedValue);
+        }
+    }
+
+    function clampConstraintValue(range, preferredValue) {
+        if (!range || typeof range !== "object") {
+            return preferredValue;
+        }
+
+        let value = preferredValue;
+
+        if (typeof range.min === "number") {
+            value = Math.max(range.min, value);
+        }
+
+        if (typeof range.max === "number") {
+            value = Math.min(range.max, value);
+        }
+
+        return value;
+    }
+
+    function buildCameraTuningConstraints(capabilities, settings) {
+        if (!capabilities) {
+            return null;
+        }
+
+        const constraints = {};
+        const advanced = [];
+
+        if (capabilities.width || capabilities.height) {
+            constraints.width = {
+                ideal: clampConstraintValue(capabilities.width, isAppleMobileDevice() ? 1920 : 1280)
+            };
+            constraints.height = {
+                ideal: clampConstraintValue(capabilities.height, isAppleMobileDevice() ? 1080 : 720)
+            };
+        }
+
+        if (Array.isArray(capabilities.focusMode)) {
+            if (capabilities.focusMode.includes("continuous")) {
+                advanced.push({ focusMode: "continuous" });
+            } else if (capabilities.focusMode.includes("single-shot")) {
+                advanced.push({ focusMode: "single-shot" });
+            }
+        }
+
+        if (Array.isArray(capabilities.exposureMode) && capabilities.exposureMode.includes("continuous")) {
+            advanced.push({ exposureMode: "continuous" });
+        }
+
+        if (Array.isArray(capabilities.whiteBalanceMode) && capabilities.whiteBalanceMode.includes("continuous")) {
+            advanced.push({ whiteBalanceMode: "continuous" });
+        }
+
+        if (capabilities.zoom) {
+            const preferredZoom = typeof settings?.zoom === "number"
+                ? Math.min(settings.zoom, 1)
+                : 1;
+            advanced.push({ zoom: clampConstraintValue(capabilities.zoom, preferredZoom) });
+        }
+
+        if (advanced.length > 0) {
+            constraints.advanced = advanced;
+        }
+
+        return Object.keys(constraints).length > 0 ? constraints : null;
+    }
+
+    async function tuneActiveQrCamera() {
+        if (!activeQrScanner || typeof activeQrScanner.applyVideoConstraints !== "function") {
+            return;
+        }
+
+        try {
+            const capabilities = typeof activeQrScanner.getRunningTrackCapabilities === "function"
+                ? activeQrScanner.getRunningTrackCapabilities()
+                : null;
+            const settings = typeof activeQrScanner.getRunningTrackSettings === "function"
+                ? activeQrScanner.getRunningTrackSettings()
+                : null;
+            const constraints = buildCameraTuningConstraints(capabilities, settings);
+
+            if (!constraints) {
+                return;
+            }
+
+            await activeQrScanner.applyVideoConstraints(constraints);
+        } catch (cameraTuneError) {
+            console.warn("Unable to tune active QR camera stream.", cameraTuneError);
+        }
+    }
+
+    function scheduleCameraTuning() {
+        tuneActiveQrCamera();
+        window.setTimeout(() => tuneActiveQrCamera(), 450);
+        window.setTimeout(() => tuneActiveQrCamera(), 1200);
+    }
+
+    async function stopQrScanner() {
+        if (isAppleMobileDevice()) {
+            await stopAppleQrScanner();
+            return;
+        }
+
+        if (!activeQrScanner || !scannerRunning) {
+            return;
+        }
+
+        await activeQrScanner.stop();
+        scannerRunning = false;
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+    }
+
+    async function startQrScannerWithSource(cameraSource, selectedValue) {
+        if (isAppleMobileDevice()) {
+            await startAppleQrScannerWithSource(cameraSource, selectedValue);
+            return;
+        }
+
+        if (!activeQrScanner) {
+            activeQrScanner = new Html5Qrcode("qr-reader");
+        }
+
+        await activeQrScanner.start(
+            cameraSource,
+            getScannerConfig(),
+            onScanSuccess,
+            onScanError);
+
+        scannerRunning = true;
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+        scheduleCameraTuning();
+
+        if (typeof selectedValue === "string" && selectedValue.length > 0) {
+            currentCameraSelection = selectedValue;
+            renderCameraOptions(availableCameras, selectedValue);
+        }
+    }
+
+    async function startQrScanner() {
+        let cameras = [];
+
+        try {
+            cameras = await loadAvailableCameras();
+            const preferredCamera = getPreferredCamera(cameras);
+
+            if (cameraControls) {
+                cameraControls.hidden = false;
+            }
+
+            if (cameraPickerGroup) {
+                cameraPickerGroup.hidden = cameras.length <= 1;
+            }
+
+            if (isAppleMobileDevice()) {
+                renderCameraOptions(cameras, preferredCamera?.id ?? "");
+            }
+
+            updateScanToggleButton();
+
+            if (isAppleMobileDevice()) {
+                const appleFallbackSources = [
+                    { facingMode: { exact: "environment" } },
+                    { facingMode: "environment" },
+                    { facingMode: { ideal: "environment" } }
+                ];
+
+                for (const appleSource of appleFallbackSources) {
+                    try {
+                        await startQrScannerWithSource(appleSource, "");
+                        return;
+                    } catch (appleStartError) {
+                        console.warn("Apple camera start attempt failed.", appleStartError);
+                    }
+                }
+            }
+
+            if (preferredCamera) {
+                renderCameraOptions(cameras, preferredCamera.id);
+                await startQrScannerWithSource(preferredCamera.id, preferredCamera.id);
+                return;
+            }
+        } catch (cameraError) {
+            console.warn("Unable to enumerate cameras, falling back to facingMode.", cameraError);
+        }
+
+        const fallbackSources = [
+            { facingMode: { exact: "environment" } },
+            { facingMode: "environment" },
+            { facingMode: { ideal: "environment" } }
+        ];
+
+        let lastStartError = null;
+
+        for (const fallbackSource of fallbackSources) {
+            try {
+                await startQrScannerWithSource(fallbackSource, "");
+                return;
+            } catch (startError) {
+                lastStartError = startError;
+            }
+        }
+
+        try {
+            const cameras = availableCameras.length > 0
+                ? availableCameras
+                : await loadAvailableCameras();
+
+            if (cameras.length > 0) {
+                const fallbackCamera = cameras[cameras.length - 1];
+                renderCameraOptions(cameras, fallbackCamera.id);
+                await startQrScannerWithSource(fallbackCamera.id, fallbackCamera.id);
+                return;
+            }
+        } catch (cameraListError) {
+            lastStartError = cameraListError;
+        }
+
+        console.error("Unable to start QR scanner.", lastStartError);
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+        document.getElementById("result").innerHTML = `
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @Inventar.Resources.Resource.UnableToStartQRScanner
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="${qrScanResources.close}"></button>
+            </div>`;
+    }
+
+    async function switchQrCamera(cameraId) {
+        if (!cameraId || scannerSwitchInProgress || currentCameraSelection === cameraId) {
+            return;
+        }
+
+        scannerSwitchInProgress = true;
+        updateScanToggleButton();
+
+        try {
+            await stopQrScanner();
+            await startQrScannerWithSource(cameraId, cameraId);
+        } catch (switchError) {
+            console.error("Unable to switch QR camera.", switchError);
+            document.getElementById("result").innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    ${qrScanResources.unableToSwitchCamera}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="${qrScanResources.close}"></button>
+                </div>`;
+        } finally {
+            scannerSwitchInProgress = false;
+            updateScanToggleButton();
+        }
+    }
+
+    async function toggleQrScanner() {
+        if (scannerSwitchInProgress) {
+            return;
+        }
+
+        scannerSwitchInProgress = true;
+        updateScanToggleButton();
+
+        try {
+            if (scannerRunning) {
+                await stopQrScanner();
+                return;
+            }
+
+            const selectedCameraId = cameraSelect?.value || currentCameraSelection;
+
+            if (selectedCameraId) {
+                await startQrScannerWithSource(selectedCameraId, selectedCameraId);
+                return;
+            }
+
+            await startQrScanner();
+        } catch (toggleError) {
+            console.error("Unable to toggle QR scanner.", toggleError);
+            document.getElementById("result").innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    ${qrScanResources.unableToChangeScannerState}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="${qrScanResources.close}"></button>
+                </div>`;
+        } finally {
+            scannerSwitchInProgress = false;
+            updateScanToggleButton();
+        }
+    }
+
+    if (cameraSelect) {
+        cameraSelect.addEventListener("change", function () {
+            switchQrCamera(this.value);
+        });
+    }
+
+    if (scanToggleButton) {
+        scanToggleButton.addEventListener("click", function () {
+            toggleQrScanner();
+        });
+    }
+
+    window.addEventListener("load", function () {
+        updateScanToggleButton();
+        updateQrReaderVisibility();
+        setTimeout(() => {
+            startQrScanner();
+        }, 100);
     });
 
-    // var html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
-    // html5QrcodeScanner.render(onScanSuccess, onScanError);
+    window.addEventListener("beforeunload", function () {
+        if (!activeQrScanner && !appleQrStream) {
+            return;
+        }
+
+        stopQrScanner().catch(() => {
+            // Ignore cleanup errors during page navigation.
+        });
+    });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
@@ -511,7 +1357,7 @@
                     }
                 },
                 error: function () {
-                    alert("Error updating quantity.");
+                    alert(qrScanResources.errorUpdatingQuantity);
                 }
             });
         });
@@ -523,7 +1369,7 @@
         var idInput = document.getElementById("manualId").value.trim();
 
         if (idInput === "") {
-            alert("Unesite ID proizvoda.");
+            alert(qrScanResources.enterProductId);
             return;
         }
 
@@ -532,7 +1378,7 @@
             .then(handleSelectionResponse)
             .catch(error => {
                 console.error(error);
-                alert("Error preparing product.");
+                alert(qrScanResources.errorPreparingProduct);
             });
     });
 
@@ -553,37 +1399,37 @@
         const productType = document.querySelector("input[name='directSaleProductType']:checked")?.value || "perUnit";
 
         if (!name) {
-            alert("Unesite naziv proizvoda.");
+            alert(qrScanResources.productNameRequired);
             return;
         }
 
         if (!Number.isFinite(quantity) || quantity < 1) {
-            alert("Unesite ispravnu količinu.");
+            alert(qrScanResources.invalidQuantity);
             return;
         }
 
         if (!Number.isFinite(price) || price < 0) {
-            alert("Unesite ispravnu cijenu proizvoda.");
+            alert(qrScanResources.invalidProductPrice);
             return;
         }
 
         if (width !== null && (!Number.isFinite(width) || width < 1)) {
-            alert("Unesite ispravnu širinu.");
+            alert(qrScanResources.invalidWidth);
             return;
         }
 
         if (length !== null && (!Number.isFinite(length) || length < 1)) {
-            alert("Unesite ispravnu dužinu.");
+            alert(qrScanResources.invalidLength);
             return;
         }
 
         if (productType !== "perUnit" && (width === null || length === null)) {
-            alert("Za izabrani tip proizvoda morate unijeti širinu i dužinu.");
+            alert(qrScanResources.widthAndLengthRequiredForSelectedProductType);
             return;
         }
 
         if (productType === "perUnit" && ((width === null) !== (length === null))) {
-            alert("Ako unosite dimenziju, unesite i širinu i dužinu.");
+            alert(qrScanResources.enterBothWidthAndLength);
             return;
         }
 
@@ -611,11 +1457,11 @@
                     return;
                 }
 
-                alert(result.message || "Greška prilikom kreiranja proizvoda.");
+                alert(result.message || qrScanResources.errorCreatingTemporaryProduct);
             })
             .catch(error => {
                 console.error(error);
-                alert("Greška prilikom kreiranja proizvoda.");
+                alert(qrScanResources.errorCreatingTemporaryProduct);
             });
     });
 </script>
@@ -713,6 +1559,9 @@
                 html += "</ul>";
 
                 $("#rightDiv").html(html).show();
+            },
+            error: function () {
+                $("#rightDiv").html(`<p>${qrScanResources.productSearchFailed}</p>`).show();
             }
         });
     }
@@ -739,7 +1588,7 @@
             .then(handleSelectionResponse)
             .catch(error => {
                 console.error(error);
-                alert("Error preparing product.");
+                alert(qrScanResources.errorPreparingProduct);
             });
     });
 

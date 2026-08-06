@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using SendGrid;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -31,6 +32,7 @@ using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 using static System.Formats.Asn1.AsnWriter;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using AppResource = Inventar.Resources.Resource;
 
 namespace Inventar.Controllers
 {
@@ -40,6 +42,10 @@ namespace Inventar.Controllers
         private const string DirectSaleTypePerUnit = "perunit";
         private const string DirectSaleTypePerM2 = "perm2";
         private const string DirectSaleTypePerMeasure = "permeasure";
+        private const string LastScanValueSessionKey = "lastScanValue";
+        private const string LastScanTimeSessionKey = "lastScanTime";
+        private const string CreateFormStateTempDataKey = "CreateFormState";
+        private const int DuplicateFastScanWindowMs = 800;
 
         private readonly ITepihRepository _tepihRepository;
         private readonly ApplicationDbContext _context;
@@ -64,10 +70,13 @@ namespace Inventar.Controllers
         {
             try
             {
-                var tepisi = await _tepihRepository.GetAllUndisabledAsync();
-                TextEncodingHelper.DecodeProductsForDisplay(tepisi ?? Enumerable.Empty<Tepih>());
+                var tepisi = (await _tepihRepository.GetAllUndisabledAsync())?.ToList() ?? new List<Tepih>();
+                TextEncodingHelper.DecodeProductsForDisplay(tepisi);
 
-                return View(tepisi ?? new List<Tepih>());
+                ViewBag.RemainingLengths = await LoadRemainingPoMjeriLengthsAsync(
+                    tepisi.Where(product => product.PoMjeri).Select(product => product.Id));
+
+                return View(tepisi);
             }
             catch (Exception ex)
             {
@@ -124,6 +133,326 @@ namespace Inventar.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Pairs(string? name, string? model, string? color, bool submitted = false)
+        {
+            var viewModel = new PairsViewModel
+            {
+                Submitted = submitted,
+                Filter = new PairsFilterViewModel
+                {
+                    Name = name?.Trim(),
+                    Model = model?.Trim(),
+                    Color = color?.Trim()
+                }
+            };
+
+            await PopulatePairsOptionsAsync(viewModel);
+            viewModel.GroupColumns = BuildPairsGroupingColumns(viewModel.Filter);
+
+            if (!submitted)
+            {
+                return View(viewModel);
+            }
+
+            var normalizedName = TextEncodingHelper.NormalizeInput(name);
+            var normalizedModel = TextEncodingHelper.NormalizeInput(model);
+            var normalizedColor = TextEncodingHelper.NormalizeInput(color);
+
+            if (string.IsNullOrWhiteSpace(normalizedName) &&
+                string.IsNullOrWhiteSpace(normalizedModel) &&
+                string.IsNullOrWhiteSpace(normalizedColor))
+            {
+                viewModel.ValidationMessage = @Inventar.Resources.Resource.AtLeastOneParam;
+                return View(viewModel);
+            }
+
+            try
+            {
+                var query = _context.Tepisi
+                    .AsNoTracking()
+                    .Where(product => !product.Disabled && !product.CreatedForDirectSale && product.Quantity >= 1);
+
+                if (!string.IsNullOrWhiteSpace(normalizedName))
+                {
+                    query = query.Where(product => (product.Name ?? string.Empty).StartsWith(normalizedName));
+                }
+
+                if (!string.IsNullOrWhiteSpace(normalizedModel))
+                {
+                    query = query.Where(product => (product.Model ?? string.Empty).StartsWith(normalizedModel));
+                }
+
+                if (!string.IsNullOrWhiteSpace(normalizedColor))
+                {
+                    query = query.Where(product => (product.Color ?? string.Empty).StartsWith(normalizedColor));
+                }
+
+                var products = await query
+                    .OrderBy(product => product.Name)
+                    .ThenBy(product => product.Model)
+                    .ThenBy(product => product.Color)
+                    .ThenBy(product => product.Width)
+                    .ThenBy(product => product.Length)
+                    .ThenBy(product => product.Id)
+                    .ToListAsync();
+
+                TextEncodingHelper.DecodeProductsForDisplay(products);
+
+                var remainingLengths = await LoadRemainingPoMjeriLengthsAsync(
+                    products.Where(product => product.PoMjeri).Select(product => product.Id));
+
+                var sizeRows = products
+                    .Select(product =>
+                    {
+                        var remainingLength = product.PoMjeri && remainingLengths.TryGetValue(product.Id, out var length)
+                            ? length
+                            : product.Length ?? 0;
+
+                        var displaySize = product.PoMjeri
+                            ? PoMjeriHelper.FormatRemainingSize(product.Width, remainingLength)
+                            : PoMjeriHelper.FormatSize(product.Width, product.Length);
+
+                        return new PairsRowViewModel
+                        {
+                            ProductName = string.IsNullOrWhiteSpace(product.Name) ? "-" : product.Name,
+                            Model = string.IsNullOrWhiteSpace(product.Model) ? "-" : product.Model,
+                            Color = string.IsNullOrWhiteSpace(product.Color) ? "-" : product.Color,
+                            Size = string.IsNullOrWhiteSpace(displaySize) ? "-" : displaySize,
+                            Quantity = product.Quantity,
+                            SortWidth = product.Width ?? 0,
+                            SortLength = product.PoMjeri ? remainingLength : product.Length ?? 0
+                        };
+                    })
+                    .GroupBy(row => new
+                    {
+                        row.ProductName,
+                        row.Model,
+                        row.Color,
+                        row.Size,
+                        row.SortWidth,
+                        row.SortLength
+                    })
+                    .Select(group => new PairsRowViewModel
+                    {
+                        ProductName = group.Key.ProductName,
+                        Model = group.Key.Model,
+                        Color = group.Key.Color,
+                        Size = group.Key.Size,
+                        Quantity = group.Sum(item => item.Quantity),
+                        SortWidth = group.Key.SortWidth,
+                        SortLength = group.Key.SortLength
+                    })
+                    .OrderBy(row => row.ProductName)
+                    .ThenBy(row => row.Model)
+                    .ThenBy(row => row.Color)
+                    .ThenBy(row => row.SortWidth)
+                    .ThenBy(row => row.SortLength)
+                    .ToList();
+
+                viewModel.Rows = BuildPairsDisplayRows(sizeRows, viewModel.GroupColumns);
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading inventory pairs view.");
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        private async Task PopulatePairsOptionsAsync(PairsViewModel viewModel)
+        {
+            var optionRows = await _context.Tepisi
+                .AsNoTracking()
+                .Where(product => !product.Disabled && !product.CreatedForDirectSale)
+                .Select(product => new
+                {
+                    product.Name,
+                    product.Model,
+                    product.Color
+                })
+                .ToListAsync();
+
+            viewModel.NameOptions = optionRows
+                .Select(row => TextEncodingHelper.Decode(row.Name)?.Trim())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value)
+                .Cast<string>()
+                .ToList();
+
+            viewModel.ModelOptions = optionRows
+                .Select(row => TextEncodingHelper.Decode(row.Model)?.Trim())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value)
+                .Cast<string>()
+                .ToList();
+
+            viewModel.ColorOptions = optionRows
+                .Select(row => TextEncodingHelper.Decode(row.Color)?.Trim())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value)
+                .Cast<string>()
+                .ToList();
+        }
+
+        private static List<PairsGroupingColumnViewModel> BuildPairsGroupingColumns(PairsFilterViewModel filter)
+        {
+            var hasName = !string.IsNullOrWhiteSpace(filter.Name);
+            var hasModel = !string.IsNullOrWhiteSpace(filter.Model);
+            var hasColor = !string.IsNullOrWhiteSpace(filter.Color);
+
+            var definitions = new List<(string Key, string Header, bool IsProvided)>
+            {
+                ("name", Inventar.Resources.Resource.Name, hasName),
+                ("model", "Model", hasModel),
+                ("color", Inventar.Resources.Resource.Color, hasColor)
+            };
+
+            return definitions
+                .OrderByDescending(definition => definition.IsProvided)
+                .Select(definition => new PairsGroupingColumnViewModel
+                {
+                    Key = definition.Key,
+                    Header = definition.Header
+                })
+                .ToList();
+        }
+
+        private static List<PairsDisplayRowViewModel> BuildPairsDisplayRows(
+            IReadOnlyCollection<PairsRowViewModel> rows,
+            IReadOnlyList<PairsGroupingColumnViewModel> groupColumns)
+        {
+            if (rows.Count == 0)
+            {
+                return new List<PairsDisplayRowViewModel>();
+            }
+
+            IOrderedEnumerable<PairsRowViewModel>? orderedRows = null;
+            foreach (var column in groupColumns)
+            {
+                orderedRows = orderedRows == null
+                    ? rows.OrderBy(row => GetPairsGroupValue(row, column.Key), StringComparer.CurrentCultureIgnoreCase)
+                    : orderedRows.ThenBy(row => GetPairsGroupValue(row, column.Key), StringComparer.CurrentCultureIgnoreCase);
+            }
+
+            var orderedList = (orderedRows ?? rows.OrderBy(row => row.ProductName, StringComparer.CurrentCultureIgnoreCase))
+                .ThenBy(row => row.SortWidth)
+                .ThenBy(row => row.SortLength)
+                .ThenBy(row => row.Size, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+
+            var displayRows = orderedList
+                .Select(row => (
+                    Data: row,
+                    Display: new PairsDisplayRowViewModel
+                    {
+                        GroupCells = Enumerable.Repeat<PairsDisplayCellViewModel?>(null, groupColumns.Count).ToList(),
+                        Size = row.Size,
+                        Quantity = row.Quantity
+                    }))
+                .ToList();
+
+            PopulatePairsDisplayCells(displayRows, groupColumns, 0, new int[groupColumns.Count]);
+            ApplyPairsDetailHighlight(displayRows, groupColumns);
+            return displayRows.Select(entry => entry.Display).ToList();
+        }
+
+        private static void PopulatePairsDisplayCells(
+            List<(PairsRowViewModel Data, PairsDisplayRowViewModel Display)> rows,
+            IReadOnlyList<PairsGroupingColumnViewModel> groupColumns,
+            int level,
+            int[] levelCounters)
+        {
+            if (level >= groupColumns.Count || rows.Count == 0)
+            {
+                return;
+            }
+
+            var groupedRows = rows
+                .GroupBy(row => GetPairsGroupValue(row.Data, groupColumns[level].Key), StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+
+            foreach (var group in groupedRows)
+            {
+                var rowEntries = group.ToList();
+                var toneClass = levelCounters[level] % 2 == 0
+                    ? "pairs-table__group-cell--tone-a"
+                    : "pairs-table__group-cell--tone-b";
+
+                rowEntries[0].Display.GroupCells[level] = new PairsDisplayCellViewModel
+                {
+                    Value = group.Key,
+                    RowSpan = rowEntries.Count,
+                    CssClass = $"pairs-table__group-cell pairs-table__group-cell--level-{level} {toneClass}{(level == 2 ? " pairs-table__group-cell--third-column-end" : string.Empty)}"
+                };
+
+                levelCounters[level]++;
+
+                if (level == 0)
+                {
+                    rowEntries[0].Display.IsTopLevelStart = true;
+                }
+
+                if (level == 2)
+                {
+                    rowEntries[^1].Display.IsThirdColumnGroupEnd = true;
+                }
+
+                PopulatePairsDisplayCells(rowEntries, groupColumns, level + 1, levelCounters);
+            }
+        }
+
+        private static void ApplyPairsDetailHighlight(
+            List<(PairsRowViewModel Data, PairsDisplayRowViewModel Display)> rows,
+            IReadOnlyList<PairsGroupingColumnViewModel> groupColumns)
+        {
+            if (rows.Count == 0 || groupColumns.Count == 0)
+            {
+                return;
+            }
+
+            var multiSizeGroupIndex = 0;
+
+            foreach (var group in rows.GroupBy(
+                         row => string.Join(
+                             "\u001F",
+                             groupColumns.Select(column => GetPairsGroupValue(row.Data, column.Key))),
+                         StringComparer.CurrentCultureIgnoreCase))
+            {
+                var rowEntries = group.ToList();
+                if (rowEntries.Count < 2)
+                {
+                    continue;
+                }
+
+                var detailCssClass = multiSizeGroupIndex % 2 == 0
+                    ? "pairs-table__detail-cell--multi-a"
+                    : "pairs-table__detail-cell--multi-b";
+
+                foreach (var rowEntry in rowEntries)
+                {
+                    rowEntry.Display.DetailCssClass = detailCssClass;
+                }
+
+                multiSizeGroupIndex++;
+            }
+        }
+
+        private static string GetPairsGroupValue(PairsRowViewModel row, string columnKey)
+        {
+            return columnKey switch
+            {
+                "name" => row.ProductName,
+                "model" => row.Model,
+                "color" => row.Color,
+                _ => string.Empty
+            };
+        }
+
         public async Task<IActionResult> QRCodesGroupedDetails(string productNumber, string name, string model, string color)
         {
             if (string.IsNullOrWhiteSpace(productNumber) ||
@@ -158,6 +487,8 @@ namespace Inventar.Controllers
             }
 
             TextEncodingHelper.DecodeProductsForDisplay(products);
+            ViewBag.RemainingLengths = await LoadRemainingPoMjeriLengthsAsync(
+                products.Where(product => product.PoMjeri).Select(product => product.Id));
 
             var firstProduct = products[0];
             return View(new GroupedQrCodeDetailsViewModel
@@ -193,9 +524,27 @@ namespace Inventar.Controllers
         [Authorize(Roles = "admin,superadmin")]
         public IActionResult Create()
         {
+            if (TempData[CreateFormStateTempDataKey] is string serializedDraft &&
+                !string.IsNullOrWhiteSpace(serializedDraft))
+            {
+                try
+                {
+                    var draft = JsonConvert.DeserializeObject<CreateProductFormState>(serializedDraft);
+                    if (draft != null)
+                    {
+                        return View(BuildCreateFormModel(draft));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to restore InventoryItem/Create form state from TempData.");
+                }
+            }
+
             return View(new Tepih
             {
-                IsPublished = false
+                IsPublished = false,
+                Price = 0m
             });
         }
 
@@ -245,6 +594,7 @@ namespace Inventar.Controllers
                         }
 
                         TempData["CreateSuccessMessage"] = $"Uspješno kreirano {createdProducts.Count} po mjeri proizvoda.";
+                        TempData[CreateFormStateTempDataKey] = JsonConvert.SerializeObject(CaptureCreateFormState(tepih));
                         TempData["CreateQrPdfUrl"] = Url.Action(
                             "GenerateCloudinaryImagePdfBatch",
                             "Pdf",
@@ -283,7 +633,10 @@ namespace Inventar.Controllers
                         istiProizvod[0].OnlinePrice ??= istiProizvod[0].Price;
                         if (string.IsNullOrWhiteSpace(istiProizvod[0].Slug))
                         {
-                            istiProizvod[0].Slug = ProductSlugHelper.BuildDefaultSlug(istiProizvod[0]);
+                            istiProizvod[0].Slug = await ProductSlugHelper.GenerateUniqueSlugAsync(
+                                _context.Tepisi.AsQueryable(),
+                                istiProizvod[0],
+                                excludedProductId: istiProizvod[0].Id);
                         }
                         _tepihRepository.Update(istiProizvod[0]);
                         tepih.Id = istiProizvod[0].Id;
@@ -295,12 +648,15 @@ namespace Inventar.Controllers
                         tepih.DateTime = time;
                         tepih.Disabled = false;
                         tepih.OnlinePrice ??= tepih.Price;
-                        tepih.Slug = ProductSlugHelper.BuildDefaultSlug(tepih);
+                        tepih.Slug = await ProductSlugHelper.GenerateUniqueSlugAsync(
+                            _context.Tepisi.AsQueryable(),
+                            tepih);
                         _tepihRepository.Add(tepih);
                         TempData["CreateSuccessMessage"] = "Proizvod je uspješno kreiran.";
                     }
 
                     await _context.SaveChangesAsync();
+                    TempData[CreateFormStateTempDataKey] = JsonConvert.SerializeObject(CaptureCreateFormState(tepih));
                     TempData["CreateQrPdfUrl"] = Url.Action("GenerateCloudinaryImagePdf", "Pdf", new { id = tepih.Id });
                     return RedirectToAction(nameof(Create));
                 }
@@ -415,6 +771,64 @@ namespace Inventar.Controllers
             tepih.Color = (TextEncodingHelper.NormalizeInput(tepih.Color) ?? string.Empty).ToUpperInvariant();
         }
 
+        private static CreateProductFormState CaptureCreateFormState(Tepih tepih)
+        {
+            return new CreateProductFormState
+            {
+                ProductNumber = tepih.ProductNumber,
+                Name = tepih.Name,
+                Model = tepih.Model,
+                BroaderCategory = tepih.BroaderCategory,
+                NarrowerCategory = tepih.NarrowerCategory,
+                Color = tepih.Color,
+                Length = tepih.Length,
+                Width = tepih.Width,
+                Quantity = tepih.Quantity,
+                Price = tepih.Price,
+                Description = tepih.Description,
+                PerM2 = tepih.PerM2,
+                PoMjeri = tepih.PoMjeri
+            };
+        }
+
+        private static Tepih BuildCreateFormModel(CreateProductFormState draft)
+        {
+            return new Tepih
+            {
+                ProductNumber = draft.ProductNumber ?? string.Empty,
+                Name = draft.Name ?? string.Empty,
+                Model = draft.Model ?? string.Empty,
+                BroaderCategory = draft.BroaderCategory ?? string.Empty,
+                NarrowerCategory = draft.NarrowerCategory ?? string.Empty,
+                Color = draft.Color ?? string.Empty,
+                Length = draft.Length,
+                Width = draft.Width,
+                Quantity = draft.Quantity,
+                Price = draft.Price,
+                Description = draft.Description,
+                PerM2 = draft.PerM2,
+                PoMjeri = draft.PoMjeri,
+                IsPublished = false
+            };
+        }
+
+        private sealed class CreateProductFormState
+        {
+            public string? ProductNumber { get; set; }
+            public string? Name { get; set; }
+            public string? Model { get; set; }
+            public string? BroaderCategory { get; set; }
+            public string? NarrowerCategory { get; set; }
+            public string? Color { get; set; }
+            public int? Length { get; set; }
+            public int? Width { get; set; }
+            public int Quantity { get; set; }
+            public decimal Price { get; set; }
+            public string? Description { get; set; }
+            public bool PerM2 { get; set; }
+            public bool PoMjeri { get; set; }
+        }
+
         private static string BuildQrCodeData(Tepih tepih)
         {
             var baseData = $"{tepih.Name}/{tepih.Model}/{tepih.ProductNumber}/{tepih.Width}/{tepih.Length}/{tepih.Color}/{tepih.PerM2}";
@@ -426,10 +840,7 @@ namespace Inventar.Controllers
 
         private static string BuildPoMjeriSlug(Tepih tepih)
         {
-            var baseSlug = ProductSlugHelper.BuildDefaultSlug(tepih);
-            return string.IsNullOrWhiteSpace(tepih.UnID)
-                ? baseSlug
-                : $"{baseSlug}-{tepih.UnID.ToLowerInvariant()}";
+            return ProductSlugHelper.BuildDefaultSlug(tepih);
         }
 
         private async Task<string> GenerateUniqueUnIdAsync(ISet<string> reservedCodes)
@@ -459,6 +870,7 @@ namespace Inventar.Controllers
         {
             var quantityToCreate = Math.Max(template.Quantity, 0);
             var reservedCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var reservedSlugs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var imageSource = await _context.Tepisi
                 .Include(product => product.ProductImages)
@@ -503,7 +915,10 @@ namespace Inventar.Controllers
                 };
 
                 product.QRCodeUrl = await GenerateQrCodeUrlAsync(BuildQrCodeData(product));
-                product.Slug = BuildPoMjeriSlug(product);
+                product.Slug = await ProductSlugHelper.GenerateUniqueSlugAsync(
+                    _context.Tepisi.AsQueryable(),
+                    product,
+                    reservedSlugs: reservedSlugs);
 
                 createdProducts.Add(product);
             }
@@ -561,6 +976,65 @@ namespace Inventar.Controllers
             return View("QRCodeScanning");
         }
 
+        [HttpGet]
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public IActionResult SimilarProducts()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public async Task<IActionResult> SimilarProductsLookup(string data)
+        {
+            try
+            {
+                var model = await BuildSimilarProductsLookupResultAsync(data);
+                return PartialView("_SimilarProductsLookupResult", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Loading similar products failed for QR data {QrData}.", data);
+                Response.StatusCode = StatusCodes.Status500InternalServerError;
+                return PartialView("_SimilarProductsLookupResult", new SimilarProductsLookupResultViewModel
+                {
+                    ErrorMessage = @Inventar.Resources.Resource.ErrorLoadingSimilarProducts
+                });
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public async Task<IActionResult> SimilarProductsLookupById(int id)
+        {
+            try
+            {
+                var matchedProduct = await _context.Tepisi
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(product => product.Id == id && !product.Disabled && !product.CreatedForDirectSale);
+
+                if (matchedProduct == null)
+                {
+                    return PartialView("_SimilarProductsLookupResult", new SimilarProductsLookupResultViewModel
+                    {
+                        ErrorMessage = @Inventar.Resources.Resource.ProductSearchFailed
+                    });
+                }
+
+                var model = await BuildSimilarProductsLookupResultAsync(matchedProduct);
+                return PartialView("_SimilarProductsLookupResult", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Loading similar products failed for product id {ProductId}.", id);
+                Response.StatusCode = StatusCodes.Status500InternalServerError;
+                return PartialView("_SimilarProductsLookupResult", new SimilarProductsLookupResultViewModel
+                {
+                    ErrorMessage = @Inventar.Resources.Resource.ErrorLoadingSimilarProducts
+                });
+            }
+        }
+
         private void AddOrIncrementRegularScannedProduct(List<ScannedProductViewModel> scannedProducts, Tepih item)
         {
             var existingLine = scannedProducts.FirstOrDefault(product => !product.PoMjeri && product.Id == item.Id);
@@ -572,6 +1046,152 @@ namespace Inventar.Controllers
             }
 
             scannedProducts.Add(BuildRegularScannedProduct(item));
+        }
+
+        private async Task<SimilarProductsLookupResultViewModel> BuildSimilarProductsLookupResultAsync(string data)
+        {
+            if (string.IsNullOrWhiteSpace(data))
+            {
+                return new SimilarProductsLookupResultViewModel
+                {
+                    ErrorMessage = @Inventar.Resources.Resource.NoQRData
+                };
+            }
+
+            var extractData = data.Split("/");
+            var matchedProduct = await FindProductByQrDataAsync(extractData);
+            if (matchedProduct == null)
+            {
+                _logger.LogWarning("SimilarProductsLookup: Couldn't find a product with properties matching QR code data: {QrData}", data);
+                return new SimilarProductsLookupResultViewModel
+                {
+                    ErrorMessage = @Inventar.Resources.Resource.ProductNotFound
+                };
+            }
+
+            return await BuildSimilarProductsLookupResultAsync(matchedProduct);
+        }
+
+        private async Task<SimilarProductsLookupResultViewModel> BuildSimilarProductsLookupResultAsync(Tepih matchedProduct)
+        {
+            var relatedProducts = await _context.Tepisi
+                .AsNoTracking()
+                .Where(product =>
+                    !product.Disabled &&
+                    !product.CreatedForDirectSale &&
+                    product.Name == matchedProduct.Name &&
+                    product.Model == matchedProduct.Model)
+                .OrderBy(product => product.Color)
+                .ThenBy(product => product.ProductNumber)
+                .ThenBy(product => product.Width)
+                .ThenBy(product => product.Length)
+                .ThenBy(product => product.Id)
+                .ToListAsync();
+
+            if (relatedProducts.Count == 0)
+            {
+                return new SimilarProductsLookupResultViewModel
+                {
+                    ErrorMessage = @Inventar.Resources.Resource.NoSimilarProductFound
+                };
+            }
+
+            TextEncodingHelper.DecodeProductsForDisplay(relatedProducts);
+
+            var remainingLengths = await LoadRemainingPoMjeriLengthsAsync(
+                relatedProducts.Where(product => product.PoMjeri).Select(product => product.Id));
+
+            var selectedProduct = relatedProducts.FirstOrDefault(product => product.Id == matchedProduct.Id) ?? relatedProducts[0];
+
+            var groupedRows = relatedProducts
+                .Select(product =>
+                {
+                    var displayLength = ResolveDisplayLength(product, remainingLengths);
+                    var size = product.PoMjeri
+                        ? PoMjeriHelper.FormatRemainingSize(product.Width, displayLength ?? 0)
+                        : PoMjeriHelper.FormatSize(product.Width, product.Length);
+                    var m2 = CalculateInventoryDisplayM2(product.Width, displayLength);
+
+                    return new
+                    {
+                        ProductNumber = string.IsNullOrWhiteSpace(product.ProductNumber) ? "-" : product.ProductNumber,
+                        Price = Math.Round(product.Price, 2, MidpointRounding.AwayFromZero),
+                        Color = string.IsNullOrWhiteSpace(product.Color) ? "-" : product.Color,
+                        Size = string.IsNullOrWhiteSpace(size) ? "-" : size,
+                        M2 = m2,
+                        Quantity = product.Quantity,
+                        M2Total = m2.HasValue
+                            ? Math.Round(m2.Value * product.Quantity, 2, MidpointRounding.AwayFromZero)
+                            : (decimal?)null,
+                        SortWidth = product.Width ?? 0,
+                        SortLength = displayLength ?? 0
+                    };
+                })
+                .OrderBy(row => row.Color, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(row => row.ProductNumber, StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(row => row.SortWidth)
+                .ThenBy(row => row.SortLength)
+                .ToList();
+
+            var rows = new List<SimilarProductsDisplayRowViewModel>();
+
+            foreach (var colorGroup in groupedRows.GroupBy(row => row.Color, StringComparer.CurrentCultureIgnoreCase))
+            {
+                var groupRows = colorGroup.ToList();
+
+                for (var index = 0; index < groupRows.Count; index++)
+                {
+                    var row = groupRows[index];
+                    rows.Add(new SimilarProductsDisplayRowViewModel
+                    {
+                        ProductNumber = row.ProductNumber,
+                        Price = row.Price,
+                        Color = row.Color,
+                        ShowColor = index == 0,
+                        ColorRowSpan = index == 0 ? groupRows.Count : 0,
+                        Size = row.Size,
+                        M2 = row.M2,
+                        Quantity = row.Quantity,
+                        M2Total = row.M2Total,
+                        IsGroupStart = index == 0
+                    });
+                }
+            }
+
+            var selectedDisplayLength = ResolveDisplayLength(selectedProduct, remainingLengths);
+            var selectedSize = selectedProduct.PoMjeri
+                ? PoMjeriHelper.FormatRemainingSize(selectedProduct.Width, selectedDisplayLength ?? 0)
+                : PoMjeriHelper.FormatSize(selectedProduct.Width, selectedProduct.Length);
+            var selectedM2 = CalculateInventoryDisplayM2(selectedProduct.Width, selectedDisplayLength);
+
+            return new SimilarProductsLookupResultViewModel
+            {
+                Summary = new SimilarProductSummaryViewModel
+                {
+                    ProductNumber = string.IsNullOrWhiteSpace(selectedProduct.ProductNumber) ? "-" : selectedProduct.ProductNumber,
+                    ProductName = string.IsNullOrWhiteSpace(selectedProduct.Name) ? "-" : selectedProduct.Name,
+                    Price = Math.Round(selectedProduct.Price, 2, MidpointRounding.AwayFromZero),
+                    Model = string.IsNullOrWhiteSpace(selectedProduct.Model) ? "-" : selectedProduct.Model,
+                    Color = string.IsNullOrWhiteSpace(selectedProduct.Color) ? "-" : selectedProduct.Color,
+                    Size = string.IsNullOrWhiteSpace(selectedSize) ? "-" : selectedSize,
+                    M2 = selectedM2,
+                    Quantity = selectedProduct.Quantity,
+                    M2Total = selectedM2.HasValue
+                        ? Math.Round(selectedM2.Value * selectedProduct.Quantity, 2, MidpointRounding.AwayFromZero)
+                        : null
+                },
+                Rows = rows
+            };
+        }
+
+        private static int? ResolveDisplayLength(Tepih product, IReadOnlyDictionary<int, int> remainingLengths)
+        {
+            return PoMjeriHelper.GetInventoryDisplayLength(product, remainingLengths);
+        }
+
+        private static decimal? CalculateInventoryDisplayM2(int? width, int? length)
+        {
+            return PoMjeriHelper.CalculateM2PerUnit(true, width, length);
         }
 
         private async Task<object> BuildPoMjeriPromptResponseAsync(Tepih product)
@@ -668,6 +1288,39 @@ namespace Inventar.Controllers
             return null;
         }
 
+        private static bool TryParseLastScanTimestamp(string? rawValue, out long timestampMs)
+        {
+            timestampMs = 0;
+
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                return false;
+            }
+
+            if (long.TryParse(rawValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var unixTimestampMs))
+            {
+                timestampMs = unixTimestampMs;
+                return true;
+            }
+
+            if (DateTimeOffset.TryParse(rawValue, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var roundtripTimestamp))
+            {
+                timestampMs = roundtripTimestamp.ToUnixTimeMilliseconds();
+                return true;
+            }
+
+            foreach (var culture in LocalizationSettings.SupportedCultures)
+            {
+                if (DateTime.TryParse(rawValue, culture, DateTimeStyles.AssumeLocal, out var localizedTimestamp))
+                {
+                    timestampMs = new DateTimeOffset(DateTime.SpecifyKind(localizedTimestamp, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         [Authorize(Roles = "admin,superadmin,employee")]
         public async Task<IActionResult> ProcessQRCode(string data)
         {
@@ -676,30 +1329,29 @@ namespace Inventar.Controllers
                 // ------------------------------
                 // DUPLICATE FAST-SCAN PROTECTION
                 // ------------------------------
-                var lastScan = HttpContext.Session.GetString("lastScanValue");
-                var lastScanTimeString = HttpContext.Session.GetString("lastScanTime");
+                var lastScan = HttpContext.Session.GetString(LastScanValueSessionKey);
+                var lastScanTimeString = HttpContext.Session.GetString(LastScanTimeSessionKey);
+                var currentScanTimestampMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-                if (lastScan == data && lastScanTimeString != null)
+                if (lastScan == data && TryParseLastScanTimestamp(lastScanTimeString, out var lastScanTimestampMs))
                 {
-                    var lastScanTime = DateTime.Parse(lastScanTimeString);
-
                     // If scanned again within 800 milliseconds → IGNORE
-                    if ((DateTime.Now - lastScanTime).TotalMilliseconds < 800)
+                    if (currentScanTimestampMs - lastScanTimestampMs < DuplicateFastScanWindowMs)
                     {
-                        return Json(new { success = false, message = "Duplicate fast scan ignored" });
+                        return Json(new { success = false, message = Inventar.Resources.Resource.DuplicateFastScanIgnored });
                     }
                 }
 
                 // Save current scan as last scan
-                HttpContext.Session.SetString("lastScanValue", data);
-                HttpContext.Session.SetString("lastScanTime", DateTime.Now.ToString());
+                HttpContext.Session.SetString(LastScanValueSessionKey, data);
+                HttpContext.Session.SetString(LastScanTimeSessionKey, currentScanTimestampMs.ToString(CultureInfo.InvariantCulture));
 
                 var extractData = data.Split("/");
                 var item = await FindProductByQrDataAsync(extractData);
                 if (item == null)
                 {
                     _logger.LogWarning("ProcessQRCode: Couldn't find a product with properties matching QR Code data: {data}", data);
-                    return Json(new { success = false, message = "Product not found" });
+                    return Json(new { success = false, message = Inventar.Resources.Resource.ProductNotFound });
                 }
 
                 var scannedProducts = GetScannedProducts();
@@ -723,7 +1375,7 @@ namespace Inventar.Controllers
             catch(Exception ex)
             {
                 _logger.LogError(ex, "QR code processing went wrong for QR code with data: {data}.",data);
-                return StatusCode(500, "An error occurred while processing the QR code.");
+                return StatusCode(500, Inventar.Resources.Resource.ErrorProcessingQR);
             }
         }
 
@@ -736,7 +1388,7 @@ namespace Inventar.Controllers
                 var item = await _context.Tepisi.FirstOrDefaultAsync(product => product.Id == id && !product.Disabled && !product.CreatedForDirectSale);
                 if (item == null)
                 {
-                    return Json(new { success = false, message = "Product not found" });
+                    return Json(new { success = false, message = Inventar.Resources.Resource.ProductNotFound });
                 }
 
                 if (item.PoMjeri)
@@ -753,7 +1405,7 @@ namespace Inventar.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "PrepareProductSelection failed for product {ProductId}.", id);
-                return StatusCode(500, "An error occurred while preparing the selected product.");
+                return StatusCode(500, Inventar.Resources.Resource.ErrorPreparingProduct);
             }
         }
 
@@ -763,7 +1415,7 @@ namespace Inventar.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return Json(new { success = false, message = "Unesite ispravne podatke za proizvod." });
+                return Json(new { success = false, message = Inventar.Resources.Resource.InvalidProductData });
             }
 
             try
@@ -771,12 +1423,12 @@ namespace Inventar.Controllers
                 var normalizedName = TextEncodingHelper.NormalizeInput(model.Name)?.Trim();
                 if (string.IsNullOrWhiteSpace(normalizedName))
                 {
-                    return Json(new { success = false, message = "Naziv proizvoda je obavezan." });
+                    return Json(new { success = false, message = Inventar.Resources.Resource.ProductNameRequired });
                 }
 
                 if (!TryParseDirectSaleProductType(model.ProductType, out var perM2, out var poMjeri))
                 {
-                    return Json(new { success = false, message = "Izaberite ispravan tip proizvoda." });
+                    return Json(new { success = false, message = Inventar.Resources.Resource.SelectValidProductType });
                 }
 
                 var width = model.Width;
@@ -786,12 +1438,12 @@ namespace Inventar.Controllers
                 {
                     if (!width.HasValue || !length.HasValue)
                     {
-                        return Json(new { success = false, message = "Unesite širinu i dužinu za izabrani tip proizvoda." });
+                        return Json(new { success = false, message = Inventar.Resources.Resource.WidthAndLengthRequiredForSelectedProductType });
                     }
                 }
                 else if (width.HasValue != length.HasValue)
                 {
-                    return Json(new { success = false, message = "Za dimenziju unesite i širinu i dužinu." });
+                    return Json(new { success = false, message = Inventar.Resources.Resource.EnterBothWidthAndLength });
                 }
 
                 var product = new Tepih
@@ -835,7 +1487,7 @@ namespace Inventar.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create a direct-sale placeholder product for QR checkout.");
-                return StatusCode(500, "An error occurred while creating the temporary product.");
+                return StatusCode(500, Inventar.Resources.Resource.ErrorCreatingTemporaryProduct);
             }
         }
 
@@ -845,7 +1497,7 @@ namespace Inventar.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return Json(new { success = false, message = "Unesite ispravne dimenzije." });
+                return Json(new { success = false, message = Inventar.Resources.Resource.InvalidDimensions });
             }
 
             try
@@ -853,12 +1505,12 @@ namespace Inventar.Controllers
                 var product = await _context.Tepisi.FirstOrDefaultAsync(item => item.Id == model.ProductId && !item.Disabled);
                 if (product == null)
                 {
-                    return Json(new { success = false, message = "Product not found" });
+                    return Json(new { success = false, message = Inventar.Resources.Resource.ProductNotFound });
                 }
 
                 if (!product.PoMjeri || !product.Width.HasValue || !product.Length.HasValue)
                 {
-                    return Json(new { success = false, message = "Izabrani proizvod nije po mjeri." });
+                    return Json(new { success = false, message = Inventar.Resources.Resource.SelectedProductIsNotPerMeasure });
                 }
 
                 var remainingLength = await GetSessionAwareRemainingLengthAsync(product);
@@ -867,7 +1519,7 @@ namespace Inventar.Controllers
 
                 if (model.CustomLength > remainingLength)
                 {
-                    return Json(new { success = false, message = "Unesena dužina ne može biti veća od preostale dužine." });
+                    return Json(new { success = false, message = $"{Inventar.Resources.Resource.TheEnteredLengthCannotBeGreaterThanTheRemainingLength}." });
                 }
 
                 var scannedProduct = await BuildPoMjeriScannedProductAsync(product, fixedWidth, model.CustomLength);
@@ -894,7 +1546,7 @@ namespace Inventar.Controllers
                         return Json(new
                         {
                             success = false,
-                            message = $"Moguće je naručiti najviše {maxAvailableQuantity} komada za dati proizvod."
+                            message = string.Format(CultureInfo.CurrentCulture, Inventar.Resources.Resource.MaxPiecesForGivenProduct, maxAvailableQuantity)
                         });
                     }
 
@@ -914,7 +1566,7 @@ namespace Inventar.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "AddPoMjeriScannedProduct failed for product {ProductId}.", model.ProductId);
-                return StatusCode(500, "An error occurred while adding po mjeri product.");
+                return StatusCode(500, Inventar.Resources.Resource.ErrorAddingPerMeasureProduct);
             }
         }
 
@@ -927,7 +1579,7 @@ namespace Inventar.Controllers
                 if (modell.Price < 0)
                 {
                     _logger.LogWarning("Invalid price submitted for product ID {Id}. Price: {Price}", modell.Id, modell.Price);
-                    return Json(new { success = false, message = "Invalid price." });
+                    return Json(new { success = false, message = Inventar.Resources.Resource.InvalidPrice });
                 }
 
                 List<ScannedProductViewModel> scannedProds = GetScannedProducts();
@@ -962,7 +1614,7 @@ namespace Inventar.Controllers
             catch(Exception ex)
             {
                 _logger.LogError(ex, "Applying discount or changing price mannualy went wrong.");
-                return StatusCode(500, "An error occurred while updating price for a product.");
+                return StatusCode(500, Inventar.Resources.Resource.ErrorUpdatingProductPrice);
             }
         }
 
@@ -1090,6 +1742,7 @@ namespace Inventar.Controllers
             {
                 ModelState.AddModelError("", "Editovanje tepiha nije uspjelo");
                 _logger.LogWarning("EditTepih post: ModelState is Invalid!");
+                tepihVM.ProductImages = await LoadProductImagesAsync(id);
                 return View("Edit", tepihVM);
             }
 
@@ -1150,7 +1803,12 @@ namespace Inventar.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "admin,superadmin")]
-        public async Task<IActionResult> UploadStorefrontImages(int id, List<IFormFile> files, string? altText)
+        public async Task<IActionResult> UploadInventoryGalleryMedia(
+            int id,
+            List<IFormFile> files,
+            string? altText,
+            bool reuseForGroup,
+            bool reuseForColorGroup)
         {
             var tepih = await _context.Tepisi
                 .Include(t => t.ProductImages)
@@ -1158,25 +1816,39 @@ namespace Inventar.Controllers
 
             if (tepih == null)
             {
-                return NotFound("Product not found.");
+                return NotFound(AppResource.ProductNotFound);
+            }
+
+            if (reuseForGroup && reuseForColorGroup)
+            {
+                TempData["InventoryGalleryErrorMessage"] = AppResource.InventoryGalleryOnlyOneReuseOption;
+                return RedirectToAction(nameof(Edit), new { id });
             }
 
             if (files == null || files.Count == 0)
             {
-                TempData["StorefrontErrorMessage"] = "Select at least one image to upload.";
+                TempData["InventoryGalleryErrorMessage"] = AppResource.InventoryGallerySelectAtLeastOneFile;
                 return RedirectToAction(nameof(Edit), new { id });
             }
 
-            var activeImages = tepih.ProductImages.Where(image => !image.Disabled).ToList();
-            var hasPrimary = activeImages.Any(image => image.IsPrimary);
+            var activeImages = tepih.ProductImages
+                .Where(image => !image.Disabled && ProductMediaFolders.IsInventoryGalleryMedia(image.CloudinaryPublicId))
+                .ToList();
+            var hasPrimary = activeImages.Any(image => image.IsPrimary && !IsVideoMediaType(image.MediaType));
             var nextSortOrder = activeImages.Any() ? activeImages.Max(image => image.SortOrder) + 1 : 1;
             var successfulUploads = 0;
+            var uploadedImageSeeds = new List<ProductImageSeed>();
 
             foreach (var file in files.Where(file => file.Length > 0))
             {
-                if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                var mediaType = file.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
+                    ? "video"
+                    : "image";
+
+                if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) &&
+                    !file.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
                 {
-                    TempData["StorefrontErrorMessage"] = $"'{file.FileName}' is not an image.";
+                    TempData["InventoryGalleryErrorMessage"] = string.Format(AppResource.InventoryGalleryUnsupportedFile, file.FileName);
                     continue;
                 }
 
@@ -1184,74 +1856,110 @@ namespace Inventar.Controllers
                 await file.CopyToAsync(stream);
                 stream.Position = 0;
 
-                CloudinaryDotNet.Actions.ImageUploadResult uploadResult;
+                (string PublicId, string SecureUrl, string MediaType) uploadResult;
                 try
                 {
-                    uploadResult = await _photoService.UploadToCloudinary(
+                    uploadResult = await _photoService.UploadStorefrontMediaToCloudinary(
                         file.FileName,
                         stream,
-                        "StorefrontProducts");
+                        ProductMediaFolders.InventoryGalleryFolder,
+                        mediaType);
                 }
                 catch (ApplicationException ex)
                 {
-                    _logger.LogWarning(ex, "Storefront image upload failed for product {ProductId} and file {FileName}.", id, file.FileName);
-                    TempData["StorefrontErrorMessage"] = BuildStorefrontImageUploadErrorMessage(ex);
+                    _logger.LogWarning(ex, "Inventory gallery media upload failed for product {ProductId} and file {FileName}.", id, file.FileName);
+                    TempData["InventoryGalleryErrorMessage"] = BuildInventoryGalleryUploadErrorMessage(ex);
                     break;
                 }
 
-                if (uploadResult.SecureUrl == null || string.IsNullOrWhiteSpace(uploadResult.PublicId))
+                if (string.IsNullOrWhiteSpace(uploadResult.SecureUrl) || string.IsNullOrWhiteSpace(uploadResult.PublicId))
                 {
-                    TempData["StorefrontErrorMessage"] = $"Upload failed for '{file.FileName}'.";
+                    TempData["InventoryGalleryErrorMessage"] = string.Format(AppResource.InventoryGalleryUploadFailedForFile, file.FileName);
                     continue;
                 }
 
-                _context.ProductImages.Add(new ProductImage
+                var imageSeed = new ProductImageSeed
+                {
+                    CloudinaryPublicId = uploadResult.PublicId,
+                    Url = uploadResult.SecureUrl,
+                    ThumbnailUrl = mediaType == "video" ? null : uploadResult.SecureUrl,
+                    AltText = string.IsNullOrWhiteSpace(altText) ? tepih.Name : (TextEncodingHelper.NormalizeInput(altText) ?? altText.Trim()),
+                    MediaType = NormalizeMediaType(uploadResult.MediaType),
+                    IsPrimary = !hasPrimary && mediaType == "image"
+                };
+
+                var createdImage = new ProductImage
                 {
                     TepihId = tepih.Id,
-                    CloudinaryPublicId = uploadResult.PublicId,
-                    Url = uploadResult.SecureUrl.ToString(),
-                    ThumbnailUrl = uploadResult.SecureUrl.ToString(),
-                    AltText = string.IsNullOrWhiteSpace(altText) ? tepih.Name : altText.Trim(),
-                    MediaType = "image",
-                    IsPrimary = !hasPrimary,
+                    CloudinaryPublicId = imageSeed.CloudinaryPublicId,
+                    Url = imageSeed.Url,
+                    ThumbnailUrl = imageSeed.ThumbnailUrl,
+                    AltText = imageSeed.AltText,
+                    MediaType = imageSeed.MediaType,
+                    IsPrimary = imageSeed.IsPrimary,
                     SortOrder = nextSortOrder++,
                     Disabled = false,
                     CreatedUtc = DateTime.UtcNow
-                });
+                };
 
-                hasPrimary = true;
+                _context.ProductImages.Add(createdImage);
+                tepih.ProductImages.Add(createdImage);
+                uploadedImageSeeds.Add(imageSeed);
+                hasPrimary = hasPrimary || imageSeed.IsPrimary;
                 successfulUploads++;
             }
 
-            await _context.SaveChangesAsync();
+            var reusedImages = 0;
+            var reuseScope = NormalizeInventoryGallerySyncScope(reuseForColorGroup ? "colorGroup" : reuseForGroup ? "group" : null);
+            if (successfulUploads > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            if ((reuseForGroup || reuseForColorGroup) && uploadedImageSeeds.Count > 0)
+            {
+                reusedImages = await CopyMissingInventoryGalleryToGroupMembersAsync(
+                    tepih,
+                    uploadedImageSeeds,
+                    reuseScope == "colorGroup");
+
+                if (reusedImages > 0)
+                {
+                    await _context.SaveChangesAsync();
+                }
+            }
 
             if (successfulUploads > 0)
             {
-                TempData["StorefrontSuccessMessage"] = successfulUploads == 1
-                    ? "1 image uploaded."
-                    : $"{successfulUploads} images uploaded.";
+                var uploadMessage = successfulUploads == 1
+                    ? AppResource.InventoryGalleryOneFileUploaded
+                    : string.Format(AppResource.InventoryGalleryManyFilesUploaded, successfulUploads);
+
+                TempData["InventoryGallerySuccessMessage"] = reusedImages > 0
+                    ? $"{uploadMessage} {string.Format(AppResource.InventoryGalleryCopiedToRelatedProducts, reusedImages, DescribeInventoryGalleryScope(reuseScope))}"
+                    : uploadMessage;
             }
-            else if (TempData["StorefrontErrorMessage"] == null)
+            else if (TempData["InventoryGalleryErrorMessage"] == null)
             {
-                TempData["StorefrontErrorMessage"] = "No images were uploaded.";
+                TempData["InventoryGalleryErrorMessage"] = AppResource.InventoryGalleryNoFilesUploaded;
             }
 
             return RedirectToAction(nameof(Edit), new { id });
         }
 
-        private static string BuildStorefrontImageUploadErrorMessage(Exception ex)
+        private static string BuildInventoryGalleryUploadErrorMessage(Exception ex)
         {
             var detail = ExtractUploadFailureDetail(ex);
 
             if (ex.Message.Contains("Cloudinary is not configured", StringComparison.OrdinalIgnoreCase) ||
                 ex.InnerException?.Message.Contains("Cloudinary is not configured", StringComparison.OrdinalIgnoreCase) == true)
             {
-                return "Cloudinary nije konfigurisan. Dodajte ispravan ApiSecret prije otpremanja slika proizvoda.";
+                return AppResource.InventoryGalleryCloudinaryNotConfigured;
             }
 
             return string.IsNullOrWhiteSpace(detail)
-                ? "Došlo je do greške prilikom otpremanja slika proizvoda."
-                : $"Došlo je do greške prilikom otpremanja slika proizvoda. Detalj: {detail}";
+                ? AppResource.InventoryGalleryUploadError
+                : string.Format(AppResource.InventoryGalleryUploadErrorWithDetail, detail);
         }
 
         private static string? ExtractUploadFailureDetail(Exception ex)
@@ -1270,7 +1978,8 @@ namespace Inventar.Controllers
                     continue;
                 }
 
-                if (candidate.Contains("Failed to upload image to Cloudinary.", StringComparison.OrdinalIgnoreCase))
+                if (candidate.Contains("Failed to upload image to Cloudinary.", StringComparison.OrdinalIgnoreCase) ||
+                    candidate.Contains("Failed to upload media to Cloudinary.", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -1284,20 +1993,95 @@ namespace Inventar.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "admin,superadmin")]
-        public async Task<IActionResult> SetPrimaryStorefrontImage(int id, int imageId)
+        public async Task<IActionResult> SyncInventoryGalleryMedia(int id, List<int> selectedImageIds, string? scope)
+        {
+            var tepih = await _context.Tepisi
+                .Include(t => t.ProductImages)
+                .FirstOrDefaultAsync(t => t.Id == id && !t.Disabled);
+
+            if (tepih == null)
+            {
+                return NotFound(AppResource.ProductNotFound);
+            }
+
+            if (selectedImageIds == null || selectedImageIds.Count == 0)
+            {
+                TempData["InventoryGalleryErrorMessage"] = AppResource.InventoryGalleryNoCheckedItems;
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            var normalizedScope = NormalizeInventoryGallerySyncScope(scope);
+            var groupProducts = await LoadInventoryGalleryGroupProductsAsync(tepih, normalizedScope == "colorGroup");
+            if (groupProducts.Count < 2)
+            {
+                TempData["InventoryGalleryErrorMessage"] = string.Format(
+                    AppResource.InventoryGalleryNoOtherProductsInScope,
+                    DescribeInventoryGalleryScope(normalizedScope));
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            var selectedIds = selectedImageIds.Distinct().ToHashSet();
+            var sourceImages = tepih.ProductImages
+                .Where(image =>
+                    selectedIds.Contains(image.Id) &&
+                    !image.Disabled &&
+                    ProductMediaFolders.IsInventoryGalleryMedia(image.CloudinaryPublicId))
+                .OrderByDescending(image => image.IsPrimary)
+                .ThenBy(image => image.SortOrder)
+                .ThenBy(image => image.Id)
+                .Select(BuildImageSeed)
+                .GroupBy(BuildImageIdentity, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .ToList();
+
+            if (sourceImages.Count == 0)
+            {
+                TempData["InventoryGalleryErrorMessage"] = AppResource.InventoryGalleryNoActiveCheckedItems;
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            var copiedImages = await CopyMissingInventoryGalleryToGroupMembersAsync(
+                tepih,
+                sourceImages,
+                normalizedScope == "colorGroup");
+
+            await _context.SaveChangesAsync();
+
+            TempData["InventoryGallerySuccessMessage"] = copiedImages > 0
+                ? string.Format(AppResource.InventoryGallerySyncedItems, copiedImages, DescribeInventoryGalleryScope(normalizedScope))
+                : string.Format(AppResource.InventoryGalleryAlreadySynced, DescribeInventoryGalleryScope(normalizedScope));
+
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin,superadmin")]
+        public async Task<IActionResult> SetPrimaryInventoryGalleryMedia(int id, int imageId)
         {
             var images = await _context.ProductImages
-                .Where(image => image.TepihId == id && !image.Disabled)
+                .Where(image =>
+                    image.TepihId == id &&
+                    !image.Disabled &&
+                    image.CloudinaryPublicId != null &&
+                    image.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix))
                 .ToListAsync();
 
             if (images.Count == 0)
             {
-                return NotFound("No product images found.");
+                return NotFound("No gallery media found.");
             }
 
             if (!images.Any(image => image.Id == imageId))
             {
-                return NotFound("Product image not found.");
+                return NotFound("Gallery media not found.");
+            }
+
+            var selectedImage = images.First(image => image.Id == imageId);
+            if (IsVideoMediaType(selectedImage.MediaType))
+            {
+                TempData["InventoryGalleryErrorMessage"] = AppResource.InventoryGalleryVideoCannotBePrimary;
+                return RedirectToAction(nameof(Edit), new { id });
             }
 
             foreach (var image in images)
@@ -1306,49 +2090,188 @@ namespace Inventar.Controllers
             }
 
             await _context.SaveChangesAsync();
-            TempData["StorefrontSuccessMessage"] = "Primary image updated.";
+            TempData["InventoryGallerySuccessMessage"] = AppResource.InventoryGalleryPrimaryUpdated;
             return RedirectToAction(nameof(Edit), new { id });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "admin,superadmin")]
-        public async Task<IActionResult> DeleteStorefrontImage(int id, int imageId)
+        public async Task<IActionResult> DeleteInventoryGalleryMedia(int id, int imageId, string? scope)
         {
+            var tepih = await _context.Tepisi
+                .AsNoTracking()
+                .FirstOrDefaultAsync(product => product.Id == id && !product.Disabled);
+
+            if (tepih == null)
+            {
+                return NotFound(AppResource.ProductNotFound);
+            }
+
             var image = await _context.ProductImages
-                .FirstOrDefaultAsync(productImage => productImage.Id == imageId && productImage.TepihId == id && !productImage.Disabled);
+                .FirstOrDefaultAsync(productImage =>
+                    productImage.Id == imageId &&
+                    productImage.TepihId == id &&
+                    !productImage.Disabled &&
+                    productImage.CloudinaryPublicId != null &&
+                    productImage.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix));
 
             if (image == null)
             {
-                return NotFound("Product image not found.");
+                return NotFound("Gallery media not found.");
             }
+
+            var normalizedScope = NormalizeInventoryGalleryDeleteScope(scope);
+            var normalizedMediaType = NormalizeMediaType(image.MediaType);
+            var imagesToDisable = new List<ProductImage> { image };
+
+            if (normalizedScope != "single")
+            {
+                var targetProductIds = await _context.Tepisi
+                    .Where(product =>
+                        !product.Disabled &&
+                        product.Name == tepih.Name &&
+                        product.Model == tepih.Model &&
+                        (normalizedScope != "colorGroup" || product.Color == tepih.Color))
+                    .Select(product => product.Id)
+                    .ToListAsync();
+
+                imagesToDisable = await _context.ProductImages
+                    .Where(productImage =>
+                        !productImage.Disabled &&
+                        targetProductIds.Contains(productImage.TepihId) &&
+                        productImage.CloudinaryPublicId != null &&
+                        productImage.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix) &&
+                        productImage.CloudinaryPublicId == image.CloudinaryPublicId &&
+                        productImage.MediaType == normalizedMediaType)
+                    .ToListAsync();
+            }
+
+            var imageIdsToDisable = imagesToDisable
+                .Select(productImage => productImage.Id)
+                .Distinct()
+                .ToList();
+
+            var affectedProductIds = imagesToDisable
+                .Select(productImage => productImage.TepihId)
+                .Distinct()
+                .ToList();
+
+            var remainingImages = await _context.ProductImages
+                .Where(productImage =>
+                    affectedProductIds.Contains(productImage.TepihId) &&
+                    !productImage.Disabled &&
+                    !imageIdsToDisable.Contains(productImage.Id) &&
+                    productImage.CloudinaryPublicId != null &&
+                    productImage.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix))
+                .OrderBy(productImage => productImage.TepihId)
+                .ThenByDescending(productImage => productImage.IsPrimary)
+                .ThenBy(productImage => productImage.SortOrder)
+                .ToListAsync();
 
             try
             {
-                await _photoService.DeletePhotoAsync(image.CloudinaryPublicId);
+                var isSharedByOtherProducts = await _context.ProductImages
+                    .AnyAsync(productImage =>
+                        !productImage.Disabled &&
+                        !imageIdsToDisable.Contains(productImage.Id) &&
+                        productImage.CloudinaryPublicId != null &&
+                        productImage.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix) &&
+                        productImage.CloudinaryPublicId == image.CloudinaryPublicId &&
+                        productImage.MediaType == normalizedMediaType);
+
+                if (!isSharedByOtherProducts)
+                {
+                    await _photoService.DeleteMediaAsync(image.CloudinaryPublicId, normalizedMediaType);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to delete storefront image {ImageId} from Cloudinary.", imageId);
-                TempData["StorefrontErrorMessage"] = "Cloudinary image deletion failed. The record was still removed from the catalog.";
+                _logger.LogWarning(ex, "Failed to delete inventory gallery media {ImageId} from Cloudinary.", imageId);
+                TempData["InventoryGalleryErrorMessage"] = AppResource.InventoryGalleryCloudinaryDeleteFailed;
             }
 
-            image.Disabled = true;
-            image.IsPrimary = false;
-
-            var replacementPrimary = await _context.ProductImages
-                .Where(productImage => productImage.TepihId == id && !productImage.Disabled && productImage.Id != imageId)
-                .OrderBy(productImage => productImage.SortOrder)
-                .FirstOrDefaultAsync();
-
-            if (replacementPrimary != null)
+            foreach (var galleryImage in imagesToDisable)
             {
-                replacementPrimary.IsPrimary = true;
+                galleryImage.Disabled = true;
+                galleryImage.IsPrimary = false;
+            }
+
+            foreach (var affectedProductId in affectedProductIds)
+            {
+                var productImages = remainingImages
+                    .Where(productImage => productImage.TepihId == affectedProductId)
+                    .ToList();
+
+                var hasPrimaryImage = productImages.Any(productImage =>
+                    productImage.IsPrimary &&
+                    !IsVideoMediaType(productImage.MediaType));
+
+                if (hasPrimaryImage)
+                {
+                    continue;
+                }
+
+                var replacementPrimary = productImages
+                    .FirstOrDefault(productImage => !IsVideoMediaType(productImage.MediaType));
+
+                if (replacementPrimary != null)
+                {
+                    replacementPrimary.IsPrimary = true;
+                }
             }
 
             await _context.SaveChangesAsync();
-            TempData["StorefrontSuccessMessage"] = "Image removed.";
+
+            TempData["InventoryGallerySuccessMessage"] = normalizedScope switch
+            {
+                "group" => string.Format(AppResource.InventoryGalleryDeletedGroup, affectedProductIds.Count),
+                "colorGroup" => string.Format(AppResource.InventoryGalleryDeletedColorGroup, affectedProductIds.Count),
+                _ => AppResource.InventoryGalleryDeletedSingle
+            };
+
             return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> InventoryGalleryMedia(int id)
+        {
+            var tepih = await _context.Tepisi
+                .Include(product => product.ProductImages)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(product => product.Id == id && !product.Disabled);
+
+            if (tepih == null)
+            {
+                return NotFound();
+            }
+
+            TextEncodingHelper.DecodeProductForDisplay(tepih);
+
+            var galleryItems = tepih.ProductImages
+                .Where(image => !image.Disabled && ProductMediaFolders.IsInventoryGalleryMedia(image.CloudinaryPublicId))
+                .OrderByDescending(image => image.IsPrimary && !IsVideoMediaType(image.MediaType))
+                .ThenBy(image => image.SortOrder)
+                .ThenBy(image => image.Id)
+                .Select(image => new
+                {
+                    id = image.Id,
+                    url = image.Url,
+                    thumbnailUrl = image.ThumbnailUrl,
+                    altText = image.AltText,
+                    mediaType = NormalizeMediaType(image.MediaType),
+                    isPrimary = image.IsPrimary,
+                    sortOrder = image.SortOrder
+                })
+                .ToList();
+
+            return Json(new
+            {
+                productId = tepih.Id,
+                name = tepih.Name,
+                model = tepih.Model,
+                items = galleryItems
+            });
         }
 
         private static int CalculateAvailableQuantity(Tepih tepih)
@@ -1594,10 +2517,177 @@ namespace Inventar.Controllers
             return resolvedPrice > 0 ? resolvedPrice : product.Price;
         }
 
+        private async Task<List<Tepih>> LoadInventoryGalleryGroupProductsAsync(Tepih product, bool sameColor = false)
+        {
+            return await _context.Tepisi
+                .Where(tepih =>
+                    !tepih.Disabled &&
+                    tepih.Name == product.Name &&
+                    tepih.Model == product.Model &&
+                    (!sameColor || tepih.Color == product.Color))
+                .OrderBy(tepih => tepih.Id)
+                .ToListAsync();
+        }
+
+        private async Task<int> CopyMissingInventoryGalleryToGroupMembersAsync(
+            Tepih sourceProduct,
+            IReadOnlyCollection<ProductImageSeed> sourceImages,
+            bool sameColor = false)
+        {
+            if (sourceImages.Count == 0)
+            {
+                return 0;
+            }
+
+            var targetProducts = await _context.Tepisi
+                .AsNoTracking()
+                .Where(product =>
+                    !product.Disabled &&
+                    product.Id != sourceProduct.Id &&
+                    product.Name == sourceProduct.Name &&
+                    product.Model == sourceProduct.Model &&
+                    (!sameColor || product.Color == sourceProduct.Color))
+                .Select(product => new
+                {
+                    product.Id,
+                    product.Name
+                })
+                .ToListAsync();
+
+            if (targetProducts.Count == 0)
+            {
+                return 0;
+            }
+
+            var orderedImages = sourceImages
+                .Where(image => !string.IsNullOrWhiteSpace(image.Url))
+                .OrderByDescending(image => image.IsPrimary && !IsVideoMediaType(image.MediaType))
+                .ThenBy(image => image.CloudinaryPublicId, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var copiedImages = 0;
+
+            foreach (var targetProduct in targetProducts)
+            {
+                var activeImages = await _context.ProductImages
+                    .Where(image =>
+                        !image.Disabled &&
+                        image.TepihId == targetProduct.Id &&
+                        image.CloudinaryPublicId != null &&
+                        image.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix))
+                    .ToListAsync();
+
+                var existingKeys = new HashSet<string>(
+                    activeImages.Select(BuildImageIdentity),
+                    StringComparer.OrdinalIgnoreCase);
+
+                var hasPrimary = activeImages.Any(image => image.IsPrimary && !IsVideoMediaType(image.MediaType));
+                var nextSortOrder = activeImages.Any() ? activeImages.Max(image => image.SortOrder) + 1 : 1;
+
+                foreach (var sourceImage in orderedImages)
+                {
+                    var imageKey = BuildImageIdentity(sourceImage);
+                    if (string.IsNullOrWhiteSpace(imageKey) || existingKeys.Contains(imageKey))
+                    {
+                        continue;
+                    }
+
+                    var copiedImage = new ProductImage
+                    {
+                        TepihId = targetProduct.Id,
+                        CloudinaryPublicId = sourceImage.CloudinaryPublicId,
+                        Url = sourceImage.Url,
+                        ThumbnailUrl = sourceImage.ThumbnailUrl,
+                        AltText = string.IsNullOrWhiteSpace(sourceImage.AltText) ? targetProduct.Name : sourceImage.AltText,
+                        IsPrimary = !hasPrimary && !IsVideoMediaType(sourceImage.MediaType),
+                        MediaType = NormalizeMediaType(sourceImage.MediaType),
+                        SortOrder = nextSortOrder++,
+                        Disabled = false,
+                        CreatedUtc = DateTime.UtcNow
+                    };
+
+                    _context.ProductImages.Add(copiedImage);
+                    existingKeys.Add(imageKey);
+                    hasPrimary = hasPrimary || copiedImage.IsPrimary;
+                    copiedImages++;
+                }
+            }
+
+            return copiedImages;
+        }
+
+        private static string NormalizeInventoryGallerySyncScope(string? scope)
+        {
+            return string.Equals(scope, "colorGroup", StringComparison.OrdinalIgnoreCase)
+                ? "colorGroup"
+                : "group";
+        }
+
+        private static string NormalizeInventoryGalleryDeleteScope(string? scope)
+        {
+            if (string.Equals(scope, "group", StringComparison.OrdinalIgnoreCase))
+            {
+                return "group";
+            }
+
+            if (string.Equals(scope, "colorGroup", StringComparison.OrdinalIgnoreCase))
+            {
+                return "colorGroup";
+            }
+
+            return "single";
+        }
+
+        private static string DescribeInventoryGalleryScope(string scope)
+        {
+            return string.Equals(scope, "colorGroup", StringComparison.OrdinalIgnoreCase)
+                ? AppResource.InventoryGalleryScopeNameModelColor
+                : AppResource.InventoryGalleryScopeNameModel;
+        }
+
+        private static ProductImageSeed BuildImageSeed(ProductImage image)
+        {
+            return new ProductImageSeed
+            {
+                CloudinaryPublicId = image.CloudinaryPublicId,
+                Url = image.Url,
+                ThumbnailUrl = image.ThumbnailUrl,
+                AltText = image.AltText,
+                IsPrimary = image.IsPrimary,
+                MediaType = NormalizeMediaType(image.MediaType)
+            };
+        }
+
+        private static string BuildImageIdentity(ProductImage image)
+        {
+            var mediaType = NormalizeMediaType(image.MediaType);
+            return !string.IsNullOrWhiteSpace(image.CloudinaryPublicId)
+                ? $"{mediaType}:{image.CloudinaryPublicId.Trim()}"
+                : $"{mediaType}:{image.Url.Trim()}";
+        }
+
+        private static string BuildImageIdentity(ProductImageSeed image)
+        {
+            var mediaType = NormalizeMediaType(image.MediaType);
+            return !string.IsNullOrWhiteSpace(image.CloudinaryPublicId)
+                ? $"{mediaType}:{image.CloudinaryPublicId.Trim()}"
+                : $"{mediaType}:{image.Url.Trim()}";
+        }
+
+        private static bool IsVideoMediaType(string? mediaType)
+        {
+            return string.Equals(mediaType, "video", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeMediaType(string? mediaType)
+        {
+            return IsVideoMediaType(mediaType) ? "video" : "image";
+        }
+
         private static List<StorefrontProductImageViewModel> MapProductImages(IEnumerable<ProductImage>? productImages)
         {
             return productImages?
-                .Where(image => !image.Disabled)
+                .Where(image => !image.Disabled && ProductMediaFolders.IsInventoryGalleryMedia(image.CloudinaryPublicId))
                 .OrderBy(image => image.SortOrder)
                 .Select(image => new StorefrontProductImageViewModel
                 {
@@ -1605,7 +2695,7 @@ namespace Inventar.Controllers
                     Url = image.Url,
                     ThumbnailUrl = image.ThumbnailUrl,
                     AltText = image.AltText,
-                    MediaType = image.MediaType,
+                    MediaType = NormalizeMediaType(image.MediaType),
                     IsPrimary = image.IsPrimary,
                     SortOrder = image.SortOrder
                 })
@@ -1615,7 +2705,11 @@ namespace Inventar.Controllers
         private async Task<List<StorefrontProductImageViewModel>> LoadProductImagesAsync(int productId)
         {
             var productImages = await _context.ProductImages
-                .Where(image => image.TepihId == productId && !image.Disabled)
+                .Where(image =>
+                    image.TepihId == productId &&
+                    !image.Disabled &&
+                    image.CloudinaryPublicId != null &&
+                    image.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix))
                 .OrderBy(image => image.SortOrder)
                 .AsNoTracking()
                 .ToListAsync();
@@ -1625,21 +2719,35 @@ namespace Inventar.Controllers
 
         private async Task<string?> ResolveSlugAsync(int productId, EditTepihViewModel tepihVM, Tepih existingProduct)
         {
-            var requestedSlug = string.IsNullOrWhiteSpace(tepihVM.Slug)
-                ? ProductSlugHelper.BuildDefaultSlug(new Tepih
-                {
-                    Id = productId,
-                    Name = tepihVM.Name,
-                    ProductNumber = tepihVM.ProductNumber,
-                    Width = tepihVM.Width,
-                    Length = tepihVM.Length,
-                    Color = tepihVM.Color
-                })
-                : ProductSlugHelper.NormalizeSlug(tepihVM.Slug);
+            var isCustomSlug = !string.IsNullOrWhiteSpace(tepihVM.Slug);
+            var requestedSlug = isCustomSlug
+                ? ProductSlugHelper.NormalizeSlug(tepihVM.Slug)
+                : await ProductSlugHelper.GenerateUniqueSlugAsync(
+                    _context.Tepisi.AsQueryable(),
+                    new Tepih
+                    {
+                        Id = productId,
+                        Name = tepihVM.Name,
+                        ProductNumber = tepihVM.ProductNumber,
+                        Model = tepihVM.Model,
+                        Width = tepihVM.Width,
+                        Length = tepihVM.Length,
+                        Color = tepihVM.Color,
+                        UnID = existingProduct.UnID
+                    },
+                    excludedProductId: productId);
 
             if (string.IsNullOrWhiteSpace(requestedSlug))
             {
-                requestedSlug = ProductSlugHelper.BuildDefaultSlug(existingProduct);
+                requestedSlug = await ProductSlugHelper.GenerateUniqueSlugAsync(
+                    _context.Tepisi.AsQueryable(),
+                    existingProduct,
+                    excludedProductId: productId);
+            }
+
+            if (!isCustomSlug)
+            {
+                return requestedSlug;
             }
 
             var slugExists = await _context.Tepisi
@@ -1652,6 +2760,16 @@ namespace Inventar.Controllers
             }
 
             return requestedSlug;
+        }
+
+        private sealed class ProductImageSeed
+        {
+            public string CloudinaryPublicId { get; init; } = string.Empty;
+            public string Url { get; init; } = string.Empty;
+            public string? ThumbnailUrl { get; init; }
+            public string? AltText { get; init; }
+            public bool IsPrimary { get; init; }
+            public string MediaType { get; init; } = "image";
         }
 
         private const string ScannedProductsSessionKey = "scannedProducts";
@@ -1708,6 +2826,32 @@ namespace Inventar.Controllers
         private static string TruncateValue(string value, int maxLength)
         {
             return value.Length <= maxLength ? value : value[..maxLength];
+        }
+
+        private static string BuildSafeExportFileName(string baseName, string extension)
+        {
+            var normalizedBaseName = string.IsNullOrWhiteSpace(baseName) ? "export" : baseName.Trim();
+
+            foreach (var invalidChar in System.IO.Path.GetInvalidFileNameChars())
+            {
+                normalizedBaseName = normalizedBaseName.Replace(invalidChar, '-');
+            }
+
+            return $"{normalizedBaseName}.{extension}";
+        }
+
+        private static bool HasScannedTableExportData(ScannedTableExportRequest? request)
+        {
+            return request != null &&
+                   request.ColumnHeaders != null &&
+                   request.ColumnHeaders.Count > 0 &&
+                   request.Rows != null &&
+                   request.Rows.Count > 0;
+        }
+
+        private string GetLocalizedText(string key, string fallback)
+        {
+            return AppResource.ResourceManager.GetString(key) ?? fallback;
         }
 
         private async Task DeleteDirectSaleProductsIfUnusedAsync(
@@ -1842,11 +2986,8 @@ namespace Inventar.Controllers
                         return RedirectToAction(nameof(ScannedProductsToBePurchased));
                     }
 
-                    if (CalculateAvailableQuantity(product) < requestedProduct.Value)
-                    {
-                        TempData["ErrorMessage"] = BuildStockUnavailableMessage(product, requestedProduct.Value);
-                        return RedirectToAction(nameof(ScannedProductsToBePurchased));
-                    }
+                    // Regular and per-m2 products may be sold even if the resulting quantity drops below zero.
+                    // Po mjeri products keep their dedicated remaining-length validation below.
                 }
 
                 foreach (var poMjeriRequest in poMjeriRequests)
@@ -1940,6 +3081,42 @@ namespace Inventar.Controllers
             {
                 _logger.LogError(ex, "Unexpected error during purchase process.");
                 return StatusCode(500, "Dogodila se greška prilikom obrade kupovine.");
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public IActionResult ExportScannedProductsToPdf([FromBody] ScannedProductsOverviewViewModel spovm)
+        {
+            if (spovm?.Products == null || !spovm.Products.Any())
+            {
+                return BadRequest(GetLocalizedText("NoProductsToExport", "No products to export."));
+            }
+
+            try
+            {
+                spovm.FullName ??= string.Empty;
+                if (spovm.PurchaseTime == default)
+                {
+                    spovm.PurchaseTime = DateTime.Now;
+                }
+
+                var sellerName = BuildSellerName();
+                var pdfBytes = GeneratePurchasePdf(spovm, sellerName);
+
+                var customerFullName = spovm.FullName.ToUpperInvariant().Trim();
+                foreach (var invalidChar in System.IO.Path.GetInvalidFileNameChars())
+                {
+                    customerFullName = customerFullName.Replace(invalidChar, '-');
+                }
+
+                var fileName = $"{spovm.PurchaseTime:dd-MM-yyyy HH.mm} {customerFullName}.pdf".Trim();
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to export scanned products to PDF before purchase confirmation.");
+                return StatusCode(500, GetLocalizedText("ErrorExportingPdf", "An error occurred while exporting PDF."));
             }
         }
 
@@ -2154,7 +3331,7 @@ namespace Inventar.Controllers
                 if (item == null)
                 {
                     _logger.LogWarning("UpdateQuantity: No scanned product found with line ID {LineId}", lineId);
-                    return NotFound("Product couldn't be found!");
+                    return NotFound(Inventar.Resources.Resource.ProductNotFound);
                 }
 
                 if (item.IsDirectSaleProduct)
@@ -2164,7 +3341,7 @@ namespace Inventar.Controllers
                         qty = item.Quantity,
                         m2Total = item.M2Total,
                         priceTotal = item.PriceTotal,
-                        message = "Količina za proizvod kreiran za direktnu prodaju je fiksna."
+                        message = Inventar.Resources.Resource.FixedQuantityForDirectSaleProduct
                     });
                 }
 
@@ -2175,7 +3352,7 @@ namespace Inventar.Controllers
                         var product = await _context.Tepisi.FirstOrDefaultAsync(p => p.Id == item.Id && !p.Disabled);
                         if (product == null)
                         {
-                            return NotFound("Product couldn't be found!");
+                            return NotFound(Inventar.Resources.Resource.ProductNotFound);
                         }
 
                         var availableLength = await GetSessionAwareRemainingLengthAsync(product, item.LineId);
@@ -2191,7 +3368,7 @@ namespace Inventar.Controllers
                             {
                                 qty = item.Quantity,
                                 m2Total = item.M2Total,
-                                message = $"Moguće je naručiti najviše {item.MaxAvailableQuantity} komada za dati proizvod."
+                                message = string.Format(CultureInfo.CurrentCulture, Inventar.Resources.Resource.MaxPiecesForGivenProduct, item.MaxAvailableQuantity)
                             });
                         }
                     }
@@ -2220,7 +3397,7 @@ namespace Inventar.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while updating quantity for scanned product line {LineId}", lineId);
-                return StatusCode(500, "An error occurred while updating the quantity.");
+                return StatusCode(500, Inventar.Resources.Resource.ErrorUpdatingQuantity);
             }
         }
 
@@ -2272,6 +3449,161 @@ namespace Inventar.Controllers
                     .SetPadding(1);
         }
 
+        [HttpPost]
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public IActionResult ExportScannedProductsTableToPdf([FromBody] ScannedTableExportRequest request)
+        {
+            if (!HasScannedTableExportData(request))
+            {
+                return BadRequest(GetLocalizedText("NoProductsToExport", "No products to export."));
+            }
+
+            try
+            {
+                byte[] pdfBytes;
+                using (var stream = new MemoryStream())
+                {
+                    using (var writer = new PdfWriter(stream))
+                    using (var pdf = new PdfDocument(writer))
+                    using (var document = new Document(pdf, PageSize.A4.Rotate()))
+                    {
+                        document.SetMargins(24, 20, 24, 20);
+
+                        var fontPath = System.IO.Path.Combine(_env.WebRootPath, "fonts", "arial.ttf");
+                        if (System.IO.File.Exists(fontPath))
+                        {
+                            var font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H, EmbeddingStrategy.PREFER_EMBEDDED);
+                            document.SetFont(font);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(request.Heading))
+                        {
+                            document.Add(new Paragraph(request.Heading)
+                                .SetTextAlignment(TextAlignment.CENTER)
+                                .SetFontSize(14)
+                                .SimulateBold()
+                                .SetMarginBottom(12));
+                        }
+
+                        var columnCount = request.ColumnHeaders.Count;
+                        var widths = Enumerable.Repeat(1f, columnCount).ToArray();
+                        var table = new Table(UnitValue.CreatePercentArray(widths)).UseAllAvailableWidth();
+
+                        foreach (var header in request.ColumnHeaders)
+                        {
+                            table.AddHeaderCell(new Cell()
+                                .Add(new Paragraph(header ?? string.Empty).SetFontSize(9).SimulateBold())
+                                .SetTextAlignment(TextAlignment.CENTER)
+                                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                                .SetBackgroundColor(iText.Kernel.Colors.ColorConstants.LIGHT_GRAY)
+                                .SetPadding(4));
+                        }
+
+                        foreach (var row in request.Rows)
+                        {
+                            for (var columnIndex = 0; columnIndex < request.ColumnHeaders.Count; columnIndex++)
+                            {
+                                var cellValue = columnIndex < row.Count ? row[columnIndex] ?? string.Empty : string.Empty;
+                                table.AddCell(new Cell()
+                                    .Add(new Paragraph(cellValue).SetFontSize(8))
+                                    .SetTextAlignment(TextAlignment.CENTER)
+                                    .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                                    .SetPadding(4));
+                            }
+                        }
+
+                        document.Add(table);
+                        document.Close();
+                    }
+
+                    pdfBytes = stream.ToArray();
+                }
+
+                var fileName = BuildSafeExportFileName(request.FileNameBase, "pdf");
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to export scanned products table to PDF.");
+                return StatusCode(500, GetLocalizedText("ErrorExportingPdf", "An error occurred while exporting PDF."));
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "admin,superadmin,employee")]
+        public IActionResult ExportScannedProductsTableToExcel([FromBody] ScannedTableExportRequest request)
+        {
+            if (!HasScannedTableExportData(request))
+            {
+                return BadRequest(GetLocalizedText("NoProductsToExport", "No products to export."));
+            }
+
+            try
+            {
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Products");
+                var columnCount = request.ColumnHeaders.Count;
+
+                var currentRow = 1;
+                if (!string.IsNullOrWhiteSpace(request.Heading))
+                {
+                    worksheet.Range(currentRow, 1, currentRow, columnCount).Merge().Value = request.Heading;
+                    worksheet.Range(currentRow, 1, currentRow, columnCount).Style.Font.Bold = true;
+                    worksheet.Range(currentRow, 1, currentRow, columnCount).Style.Font.FontSize = 14;
+                    worksheet.Range(currentRow, 1, currentRow, columnCount).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    currentRow += 2;
+                }
+
+                for (var columnIndex = 0; columnIndex < columnCount; columnIndex++)
+                {
+                    var headerCell = worksheet.Cell(currentRow, columnIndex + 1);
+                    headerCell.Value = request.ColumnHeaders[columnIndex];
+                    headerCell.Style.Font.Bold = true;
+                    headerCell.Style.Fill.BackgroundColor = XLColor.LightGray;
+                    headerCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    headerCell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                }
+
+                var dataStartRow = currentRow + 1;
+                var rowIndex = dataStartRow;
+
+                foreach (var row in request.Rows)
+                {
+                    for (var columnIndex = 0; columnIndex < columnCount; columnIndex++)
+                    {
+                        var cell = worksheet.Cell(rowIndex, columnIndex + 1);
+                        cell.Value = columnIndex < row.Count ? row[columnIndex] ?? string.Empty : string.Empty;
+                        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                        cell.Style.Alignment.WrapText = true;
+                    }
+
+                    rowIndex++;
+                }
+
+                var dataEndRow = rowIndex - 1;
+                var tableRange = worksheet.Range(currentRow, 1, dataEndRow, columnCount);
+                tableRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                tableRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+                worksheet.Columns(1, columnCount).AdjustToContents();
+
+                using var stream = new MemoryStream();
+                workbook.SaveAs(stream);
+
+                var fileName = BuildSafeExportFileName(request.FileNameBase, "xlsx");
+                return File(
+                    stream.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to export scanned products table to Excel.");
+                return StatusCode(500, GetLocalizedText("ErrorExportingExcel", "An error occurred while exporting Excel."));
+            }
+        }
+
         [Authorize(Roles = "admin,superadmin,employee")]
         public IActionResult ManuallyAddProduct(int id)
         {
@@ -2280,14 +3612,14 @@ namespace Inventar.Controllers
                 var item = _context.Tepisi.FirstOrDefault(i => i.Id == id);
                 if (item == null || item.Disabled == true || item.CreatedForDirectSale)
                 {
-                    TempData["ProductNotFound"] = "Product not found!";
+                    TempData["ProductNotFound"] = Inventar.Resources.Resource.ProductNotFound;
                     _logger.LogWarning("ManuallyAddProduct: product with id {ProductId} was not found!", id);
                     return RedirectToAction("QRCodeScanning");
                 }
 
                 if (item.PoMjeri)
                 {
-                    TempData["ProductNotFound"] = "Za po mjeri proizvod prvo unesite željene dimenzije.";
+                    TempData["ProductNotFound"] = Inventar.Resources.Resource.FirstEnterTheCorrectDimensions;
                     return RedirectToAction("QRCodeScanning");
                 }
 
@@ -2389,6 +3721,12 @@ namespace Inventar.Controllers
 
             var results = query
                 .Where(t => !t.Disabled && !t.CreatedForDirectSale)
+                .OrderBy(t => t.Name)
+                .ThenBy(t => t.Model)
+                .ThenBy(t => t.Color)
+                .ThenBy(t => t.Width)
+                .ThenBy(t => t.Length)
+                .ThenBy(t => t.Id)
                 .Take(30)
                 .Select(t => new
                 {

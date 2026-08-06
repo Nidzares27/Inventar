@@ -97,28 +97,29 @@
                         <th colspan="3"></th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var group in Model.Groups)
-                    {
-                        var sizeRows = group.SizeRows.Count == 0
-                            ? new List<Inventar.ViewModels.InventoryReports.InventoryNameReportSizeSummaryViewModel>
+                @foreach (var group in Model.Groups)
+                {
+                    var sizeRows = group.SizeRows.Count == 0
+                        ? new List<Inventar.ViewModels.InventoryReports.InventoryNameReportSizeSummaryViewModel>
+                        {
+                            new()
                             {
-                                new()
-                                {
-                                    SizeLabel = "-",
-                                    TotalM2 = group.TotalM2,
-                                    TotalQuantity = group.TotalQuantity
-                                }
+                                SizeLabel = "-",
+                                TotalM2 = group.TotalM2,
+                                TotalQuantity = group.TotalQuantity
                             }
-                            : group.SizeRows;
+                        }
+                        : group.SizeRows;
 
-                        for (var index = 0; index < sizeRows.Count; index++)
+                    <tbody class="inventory-report-section"
+                           data-group-name="@group.ProductName"
+                           data-group-name-normalized="@group.ProductName.ToLowerInvariant()"
+                           data-section-row-count="@group.RowSpan">
+                        @for (var index = 0; index < sizeRows.Count; index++)
                         {
                             var row = sizeRows[index];
 
-                            <tr class="inventory-report-row"
-                                data-group-name="@group.ProductName"
-                                data-group-name-normalized="@group.ProductName.ToLowerInvariant()">
+                            <tr class="inventory-report-row">
                                 @if (index == 0)
                                 {
                                     <td class="inventory-report-table__name-cell" rowspan="@group.RowSpan">
@@ -138,15 +139,14 @@
                             </tr>
                         }
 
-                        <tr class="inventory-report-row inventory-report-row--total"
-                            data-group-name="@group.ProductName"
-                            data-group-name-normalized="@group.ProductName.ToLowerInvariant()">
+                        <tr class="inventory-report-row inventory-report-row--total">
                             <td><strong>@Inventar.Resources.Resource.Total</strong></td>
                             <td><strong>@group.TotalQuantity</strong></td>
                             <td><strong>@group.TotalM2.ToString("0.00", CultureInfo.InvariantCulture)</strong></td>
                         </tr>
-                    }
-
+                    </tbody>
+                }
+                <tbody>
                     <tr class="inventory-report-row inventory-report-row--grand-total" id="nameReportGrandTotalRow">
                         <td colspan="2"><strong>@Inventar.Resources.Resource.OverallTotal</strong></td>
                         <td id="nameGrandTotalQuantity"><strong>@initialGrandTotalQuantity</strong></td>
@@ -187,10 +187,13 @@
             const createCustomExcelButton = document.getElementById('createCustomExcel');
             const mainGrandTotalM2 = document.getElementById('nameGrandTotalM2');
             const mainGrandTotalQuantity = document.getElementById('nameGrandTotalQuantity');
-            const mainRowLoader = window.InventarTableLoadMore.init({
-                rowSelector: '#nameReportTable tbody > tr.inventory-report-row:not(.inventory-report-row--grand-total)',
+            const mainRowLoader = window.InventarSectionLoadMore.init({
+                sectionSelector: '#nameReportTable tbody.inventory-report-section',
                 loadMoreButtonId: 'loadMoreMainRows',
-                pageSize: 300
+                pageSize: 300,
+                getSectionRowCount: function (section) {
+                    return Number(section.dataset.sectionRowCount || 1);
+                }
             });
 
             let customTableActive = false;
@@ -209,8 +212,8 @@
                 return Number(value ?? 0).toFixed(2);
             }
 
-            function getVisibleGroupRows(productName) {
-                return document.querySelectorAll(`[data-group-name="${CSS.escape(productName)}"]`);
+            function getGroupSection(productName) {
+                return document.querySelector(`#nameReportTable tbody.inventory-report-section[data-group-name="${CSS.escape(productName)}"]`);
             }
 
             function findGroupByInputValue(rawValue) {
@@ -221,9 +224,10 @@
                 const filterValue = (productNameFilter.value || '').trim().toLowerCase();
                 reportGroups.forEach(group => {
                     const isVisible = filterValue.length === 0 || group.productName.toLowerCase().includes(filterValue);
-                    getVisibleGroupRows(group.productName).forEach(row => {
-                        row.dataset.filterMatch = isVisible ? 'true' : 'false';
-                    });
+                    const section = getGroupSection(group.productName);
+                    if (section) {
+                        section.dataset.filterMatch = isVisible ? 'true' : 'false';
+                    }
                 });
                 mainRowLoader.refresh(true);
             }

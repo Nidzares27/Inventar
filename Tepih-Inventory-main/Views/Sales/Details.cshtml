@@ -1,10 +1,65 @@
 ﻿@using Inventar.ViewModels.Shared
 @model IEnumerable<SaleDetailsViewModel>
 
+<style>
+    #DetailsTable thead tr.filters th {
+        padding: 1px;
+    }
+
+    #DetailsTable thead tr.filters input {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .sales-details__totals {
+        margin-top: 10px;
+        margin-left: 5px;
+        font-weight: bold;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .sales-details__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .sales-details__actions form,
+    .sales-details__actions a,
+    .sales-details__actions button {
+        margin-top: 0 !important;
+    }
+
+    @@media (max-width: 768px) {
+        .sales-mobile-zoom--wide {
+            zoom: 0.34;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        .sales-details__actions {
+            flex-direction: column;
+        }
+
+        .sales-details__actions form,
+        .sales-details__actions a,
+        .sales-details__actions button {
+            width: 100%;
+        }
+    }
+</style>
+
 <h2>@Inventar.Resources.Resource.Sales: @ViewBag.CustomerFullName</h2>
 <div style="margin-bottom: 20px;">
     <h4>@Inventar.Resources.Resource.SaleTime: @ViewBag.SaleTime</h4>
 </div>
+<div class="sales-mobile-zoom--wide">
 <table id="DetailsTable" class="table stripe tabela" style="font-weight:500">
     <thead>
         <tr>
@@ -77,14 +132,16 @@
         }
     </tbody>
 </table>
+</div>
 
-<div style="margin-top: 10px; font-weight: bold;">
+<div class="sales-details__totals">
     <strong>@Inventar.Resources.Resource.TotalQuantity: </strong><span id="totalQuantity"></span>   |
     <strong>@Inventar.Resources.Resource.M2Total: </strong><span id="totalM2"></span>   |
     <strong>@Inventar.Resources.Resource.TotalPrice: </strong><span id="totalPrice"></span>€
 </div>
 
-<button id="downloadDetailsPDF" class="btn btn-primary" style="margin-top: 1rem;">@Inventar.Resources.Resource.PrintPDF</button>
+<div class="sales-details__actions">
+<button id="downloadDetailsPDF" class="btn btn-primary">@Inventar.Resources.Resource.DetailedPDF</button>
 @if(Model.Count() > 0)
 {
     <form asp-controller="Pdf"
@@ -114,8 +171,25 @@
 
         }
 
-        <button type="submit" class="btn btn-primary btn-success" style="margin-top: 1rem;">
+        <button type="submit" class="btn btn-warning text-dark">
             @Inventar.Resources.Resource.Receipt
+        </button>
+    </form>
+
+    <button id="downloadDetailsExcel" type="button" class="btn btn-success">
+        @Inventar.Resources.Resource.Excel
+    </button>
+
+    <form asp-action="DeleteGroupedSale"
+          asp-controller="Sales"
+          method="post"
+          onsubmit="return confirm('@Inventar.Resources.Resource.DeleteThis');">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="customer" value="@ViewBag.CustomerFullName" />
+        <input type="hidden" name="saleTime" value="@ViewBag.SaleTimeIso" />
+        <input type="hidden" name="returnFromDetails" value="@ViewBag.ReturnFromDetails" />
+        <button type="submit" class="btn btn-danger">
+            @Inventar.Resources.Resource.DeleteSale
         </button>
     </form>
 }
@@ -128,18 +202,19 @@
         var zz = xx.Split('/').Last();
         if (zz == "Sales")
         {
-            <a asp-action="Index" asp-controller="Sales" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+            <a asp-action="Index" asp-controller="Sales" class="btn btn-secondary btn-sm">@Inventar.Resources.Resource.BackToList</a>
         }
         else
         {
-            <a asp-action="Index" asp-controller="Buyer" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+            <a asp-action="Index" asp-controller="Buyer" class="btn btn-secondary btn-sm">@Inventar.Resources.Resource.BackToList</a>
         }
     }
     else
     {
-        <a href="@ViewBag.ReturnFromDetails" class="btn btn-secondary btn-sm" style="margin-top:1rem">@Inventar.Resources.Resource.BackToList</a>
+        <a href="@ViewBag.ReturnFromDetails" class="btn btn-secondary btn-sm">@Inventar.Resources.Resource.BackToList</a>
     }
 
+</div>
 </div>
 
 @section Scripts {
@@ -167,8 +242,8 @@
 
                 for (var i = 0; i < data.length; i++) {
                     totalQuantity += parseInt(data[i][8]) || 0;
-                    totalPrice += parseFloat(data[i][11]) || 0;
-                    totalM2 += parseFloat(data[i][7]) || 0;
+                    totalPrice += window.InventarNumber.parseUiNumber(data[i][11]);
+                    totalM2 += window.InventarNumber.parseUiNumber(data[i][7]);
                 }
 
                 $('#totalQuantity').text(totalQuantity);
@@ -193,7 +268,7 @@
     </script>
         
     <script>
-        $('#downloadDetailsPDF').on('click', function () {
+        function collectDetailsExportPayload() {
             var table = $('#DetailsTable').DataTable();
 
             var data = [];
@@ -220,8 +295,8 @@
 
             // Totals from page
             var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
-            var totalM2 = parseFloat($('#totalM2').text()) || 0;
-            var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+            var totalM2 = window.InventarNumber.parseUiNumber($('#totalM2').text());
+            var totalPrice = window.InventarNumber.parseUiNumber($('#totalPrice').text());
 
             // Heading text from h2 and h4
             var h2Text = $('h2').text().trim();
@@ -233,28 +308,40 @@
                 if (i < tableData[0].length) headers.push($(this).text().trim());
             });
 
+            return {
+                HeadingLeft: h2Text,
+                HeadingRight: h4Text,
+                Data: tableData,
+                Filters: filters,
+                ColumnHeaders: headers,
+                TotalQuantity: totalQuantity,
+                TotalM2: totalM2,
+                TotalPrice: totalPrice
+            };
+        }
+
+        function downloadDetailsExport(url, fileName) {
             $.ajax({
-                url: '@Url.Action("GenerateDetailsPDF", "Pdf")',
+                url: url,
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({
-                    HeadingLeft: h2Text,
-                    HeadingRight: h4Text,
-                    Data: tableData,
-                    Filters: filters,
-                    ColumnHeaders: headers,
-                    TotalQuantity: totalQuantity,
-                    TotalM2: totalM2,
-                    TotalPrice: totalPrice
-                }),
+                data: JSON.stringify(collectDetailsExportPayload()),
                 xhrFields: { responseType: 'blob' },
                 success: function (blob) {
                     var link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
-                    link.download = 'Detaljne_prodaje/kupovine.pdf';
+                    link.download = fileName;
                     link.click();
                 }
             });
+        }
+
+        $('#downloadDetailsPDF').on('click', function () {
+            downloadDetailsExport('@Url.Action("GenerateDetailsPDF", "Pdf")', 'Detaljne_prodaje_kupovine.pdf');
+        });
+
+        $('#downloadDetailsExcel').on('click', function () {
+            downloadDetailsExport('@Url.Action("GenerateDetailsExcel", "Pdf")', 'Detaljne_prodaje_kupovine.xlsx');
         });
 
     </script>

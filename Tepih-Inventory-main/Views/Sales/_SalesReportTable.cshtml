@@ -1,4 +1,5 @@
 ﻿@using Inventar.ViewModels.Sales
+@using Inventar.Utils
 @model PerProductViewModel
 @if (Model.StartDate.HasValue && Model.EndDate.HasValue)
 {
@@ -9,9 +10,10 @@
 
 @if (Model.SalesReport != null && Model.SalesReport.Any())
 {
+    <div class="sales-report-table-zoom">
     @if (Model.IsGrouped)
     {
-        <table id="PerProductsTable" class="table stripe" style="font-weight:500">
+        <table id="PerProductsTable" class="table stripe" style="width:100%; font-weight:500">
             <thead>
                 <tr>
                     <th>#</th>
@@ -24,26 +26,21 @@
                     <th>@Inventar.Resources.Resource.TotalPrice</th>
                 </tr>
                 <tr class="filters">
-                    <th><input style="width:2rem" type="text" placeholder="" disabled></th>
-                    <th><input style="width:7.5rem" type="text" placeholder="Name" /></th>
-                    <th><input style="width:5rem" type="text" placeholder="" /></th>
-                    <th><input style="width:5rem" type="text" placeholder="Size" /></th>
-                    <th><input style="width:5rem" type="text" placeholder="m²" /></th>
-                    <th><input style="width:5rem" type="text" placeholder="M2Total" /></th>
-                    <th><input style="width:5rem" type="text" placeholder="Total Quantity" /></th>
-                    <th><input style="width:5rem" type="text" placeholder="Total Price" /></th>
+                    <th><input class="per-products-filter-input" data-column-index="0" style="width:2rem" type="text" placeholder="" disabled></th>
+                    <th><input class="per-products-filter-input" data-column-index="1" style="width:7.5rem" type="text" placeholder="Name" /></th>
+                    <th><input class="per-products-filter-input" data-column-index="2" style="width:5rem" type="text" placeholder="" /></th>
+                    <th><input class="per-products-filter-input" data-column-index="3" style="width:5rem" type="text" placeholder="Size" /></th>
+                    <th><input class="per-products-filter-input" data-column-index="4" style="width:5rem" type="text" placeholder="m²" /></th>
+                    <th><input class="per-products-filter-input" data-column-index="5" style="width:5rem" type="text" placeholder="M2Total" /></th>
+                    <th><input class="per-products-filter-input" data-column-index="6" style="width:5rem" type="text" placeholder="Total Quantity" /></th>
+                    <th><input class="per-products-filter-input" data-column-index="7" style="width:5rem" type="text" placeholder="Total Price" /></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model.SalesReport)
                 {
-                    decimal m2 = 0;
-                    decimal m2Total = 0;
-                    if (item.PerM2 && item.Length.HasValue && item.Width.HasValue)
-                    {
-                        m2 = Math.Round((item.Length.Value * item.Width.Value) / 10000m, 2);
-                        m2Total = Math.Round(m2 * item.TotalQuantity, 2);
-                    }
+                    var m2 = PoMjeriHelper.CalculateM2PerUnit(item.PerM2, item.Width, item.Length);
+                    var m2Total = PoMjeriHelper.CalculateM2Total(item.PerM2, item.Width, item.Length, item.TotalQuantity);
                     <tr>
                        <td></td>
                        <td>
@@ -64,8 +61,8 @@
                         </td>
                         <td>@item.ProductNumber</td>
                         <td>@(item.Size ?? "")</td>
-                        <td>@(item.PerM2 ? m2 : "")</td>
-                        <td>@(item.PerM2 ? m2Total : "")</td>
+                        <td>@(m2?.ToString("0.##") ?? "")</td>
+                        <td>@(m2Total?.ToString("0.##") ?? "")</td>
                         <td>@item.TotalQuantity</td>
                         <td style="color:@(item.PerM2 ? "green" : "black")">@string.Format("{0:F2}", item.TotalPrice)€</td>
                     </tr>
@@ -75,7 +72,7 @@
     }
     else
     {
-        <table id="PerProductsTable" class="table stripe" style="font-weight:500">
+        <table id="PerProductsTable" class="table stripe" style="width:100%; font-weight:500">
             <thead>
                 <tr>
                     <th>#</th>
@@ -91,25 +88,24 @@
                     <th>@Inventar.Resources.Resource.TotalPrice</th>
                 </tr>
                 <tr class="filters">
-                    <th><input style="width:2rem" type="text" placeholder="" disabled></th>
-                    <th style="display:none"><input style="width:5rem" type="text" placeholder="Product ID"></th>
-                    <th><input style="width:5rem" type="text" placeholder=""></th>
-                    <th><input style="width:7.5rem" type="text" placeholder="Name"></th>
-                    <th><input style="width:5rem" type="text" placeholder="Model"></th>
-                    <th><input style="width:7.5rem" type="text" placeholder="Color"></th>
-                    <th><input style="width:5rem" type="text" placeholder="Size"></th>
-                    <th><input style="width:5rem" type="text" placeholder="m²"></th>
-                    <th><input style="width:5rem" type="text" placeholder="M2Total"></th>
-                    <th><input style="width:5rem" type="text" placeholder="Total Quantity"></th>
-                    <th><input style="width:5rem" type="text" placeholder="Total Price"></th>
+                    <th><input class="per-products-filter-input" data-column-index="0" style="width:2rem" type="text" placeholder="" disabled></th>
+                    <th style="display:none"><input class="per-products-filter-input" data-column-index="1" style="width:5rem" type="text" placeholder="Product ID"></th>
+                    <th><input class="per-products-filter-input" data-column-index="2" style="width:5rem" type="text" placeholder=""></th>
+                    <th><input class="per-products-filter-input" data-column-index="3" style="width:7.5rem" type="text" placeholder="Name"></th>
+                    <th><input class="per-products-filter-input" data-column-index="4" style="width:5rem" type="text" placeholder="Model"></th>
+                    <th><input class="per-products-filter-input" data-column-index="5" style="width:7.5rem" type="text" placeholder="Color"></th>
+                    <th><input class="per-products-filter-input" data-column-index="6" style="width:5rem" type="text" placeholder="Size"></th>
+                    <th><input class="per-products-filter-input" data-column-index="7" style="width:5rem" type="text" placeholder="m²"></th>
+                    <th><input class="per-products-filter-input" data-column-index="8" style="width:5rem" type="text" placeholder="M2Total"></th>
+                    <th><input class="per-products-filter-input" data-column-index="9" style="width:5rem" type="text" placeholder="Total Quantity"></th>
+                    <th><input class="per-products-filter-input" data-column-index="10" style="width:5rem" type="text" placeholder="Total Price"></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model.SalesReport)
                 {
-                    decimal? m2PerProduct = item.PerM2 && item.Length.HasValue && item.Width.HasValue
-                        ? Math.Round((item.Length.Value * item.Width.Value) / 10000m, 2)
-                        : null;
+                    var m2PerProduct = PoMjeriHelper.CalculateM2PerUnit(item.PerM2, item.Width, item.Length);
+                    var m2Total = PoMjeriHelper.CalculateM2Total(item.PerM2, item.Width, item.Length, item.TotalQuantity);
 
                     <tr>
                         <td>
@@ -136,8 +132,8 @@
                         <td>@item.Model</td>
                         <td>@item.Color</td>
                         <td>@(item.Size ?? "")</td>
-                        <td>@(m2PerProduct.HasValue ? m2PerProduct.Value : "")</td>
-                        <td>@(m2PerProduct.HasValue ? Math.Round(m2PerProduct.Value * item.TotalQuantity, 2) : "")</td>
+                        <td>@(m2PerProduct?.ToString("0.##") ?? "")</td>
+                        <td>@(m2Total?.ToString("0.##") ?? "")</td>
                         <td>@item.TotalQuantity</td>
                         <td style="color:@(item.PerM2 ? "green" : "black")">@string.Format("{0:F2}", item.TotalPrice)€</td>
                     </tr>
@@ -145,6 +141,7 @@
             </tbody>
         </table>
     }
+    </div>
 }
 else
 {

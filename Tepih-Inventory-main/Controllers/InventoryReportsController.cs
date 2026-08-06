@@ -8,9 +8,11 @@ using iText.Kernel.Colors;
 using iText.Kernel.Font;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
+using iText.Layout.Layout;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using iText.Layout.Renderer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -119,6 +121,97 @@ namespace Inventar.Controllers
             {
                 Groups = groups
             });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ByCode()
+        {
+            var groups = await BuildCodeReportGroupsAsync();
+
+            return View(new InventoryPrimaryReportPageViewModel
+            {
+                Groups = groups,
+                Options = groups
+                    .Select(group => group.KeyLabel)
+                    .OrderBy(value => value)
+                    .ToList()
+            });
+        }
+
+        [HttpGet]
+        public IActionResult ByProductName()
+        {
+            return RedirectToAction(nameof(ByCode));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ExportCodeReportPdf([FromBody] InventoryPrimaryReportExportRequest request)
+        {
+            if (request == null || request.Keys.Count == 0)
+            {
+                return BadRequest("No product numbers were provided for PDF export.");
+            }
+
+            try
+            {
+                var groups = await BuildCodeReportGroupsAsync(request.Keys);
+                if (groups.Count == 0)
+                {
+                    return BadRequest("No grouped rows were found for the requested export.");
+                }
+
+                var heading = @Inventar.Resources.Resource.ReportByProductNumber;
+                var fileName = request.UseCustomTable
+                    ? "NovaTabela_Izvjestaj_po_sifri_inventar.pdf"
+                    : "Izvjestaj_po_sifri_inventar.pdf";
+
+                return File(
+                    GeneratePrimaryReportPdf(groups, heading, @Inventar.Resources.Resource.ProductNumber),
+                    "application/pdf",
+                    fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting inventory code report PDF.");
+                return StatusCode(500, "An error occurred while generating the PDF.");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ExportCodeReportExcel([FromBody] InventoryPrimaryReportExportRequest request)
+        {
+            if (request == null || request.Keys.Count == 0)
+            {
+                return BadRequest("No product numbers were provided for Excel export.");
+            }
+
+            try
+            {
+                var groups = await BuildCodeReportGroupsAsync(request.Keys);
+                if (groups.Count == 0)
+                {
+                    return BadRequest("No grouped rows were found for the requested export.");
+                }
+
+                var heading = @Inventar.Resources.Resource.ReportByProductNumber;
+                var fileName = request.UseCustomTable
+                    ? "NovaTabela_Izvjestaj_po_sifri_inventar.xlsx"
+                    : "Izvjestaj_po_sifri_inventar.xlsx";
+
+                return File(
+                    GeneratePrimaryReportExcel(
+                        groups,
+                        heading,
+                        @Inventar.Resources.Resource.ProductNumber,
+                        "Izvjestaj po sifri inventar"),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting inventory code report Excel.");
+                return StatusCode(500, "An error occurred while generating the Excel file.");
+            }
         }
 
         [HttpPost]
@@ -499,7 +592,7 @@ namespace Inventar.Controllers
             var selected = NormalizeSelection(selectedNames);
 
             return products
-                .GroupBy(item => item.ProductName.Trim(), StringComparer.OrdinalIgnoreCase)
+                .GroupBy(item => item.ProductName, StringComparer.OrdinalIgnoreCase)
                 .Where(group => IsSelected(group.Key, selected))
                 .OrderBy(group => group.Key)
                 .Select(group => new InventoryNameReportGroupViewModel
@@ -532,6 +625,35 @@ namespace Inventar.Controllers
                 .ToList();
         }
 
+        private async Task<List<InventoryPrimaryReportGroupViewModel>> BuildCodeReportGroupsAsync(
+            IReadOnlyCollection<string>? selectedProductNumbers = null)
+        {
+            var rows = await GetActiveInventoryReportRowsAsync();
+            var selected = NormalizeSelection(selectedProductNumbers);
+
+            return rows
+                .GroupBy(item => BuildProductNumberLabel(item.ProductNumber), StringComparer.OrdinalIgnoreCase)
+                .Where(group => IsSelected(group.Key, selected))
+                .OrderBy(group => group.Key)
+                .Select(group => new InventoryPrimaryReportGroupViewModel
+                {
+                    KeyLabel = group.Key,
+                    ProductRows = group
+                        .GroupBy(item => item.ProductName, StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(nameGroup => nameGroup.Key)
+                        .Select(nameGroup => new InventoryProductSummaryViewModel
+                        {
+                            ProductName = nameGroup.Key,
+                            TotalM2 = Math.Round(nameGroup.Sum(CalculateItemM2Total), 2),
+                            TotalQuantity = nameGroup.Sum(item => item.Quantity)
+                        })
+                        .ToList(),
+                    TotalM2 = Math.Round(group.Sum(CalculateItemM2Total), 2),
+                    TotalQuantity = group.Sum(item => item.Quantity)
+                })
+                .ToList();
+        }
+
         private async Task<List<InventoryPieceReportGroupViewModel>> BuildPieceReportGroupsAsync(
             IReadOnlyCollection<string>? selectedNames = null)
         {
@@ -542,7 +664,7 @@ namespace Inventar.Controllers
             var selected = NormalizeSelection(selectedNames);
 
             return products
-                .GroupBy(item => item.Name.Trim(), StringComparer.OrdinalIgnoreCase)
+                .GroupBy(item => BuildProductNameLabel(item.Name), StringComparer.OrdinalIgnoreCase)
                 .Where(group => IsSelected(group.Key, selected))
                 .OrderBy(group => group.Key)
                 .Select(group => new InventoryPieceReportGroupViewModel
@@ -560,24 +682,22 @@ namespace Inventar.Controllers
             var selected = NormalizeSelection(selectedSizes);
 
             return products
-                .GroupBy(item => new
+                .GroupBy(item => BuildInventorySizeLabel(item), StringComparer.OrdinalIgnoreCase)
+                .Select(group => new
                 {
-                    item.EffectiveWidth,
-                    item.EffectiveLength,
-                    item.OriginalWidth,
-                    item.OriginalLength,
-                    item.PoMjeri,
-                    SizeLabel = BuildInventorySizeLabel(item)
+                    SizeLabel = group.Key,
+                    SortWidth = group.Min(item => item.EffectiveWidth ?? item.OriginalWidth ?? int.MaxValue),
+                    SortLength = group.Min(item => item.EffectiveLength ?? item.OriginalLength ?? int.MaxValue),
+                    Items = group.ToList()
                 })
-                .OrderBy(group => group.Key.EffectiveWidth ?? int.MaxValue)
-                .ThenBy(group => group.Key.EffectiveLength ?? int.MaxValue)
-                .ThenBy(group => group.Key.OriginalWidth ?? int.MaxValue)
-                .ThenBy(group => group.Key.OriginalLength ?? int.MaxValue)
+                .OrderBy(group => group.SortWidth)
+                .ThenBy(group => group.SortLength)
+                .ThenBy(group => group.SizeLabel)
                 .Select(group => new InventorySizeReportGroupViewModel
                 {
-                    SizeLabel = group.Key.SizeLabel,
-                    ProductRows = group
-                        .GroupBy(item => item.ProductName.Trim(), StringComparer.OrdinalIgnoreCase)
+                    SizeLabel = group.SizeLabel,
+                    ProductRows = group.Items
+                        .GroupBy(item => item.ProductName, StringComparer.OrdinalIgnoreCase)
                         .OrderBy(nameGroup => nameGroup.Key)
                         .Select(nameGroup => new InventorySizeReportProductSummaryViewModel
                         {
@@ -586,8 +706,8 @@ namespace Inventar.Controllers
                             TotalQuantity = nameGroup.Sum(item => item.Quantity)
                         })
                         .ToList(),
-                    TotalM2 = Math.Round(group.Sum(CalculateItemM2Total), 2),
-                    TotalQuantity = group.Sum(item => item.Quantity)
+                    TotalM2 = Math.Round(group.Items.Sum(CalculateItemM2Total), 2),
+                    TotalQuantity = group.Items.Sum(item => item.Quantity)
                 })
                 .Where(group => IsSelected(group.SizeLabel, selected))
                 .ToList();
@@ -607,7 +727,7 @@ namespace Inventar.Controllers
                 {
                     Color = group.Key,
                     ProductGroups = group
-                        .GroupBy(item => item.ProductName.Trim(), StringComparer.OrdinalIgnoreCase)
+                        .GroupBy(item => item.ProductName, StringComparer.OrdinalIgnoreCase)
                         .OrderBy(nameGroup => nameGroup.Key)
                         .Select(nameGroup => new InventoryColorReportProductGroupViewModel
                         {
@@ -651,13 +771,13 @@ namespace Inventar.Controllers
 
             var errorNames = products
                 .Where(item => item.Quantity < 0)
-                .Select(item => item.ProductName.Trim())
+                .Select(item => item.ProductName)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             return products
-                .Where(item => errorNames.Contains(item.ProductName.Trim()))
-                .GroupBy(item => item.ProductName.Trim(), StringComparer.OrdinalIgnoreCase)
+                .Where(item => errorNames.Contains(item.ProductName))
+                .GroupBy(item => item.ProductName, StringComparer.OrdinalIgnoreCase)
                 .Where(group => IsSelected(group.Key, selected))
                 .OrderBy(group => group.Key)
                 .Select(group => new InventoryErrorReportGroupViewModel
@@ -695,10 +815,12 @@ namespace Inventar.Controllers
             using var ms = new MemoryStream();
             using var writer = new PdfWriter(ms);
             using var pdf = new PdfDocument(writer);
-            using var document = new Document(pdf, PageSize.A4.Rotate());
+            var pageSize = PageSize.A4.Rotate();
+            using var document = new Document(pdf, pageSize);
+            var pdfFont = GetPdfFont();
 
             document.SetMargins(20, 20, 20, 20);
-            document.SetFont(GetPdfFont());
+            document.SetFont(pdfFont);
             document.SetFontSize(10);
             AddPdfHeading(document, heading);
 
@@ -709,39 +831,18 @@ namespace Inventar.Controllers
                 return ms.ToArray();
             }
 
-            const int maxLogicalRowsPerPage = 22;
-            var currentRows = 0;
-            var table = CreatePdfTable(new float[] { 4.6f, 2.2f, 1.6f, 1.6f }, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, @Inventar.Resources.Resource.M2Total);
-
-            foreach (var group in groups)
-            {
-                var logicalRows = Math.Max(group.SizeRows.Count, 1) + 1;
-                if (currentRows > 0 && currentRows + logicalRows > maxLogicalRowsPerPage)
-                {
-                    document.Add(table);
-                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                    table = CreatePdfTable(new float[] { 4.6f, 2.2f, 1.6f, 1.6f }, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, @Inventar.Resources.Resource.M2Total);
-                    currentRows = 0;
-                }
-
-                AddNameGroupToPdfTable(table, group);
-                currentRows += logicalRows;
-            }
-
-            if (currentRows > 0 && currentRows + 1 > maxLogicalRowsPerPage)
-            {
-                document.Add(table);
-                document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                table = CreatePdfTable(new float[] { 4.6f, 2.2f, 1.6f, 1.6f }, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, @Inventar.Resources.Resource.M2Total);
-            }
-
-            AddPdfGrandTotalRow(
-                table,
-                @Inventar.Resources.Resource.OverallTotal, /*"Ukupno svega"*/
-                2,
-                groups.Sum(group => group.TotalQuantity).ToString(),
-                groups.Sum(group => group.TotalM2).ToString("0.00"));
-            document.Add(table);
+            var rows = BuildNameReportPdfRows(groups);
+            RenderPaginatedFourColumnReportPdf(
+                document,
+                pageSize,
+                pdfFont,
+                heading,
+                rows,
+                new float[] { 4.6f, 2.2f, 1.6f, 1.6f },
+                @Inventar.Resources.Resource.Name,
+                @Inventar.Resources.Resource.Size,
+                @Inventar.Resources.Resource.Quantity,
+                @Inventar.Resources.Resource.M2Total);
 
             document.Close();
             return ms.ToArray();
@@ -754,10 +855,12 @@ namespace Inventar.Controllers
             using var ms = new MemoryStream();
             using var writer = new PdfWriter(ms);
             using var pdf = new PdfDocument(writer);
-            using var document = new Document(pdf, PageSize.A4.Rotate());
+            var pageSize = PageSize.A4.Rotate();
+            using var document = new Document(pdf, pageSize);
+            var pdfFont = GetPdfFont();
 
             document.SetMargins(20, 20, 20, 20);
-            document.SetFont(GetPdfFont());
+            document.SetFont(pdfFont);
             document.SetFontSize(10);
             AddPdfHeading(document, heading);
 
@@ -768,39 +871,18 @@ namespace Inventar.Controllers
                 return ms.ToArray();
             }
 
-            const int maxLogicalRowsPerPage = 22;
-            var currentRows = 0;
-            var table = CreatePdfTable(new float[] { 2.5f, 4.3f, 1.6f, 1.6f }, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Quantity, @Inventar.Resources.Resource.M2Total);
-
-            foreach (var group in groups)
-            {
-                var logicalRows = Math.Max(group.ProductRows.Count, 1) + 1;
-                if (currentRows > 0 && currentRows + logicalRows > maxLogicalRowsPerPage)
-                {
-                    document.Add(table);
-                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                    table = CreatePdfTable(new float[] { 2.5f, 4.3f, 1.6f, 1.6f }, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Quantity, @Inventar.Resources.Resource.M2Total);
-                    currentRows = 0;
-                }
-
-                AddSizeGroupToPdfTable(table, group);
-                currentRows += logicalRows;
-            }
-
-            if (currentRows > 0 && currentRows + 1 > maxLogicalRowsPerPage)
-            {
-                document.Add(table);
-                document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                table = CreatePdfTable(new float[] { 2.5f, 4.3f, 1.6f, 1.6f }, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Quantity, @Inventar.Resources.Resource.M2Total);
-            }
-
-            AddPdfGrandTotalRow(
-                table,
-                @Inventar.Resources.Resource.OverallTotal, /*"Ukupno svega"*/
-                2,
-                groups.Sum(group => group.TotalQuantity).ToString(),
-                groups.Sum(group => group.TotalM2).ToString("0.00"));
-            document.Add(table);
+            var rows = BuildSizeReportPdfRows(groups);
+            RenderPaginatedFourColumnReportPdf(
+                document,
+                pageSize,
+                pdfFont,
+                heading,
+                rows,
+                new float[] { 2.5f, 4.3f, 1.6f, 1.6f },
+                @Inventar.Resources.Resource.Size,
+                @Inventar.Resources.Resource.Name,
+                @Inventar.Resources.Resource.Quantity,
+                @Inventar.Resources.Resource.M2Total);
 
             document.Close();
             return ms.ToArray();
@@ -813,10 +895,12 @@ namespace Inventar.Controllers
             using var ms = new MemoryStream();
             using var writer = new PdfWriter(ms);
             using var pdf = new PdfDocument(writer);
-            using var document = new Document(pdf, PageSize.A4.Rotate());
+            var pageSize = PageSize.A4.Rotate();
+            using var document = new Document(pdf, pageSize);
+            var pdfFont = GetPdfFont();
 
             document.SetMargins(20, 20, 20, 20);
-            document.SetFont(GetPdfFont());
+            document.SetFont(pdfFont);
             document.SetFontSize(10);
             AddPdfHeading(document, heading);
 
@@ -827,39 +911,19 @@ namespace Inventar.Controllers
                 return ms.ToArray();
             }
 
-            const int maxLogicalRowsPerPage = 18;
-            var currentRows = 0;
-            var table = CreatePdfTable(new float[] { 2.2f, 3.8f, 2.0f, 1.5f, 1.5f }, @Inventar.Resources.Resource.Color, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, @Inventar.Resources.Resource.M2Total);
-
-            foreach (var group in groups)
-            {
-                var logicalRows = group.RowSpan;
-                if (currentRows > 0 && currentRows + logicalRows > maxLogicalRowsPerPage)
-                {
-                    document.Add(table);
-                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                    table = CreatePdfTable(new float[] { 2.2f, 3.8f, 2.0f, 1.5f, 1.5f }, @Inventar.Resources.Resource.Color, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, @Inventar.Resources.Resource.M2Total);
-                    currentRows = 0;
-                }
-
-                AddColorGroupToPdfTable(table, group);
-                currentRows += logicalRows;
-            }
-
-            if (currentRows > 0 && currentRows + 1 > maxLogicalRowsPerPage)
-            {
-                document.Add(table);
-                document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                table = CreatePdfTable(new float[] { 2.2f, 3.8f, 2.0f, 1.5f, 1.5f }, @Inventar.Resources.Resource.Color, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Size, @Inventar.Resources.Resource.Quantity, @Inventar.Resources.Resource.M2Total);
-            }
-
-            AddPdfGrandTotalRow(
-                table,
-                @Inventar.Resources.Resource.OverallTotal, /*"Ukupno svega"*/
-                3,
-                groups.Sum(group => group.TotalQuantity).ToString(),
-                groups.Sum(group => group.TotalM2).ToString("0.00"));
-            document.Add(table);
+            var rows = BuildColorReportPdfRows(groups);
+            RenderPaginatedFiveColumnReportPdf(
+                document,
+                pageSize,
+                pdfFont,
+                heading,
+                rows,
+                new float[] { 2.2f, 3.8f, 2.0f, 1.5f, 1.5f },
+                @Inventar.Resources.Resource.Color,
+                @Inventar.Resources.Resource.Name,
+                @Inventar.Resources.Resource.Size,
+                @Inventar.Resources.Resource.Quantity,
+                @Inventar.Resources.Resource.M2Total);
 
             document.Close();
             return ms.ToArray();
@@ -886,21 +950,12 @@ namespace Inventar.Controllers
                 return ms.ToArray();
             }
 
-            const int maxLogicalRowsPerPage = 20;
-            var currentRows = 0;
-
             foreach (var group in groups)
             {
-                var logicalRows = group.Items.Count + 3;
-                if (currentRows > 0 && currentRows + logicalRows > maxLogicalRowsPerPage)
-                {
-                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                    currentRows = 0;
-                }
-
                 var table = new Table(UnitValue.CreatePercentArray(new float[] { 2.0f, 2.6f, 2.2f, 1.8f, 1.2f, 1.4f, 1.6f }))
-                    .UseAllAvailableWidth();
-                table.AddCell(new Cell(1, 7)
+                    .UseAllAvailableWidth()
+                    .SetKeepTogether(false);
+                table.AddHeaderCell(new Cell(1, 7)
                     .Add(new Paragraph(group.ProductName))
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SimulateBold()
@@ -932,12 +987,6 @@ namespace Inventar.Controllers
 
                 document.Add(table);
                 document.Add(new Paragraph(" ").SetMarginBottom(8));
-                currentRows += logicalRows;
-            }
-
-            if (currentRows > 0 && currentRows + 1 > maxLogicalRowsPerPage)
-            {
-                document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
             }
 
             var summaryTable = new Table(UnitValue.CreatePercentArray(new float[] { 2.0f, 2.6f, 2.2f, 1.8f, 1.2f, 1.4f, 1.6f }))
@@ -972,30 +1021,12 @@ namespace Inventar.Controllers
                 return ms.ToArray();
             }
 
-            const int maxLogicalRowsPerPage = 26;
-            var currentRows = 0;
             var table = CreatePdfTable(new float[] { 6.0f, 2.0f }, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Quantity);
 
             foreach (var group in groups)
             {
-                if (currentRows > 0 && currentRows + 1 > maxLogicalRowsPerPage)
-                {
-                    document.Add(table);
-                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                    table = CreatePdfTable(new float[] { 6.0f, 2.0f }, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Quantity);
-                    currentRows = 0;
-                }
-
                 table.AddCell(CreatePdfBodyCell(group.ProductName));
                 table.AddCell(CreatePdfBodyCell(group.TotalQuantity.ToString()));
-                currentRows++;
-            }
-
-            if (currentRows > 0 && currentRows + 1 > maxLogicalRowsPerPage)
-            {
-                document.Add(table);
-                document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                table = CreatePdfTable(new float[] { 6.0f, 2.0f }, @Inventar.Resources.Resource.Name, @Inventar.Resources.Resource.Quantity);
             }
 
             table.AddCell(CreatePdfGrandTotalCell(@Inventar.Resources.Resource.OverallTotal));
@@ -1323,6 +1354,122 @@ namespace Inventar.Controllers
             return stream.ToArray();
         }
 
+        private byte[] GeneratePrimaryReportPdf(
+            IReadOnlyList<InventoryPrimaryReportGroupViewModel> groups,
+            string heading,
+            string firstColumnHeader)
+        {
+            using var ms = new MemoryStream();
+            using var writer = new PdfWriter(ms);
+            using var pdf = new PdfDocument(writer);
+            var pageSize = PageSize.A4.Rotate();
+            using var document = new Document(pdf, pageSize);
+            var pdfFont = GetPdfFont();
+
+            document.SetMargins(20, 20, 20, 20);
+            document.SetFont(pdfFont);
+            document.SetFontSize(10);
+            AddPdfHeading(document, heading);
+
+            if (groups.Count == 0)
+            {
+                document.Add(new Paragraph("Nema podataka za prikaz."));
+                document.Close();
+                return ms.ToArray();
+            }
+
+            var rows = BuildPrimaryReportPdfRows(groups);
+            RenderPaginatedFourColumnReportPdf(
+                document,
+                pageSize,
+                pdfFont,
+                heading,
+                rows,
+                new float[] { 2.5f, 4.3f, 1.6f, 1.6f },
+                firstColumnHeader,
+                @Inventar.Resources.Resource.Name,
+                @Inventar.Resources.Resource.Quantity,
+                @Inventar.Resources.Resource.M2Total);
+
+            document.Close();
+            return ms.ToArray();
+        }
+
+        private byte[] GeneratePrimaryReportExcel(
+            IReadOnlyList<InventoryPrimaryReportGroupViewModel> groups,
+            string heading,
+            string firstColumnHeader,
+            string worksheetName)
+        {
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add(worksheetName);
+
+            worksheet.Range("A1:D1").Merge().Value = heading;
+            StyleSheetHeading(worksheet.Range("A1:D1"));
+
+            var headerRow = 3;
+            SetSheetHeaders(
+                worksheet,
+                headerRow,
+                firstColumnHeader,
+                @Inventar.Resources.Resource.Name,
+                @Inventar.Resources.Resource.Quantity,
+                @Inventar.Resources.Resource.M2Total);
+
+            worksheet.SheetView.FreezeRows(headerRow);
+            worksheet.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+
+            var currentRow = headerRow + 1;
+
+            foreach (var group in groups)
+            {
+                var groupStartRow = currentRow;
+                var productRows = group.ProductRows.Count == 0
+                    ? new List<InventoryProductSummaryViewModel>
+                    {
+                        new()
+                        {
+                            ProductName = "-",
+                            TotalM2 = group.TotalM2,
+                            TotalQuantity = group.TotalQuantity
+                        }
+                    }
+                    : group.ProductRows;
+
+                foreach (var productRow in productRows)
+                {
+                    worksheet.Cell(currentRow, 2).Value = productRow.ProductName;
+                    worksheet.Cell(currentRow, 3).Value = productRow.TotalQuantity;
+                    worksheet.Cell(currentRow, 4).Value = productRow.TotalM2;
+                    currentRow++;
+                }
+
+                worksheet.Cell(currentRow, 2).Value = @Inventar.Resources.Resource.Total;
+                worksheet.Cell(currentRow, 3).Value = group.TotalQuantity;
+                worksheet.Cell(currentRow, 4).Value = group.TotalM2;
+                StyleTotalRow(worksheet.Range(currentRow, 2, currentRow, 4));
+
+                worksheet.Range(groupStartRow, 1, currentRow, 1).Merge().Value = group.KeyLabel;
+                StyleMergedLabelCell(worksheet.Range(groupStartRow, 1, currentRow, 1));
+                currentRow++;
+            }
+
+            worksheet.Range(currentRow, 1, currentRow, 2).Merge().Value = @Inventar.Resources.Resource.OverallTotal;
+            worksheet.Cell(currentRow, 3).Value = groups.Sum(group => group.TotalQuantity);
+            worksheet.Cell(currentRow, 4).Value = groups.Sum(group => group.TotalM2);
+            StyleGrandTotalRow(worksheet.Range(currentRow, 1, currentRow, 4));
+
+            FinalizeSimpleWorksheet(worksheet, Math.Max(currentRow, headerRow), 4);
+            worksheet.Column(1).Width = 20;
+            worksheet.Column(2).Width = 28;
+            worksheet.Column(3).Width = 15;
+            worksheet.Column(4).Width = 14;
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
+        }
+
         private void AddNameGroupToPdfTable(Table table, InventoryNameReportGroupViewModel group)
         {
             var sizeRows = group.SizeRows.Count == 0
@@ -1337,18 +1484,43 @@ namespace Inventar.Controllers
                 }
                 : group.SizeRows;
 
-            table.AddCell(CreatePdfBodyCell(group.ProductName, sizeRows.Count + 1));
-            table.AddCell(CreatePdfBodyCell(sizeRows[0].SizeLabel));
-            table.AddCell(CreatePdfBodyCell(sizeRows[0].TotalQuantity.ToString()));
-            table.AddCell(CreatePdfBodyCell(sizeRows[0].TotalM2.ToString("0.00")));
-
-            for (var index = 1; index < sizeRows.Count; index++)
+            foreach (var sizeRow in sizeRows)
             {
-                table.AddCell(CreatePdfBodyCell(sizeRows[index].SizeLabel));
-                table.AddCell(CreatePdfBodyCell(sizeRows[index].TotalQuantity.ToString()));
-                table.AddCell(CreatePdfBodyCell(sizeRows[index].TotalM2.ToString("0.00")));
+                table.AddCell(CreatePdfBodyCell(group.ProductName));
+                table.AddCell(CreatePdfBodyCell(sizeRow.SizeLabel));
+                table.AddCell(CreatePdfBodyCell(sizeRow.TotalQuantity.ToString()));
+                table.AddCell(CreatePdfBodyCell(sizeRow.TotalM2.ToString("0.00")));
             }
 
+            table.AddCell(CreatePdfTotalCell(group.ProductName));
+            table.AddCell(CreatePdfTotalCell(@Inventar.Resources.Resource.Total));
+            table.AddCell(CreatePdfTotalCell(group.TotalQuantity.ToString()));
+            table.AddCell(CreatePdfTotalCell(group.TotalM2.ToString("0.00")));
+        }
+
+        private void AddPrimaryGroupToPdfTable(Table table, InventoryPrimaryReportGroupViewModel group)
+        {
+            var productRows = group.ProductRows.Count == 0
+                ? new List<InventoryProductSummaryViewModel>
+                {
+                    new()
+                    {
+                        ProductName = "-",
+                        TotalM2 = group.TotalM2,
+                        TotalQuantity = group.TotalQuantity
+                    }
+                }
+                : group.ProductRows;
+
+            foreach (var productRow in productRows)
+            {
+                table.AddCell(CreatePdfBodyCell(group.KeyLabel));
+                table.AddCell(CreatePdfBodyCell(productRow.ProductName));
+                table.AddCell(CreatePdfBodyCell(productRow.TotalQuantity.ToString()));
+                table.AddCell(CreatePdfBodyCell(productRow.TotalM2.ToString("0.00")));
+            }
+
+            table.AddCell(CreatePdfTotalCell(group.KeyLabel));
             table.AddCell(CreatePdfTotalCell(@Inventar.Resources.Resource.Total));
             table.AddCell(CreatePdfTotalCell(group.TotalQuantity.ToString()));
             table.AddCell(CreatePdfTotalCell(group.TotalM2.ToString("0.00")));
@@ -1368,18 +1540,15 @@ namespace Inventar.Controllers
                 }
                 : group.ProductRows;
 
-            table.AddCell(CreatePdfBodyCell(group.SizeLabel, productRows.Count + 1));
-            table.AddCell(CreatePdfBodyCell(productRows[0].ProductName));
-            table.AddCell(CreatePdfBodyCell(productRows[0].TotalQuantity.ToString()));
-            table.AddCell(CreatePdfBodyCell(productRows[0].TotalM2.ToString("0.00")));
-
-            for (var index = 1; index < productRows.Count; index++)
+            foreach (var productRow in productRows)
             {
-                table.AddCell(CreatePdfBodyCell(productRows[index].ProductName));
-                table.AddCell(CreatePdfBodyCell(productRows[index].TotalQuantity.ToString()));
-                table.AddCell(CreatePdfBodyCell(productRows[index].TotalM2.ToString("0.00")));
+                table.AddCell(CreatePdfBodyCell(group.SizeLabel));
+                table.AddCell(CreatePdfBodyCell(productRow.ProductName));
+                table.AddCell(CreatePdfBodyCell(productRow.TotalQuantity.ToString()));
+                table.AddCell(CreatePdfBodyCell(productRow.TotalM2.ToString("0.00")));
             }
 
+            table.AddCell(CreatePdfTotalCell(group.SizeLabel));
             table.AddCell(CreatePdfTotalCell(@Inventar.Resources.Resource.Total));
             table.AddCell(CreatePdfTotalCell(group.TotalQuantity.ToString()));
             table.AddCell(CreatePdfTotalCell(group.TotalM2.ToString("0.00")));
@@ -1387,51 +1556,592 @@ namespace Inventar.Controllers
 
         private void AddColorGroupToPdfTable(Table table, InventoryColorReportGroupViewModel group)
         {
-            var firstProductGroup = group.ProductGroups[0];
-            var firstSizeRows = GetSafeColorSizeRows(firstProductGroup);
-
-            table.AddCell(CreatePdfBodyCell(group.Color, group.RowSpan));
-            table.AddCell(CreatePdfBodyCell(firstProductGroup.ProductName, firstProductGroup.RowSpan));
-            table.AddCell(CreatePdfBodyCell(firstSizeRows[0].SizeLabel));
-            table.AddCell(CreatePdfBodyCell(firstSizeRows[0].TotalQuantity.ToString()));
-            table.AddCell(CreatePdfBodyCell(firstSizeRows[0].TotalM2.ToString("0.00")));
-
-            for (var index = 1; index < firstSizeRows.Count; index++)
-            {
-                table.AddCell(CreatePdfBodyCell(firstSizeRows[index].SizeLabel));
-                table.AddCell(CreatePdfBodyCell(firstSizeRows[index].TotalQuantity.ToString()));
-                table.AddCell(CreatePdfBodyCell(firstSizeRows[index].TotalM2.ToString("0.00")));
-            }
-
-            table.AddCell(CreatePdfSubtotalCell(@Inventar.Resources.Resource.Total));
-            table.AddCell(CreatePdfSubtotalCell(firstProductGroup.TotalQuantity.ToString()));
-            table.AddCell(CreatePdfSubtotalCell(firstProductGroup.TotalM2.ToString("0.00")));
-
-            foreach (var productGroup in group.ProductGroups.Skip(1))
+            foreach (var productGroup in group.ProductGroups)
             {
                 var sizeRows = GetSafeColorSizeRows(productGroup);
 
-                table.AddCell(CreatePdfBodyCell(productGroup.ProductName, productGroup.RowSpan));
-                table.AddCell(CreatePdfBodyCell(sizeRows[0].SizeLabel));
-                table.AddCell(CreatePdfBodyCell(sizeRows[0].TotalQuantity.ToString()));
-                table.AddCell(CreatePdfBodyCell(sizeRows[0].TotalM2.ToString("0.00")));
-
-                for (var index = 1; index < sizeRows.Count; index++)
+                foreach (var sizeRow in sizeRows)
                 {
-                    table.AddCell(CreatePdfBodyCell(sizeRows[index].SizeLabel));
-                    table.AddCell(CreatePdfBodyCell(sizeRows[index].TotalQuantity.ToString()));
-                    table.AddCell(CreatePdfBodyCell(sizeRows[index].TotalM2.ToString("0.00")));
+                    table.AddCell(CreatePdfBodyCell(group.Color));
+                    table.AddCell(CreatePdfBodyCell(productGroup.ProductName));
+                    table.AddCell(CreatePdfBodyCell(sizeRow.SizeLabel));
+                    table.AddCell(CreatePdfBodyCell(sizeRow.TotalQuantity.ToString()));
+                    table.AddCell(CreatePdfBodyCell(sizeRow.TotalM2.ToString("0.00")));
                 }
 
+                table.AddCell(CreatePdfSubtotalCell(group.Color));
+                table.AddCell(CreatePdfSubtotalCell(productGroup.ProductName));
                 table.AddCell(CreatePdfSubtotalCell(@Inventar.Resources.Resource.Total));
                 table.AddCell(CreatePdfSubtotalCell(productGroup.TotalQuantity.ToString()));
                 table.AddCell(CreatePdfSubtotalCell(productGroup.TotalM2.ToString("0.00")));
             }
 
-            table.AddCell(CreatePdfTotalCell(@Inventar.Resources.Resource.Total));
-            table.AddCell(CreatePdfTotalCell(string.Empty));
+            table.AddCell(CreatePdfTotalCell(group.Color));
+            table.AddCell(CreatePdfTotalCell(@Inventar.Resources.Resource.Total, 2));
             table.AddCell(CreatePdfTotalCell(group.TotalQuantity.ToString()));
             table.AddCell(CreatePdfTotalCell(group.TotalM2.ToString("0.00")));
+        }
+
+        private List<FourColumnPdfRow> BuildNameReportPdfRows(IReadOnlyList<InventoryNameReportGroupViewModel> groups)
+        {
+            var rows = new List<FourColumnPdfRow>();
+
+            foreach (var group in groups)
+            {
+                var sizeRows = group.SizeRows.Count == 0
+                    ? new List<InventoryNameReportSizeSummaryViewModel>
+                    {
+                        new()
+                        {
+                            SizeLabel = "-",
+                            TotalM2 = group.TotalM2,
+                            TotalQuantity = group.TotalQuantity
+                        }
+                    }
+                    : group.SizeRows;
+
+                rows.AddRange(sizeRows.Select(sizeRow => new FourColumnPdfRow
+                {
+                    GroupLabel = group.ProductName,
+                    SecondColumnText = sizeRow.SizeLabel,
+                    QuantityText = sizeRow.TotalQuantity.ToString(),
+                    M2Text = sizeRow.TotalM2.ToString("0.00"),
+                    Kind = FourColumnPdfRowKind.Data
+                }));
+
+                rows.Add(new FourColumnPdfRow
+                {
+                    GroupLabel = group.ProductName,
+                    SecondColumnText = @Inventar.Resources.Resource.Total,
+                    QuantityText = group.TotalQuantity.ToString(),
+                    M2Text = group.TotalM2.ToString("0.00"),
+                    Kind = FourColumnPdfRowKind.Total
+                });
+            }
+
+            rows.Add(new FourColumnPdfRow
+            {
+                GroupLabel = @Inventar.Resources.Resource.OverallTotal,
+                QuantityText = groups.Sum(group => group.TotalQuantity).ToString(),
+                M2Text = groups.Sum(group => group.TotalM2).ToString("0.00"),
+                Kind = FourColumnPdfRowKind.GrandTotal
+            });
+
+            return rows;
+        }
+
+        private List<FourColumnPdfRow> BuildSizeReportPdfRows(IReadOnlyList<InventorySizeReportGroupViewModel> groups)
+        {
+            var rows = new List<FourColumnPdfRow>();
+
+            foreach (var group in groups)
+            {
+                var productRows = group.ProductRows.Count == 0
+                    ? new List<InventorySizeReportProductSummaryViewModel>
+                    {
+                        new()
+                        {
+                            ProductName = "-",
+                            TotalM2 = group.TotalM2,
+                            TotalQuantity = group.TotalQuantity
+                        }
+                    }
+                    : group.ProductRows;
+
+                rows.AddRange(productRows.Select(productRow => new FourColumnPdfRow
+                {
+                    GroupLabel = group.SizeLabel,
+                    SecondColumnText = productRow.ProductName,
+                    QuantityText = productRow.TotalQuantity.ToString(),
+                    M2Text = productRow.TotalM2.ToString("0.00"),
+                    Kind = FourColumnPdfRowKind.Data
+                }));
+
+                rows.Add(new FourColumnPdfRow
+                {
+                    GroupLabel = group.SizeLabel,
+                    SecondColumnText = @Inventar.Resources.Resource.Total,
+                    QuantityText = group.TotalQuantity.ToString(),
+                    M2Text = group.TotalM2.ToString("0.00"),
+                    Kind = FourColumnPdfRowKind.Total
+                });
+            }
+
+            rows.Add(new FourColumnPdfRow
+            {
+                GroupLabel = @Inventar.Resources.Resource.OverallTotal,
+                QuantityText = groups.Sum(group => group.TotalQuantity).ToString(),
+                M2Text = groups.Sum(group => group.TotalM2).ToString("0.00"),
+                Kind = FourColumnPdfRowKind.GrandTotal
+            });
+
+            return rows;
+        }
+
+        private List<FourColumnPdfRow> BuildPrimaryReportPdfRows(IReadOnlyList<InventoryPrimaryReportGroupViewModel> groups)
+        {
+            var rows = new List<FourColumnPdfRow>();
+
+            foreach (var group in groups)
+            {
+                var productRows = group.ProductRows.Count == 0
+                    ? new List<InventoryProductSummaryViewModel>
+                    {
+                        new()
+                        {
+                            ProductName = "-",
+                            TotalM2 = group.TotalM2,
+                            TotalQuantity = group.TotalQuantity
+                        }
+                    }
+                    : group.ProductRows;
+
+                rows.AddRange(productRows.Select(productRow => new FourColumnPdfRow
+                {
+                    GroupLabel = group.KeyLabel,
+                    SecondColumnText = productRow.ProductName,
+                    QuantityText = productRow.TotalQuantity.ToString(),
+                    M2Text = productRow.TotalM2.ToString("0.00"),
+                    Kind = FourColumnPdfRowKind.Data
+                }));
+
+                rows.Add(new FourColumnPdfRow
+                {
+                    GroupLabel = group.KeyLabel,
+                    SecondColumnText = @Inventar.Resources.Resource.Total,
+                    QuantityText = group.TotalQuantity.ToString(),
+                    M2Text = group.TotalM2.ToString("0.00"),
+                    Kind = FourColumnPdfRowKind.Total
+                });
+            }
+
+            rows.Add(new FourColumnPdfRow
+            {
+                GroupLabel = @Inventar.Resources.Resource.OverallTotal,
+                QuantityText = groups.Sum(group => group.TotalQuantity).ToString(),
+                M2Text = groups.Sum(group => group.TotalM2).ToString("0.00"),
+                Kind = FourColumnPdfRowKind.GrandTotal
+            });
+
+            return rows;
+        }
+
+        private List<FiveColumnPdfRow> BuildColorReportPdfRows(IReadOnlyList<InventoryColorReportGroupViewModel> groups)
+        {
+            var rows = new List<FiveColumnPdfRow>();
+
+            foreach (var colorGroup in groups)
+            {
+                foreach (var productGroup in colorGroup.ProductGroups)
+                {
+                    var sizeRows = GetSafeColorSizeRows(productGroup);
+
+                    rows.AddRange(sizeRows.Select(sizeRow => new FiveColumnPdfRow
+                    {
+                        FirstColumnText = colorGroup.Color,
+                        SecondColumnText = productGroup.ProductName,
+                        ThirdColumnText = sizeRow.SizeLabel,
+                        QuantityText = sizeRow.TotalQuantity.ToString(),
+                        M2Text = sizeRow.TotalM2.ToString("0.00"),
+                        Kind = FiveColumnPdfRowKind.Data
+                    }));
+
+                    rows.Add(new FiveColumnPdfRow
+                    {
+                        FirstColumnText = colorGroup.Color,
+                        SecondColumnText = productGroup.ProductName,
+                        ThirdColumnText = @Inventar.Resources.Resource.Total,
+                        QuantityText = productGroup.TotalQuantity.ToString(),
+                        M2Text = productGroup.TotalM2.ToString("0.00"),
+                        Kind = FiveColumnPdfRowKind.ProductSubtotal
+                    });
+                }
+
+                rows.Add(new FiveColumnPdfRow
+                {
+                    FirstColumnText = colorGroup.Color,
+                    ThirdColumnText = @Inventar.Resources.Resource.Total,
+                    QuantityText = colorGroup.TotalQuantity.ToString(),
+                    M2Text = colorGroup.TotalM2.ToString("0.00"),
+                    Kind = FiveColumnPdfRowKind.GroupTotal
+                });
+            }
+
+            rows.Add(new FiveColumnPdfRow
+            {
+                ThirdColumnText = @Inventar.Resources.Resource.OverallTotal,
+                QuantityText = groups.Sum(group => group.TotalQuantity).ToString(),
+                M2Text = groups.Sum(group => group.TotalM2).ToString("0.00"),
+                Kind = FiveColumnPdfRowKind.GrandTotal
+            });
+
+            return rows;
+        }
+
+        private void RenderPaginatedFourColumnReportPdf(
+            Document document,
+            PageSize pageSize,
+            PdfFont font,
+            string heading,
+            IReadOnlyList<FourColumnPdfRow> rows,
+            float[] widths,
+            params string[] headers)
+        {
+            var usableWidth = pageSize.GetWidth() - document.GetLeftMargin() - document.GetRightMargin();
+            var fullPageHeight = pageSize.GetHeight() - document.GetTopMargin() - document.GetBottomMargin();
+            var firstPageHeight = Math.Max(80f, fullPageHeight - MeasureHeadingHeight(document, font, heading, usableWidth, fullPageHeight) - 6f);
+            var rowIndex = 0;
+            var isFirstPage = true;
+
+            while (rowIndex < rows.Count)
+            {
+                var availableHeight = isFirstPage ? firstPageHeight : fullPageHeight;
+                var rowsToTake = FindMaxFourColumnRowsThatFit(document, font, rows, rowIndex, usableWidth, availableHeight, widths, headers);
+
+                if (rowsToTake <= 0)
+                {
+                    if (isFirstPage)
+                    {
+                        document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                        isFirstPage = false;
+                        continue;
+                    }
+
+                    rowsToTake = 1;
+                }
+
+                document.Add(BuildFourColumnChunkTable(font, rows, rowIndex, rowsToTake, widths, headers));
+                rowIndex += rowsToTake;
+
+                if (rowIndex < rows.Count)
+                {
+                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    isFirstPage = false;
+                }
+            }
+        }
+
+        private void RenderPaginatedFiveColumnReportPdf(
+            Document document,
+            PageSize pageSize,
+            PdfFont font,
+            string heading,
+            IReadOnlyList<FiveColumnPdfRow> rows,
+            float[] widths,
+            params string[] headers)
+        {
+            var usableWidth = pageSize.GetWidth() - document.GetLeftMargin() - document.GetRightMargin();
+            var fullPageHeight = pageSize.GetHeight() - document.GetTopMargin() - document.GetBottomMargin();
+            var firstPageHeight = Math.Max(80f, fullPageHeight - MeasureHeadingHeight(document, font, heading, usableWidth, fullPageHeight) - 6f);
+            var rowIndex = 0;
+            var isFirstPage = true;
+
+            while (rowIndex < rows.Count)
+            {
+                var availableHeight = isFirstPage ? firstPageHeight : fullPageHeight;
+                var rowsToTake = FindMaxFiveColumnRowsThatFit(document, font, rows, rowIndex, usableWidth, availableHeight, widths, headers);
+
+                if (rowsToTake <= 0)
+                {
+                    if (isFirstPage)
+                    {
+                        document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                        isFirstPage = false;
+                        continue;
+                    }
+
+                    rowsToTake = 1;
+                }
+
+                document.Add(BuildFiveColumnChunkTable(font, rows, rowIndex, rowsToTake, widths, headers));
+                rowIndex += rowsToTake;
+
+                if (rowIndex < rows.Count)
+                {
+                    document.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                    isFirstPage = false;
+                }
+            }
+        }
+
+        private int FindMaxFourColumnRowsThatFit(
+            Document document,
+            PdfFont font,
+            IReadOnlyList<FourColumnPdfRow> rows,
+            int startIndex,
+            float usableWidth,
+            float availableHeight,
+            float[] widths,
+            string[] headers)
+        {
+            var low = 1;
+            var high = rows.Count - startIndex;
+            var best = 0;
+
+            while (low <= high)
+            {
+                var mid = (low + high) / 2;
+                var table = BuildFourColumnChunkTable(font, rows, startIndex, mid, widths, headers);
+
+                if (DoesTableFit(document, table, usableWidth, availableHeight))
+                {
+                    best = mid;
+                    low = mid + 1;
+                }
+                else
+                {
+                    high = mid - 1;
+                }
+            }
+
+            return best;
+        }
+
+        private int FindMaxFiveColumnRowsThatFit(
+            Document document,
+            PdfFont font,
+            IReadOnlyList<FiveColumnPdfRow> rows,
+            int startIndex,
+            float usableWidth,
+            float availableHeight,
+            float[] widths,
+            string[] headers)
+        {
+            var low = 1;
+            var high = rows.Count - startIndex;
+            var best = 0;
+
+            while (low <= high)
+            {
+                var mid = (low + high) / 2;
+                var table = BuildFiveColumnChunkTable(font, rows, startIndex, mid, widths, headers);
+
+                if (DoesTableFit(document, table, usableWidth, availableHeight))
+                {
+                    best = mid;
+                    low = mid + 1;
+                }
+                else
+                {
+                    high = mid - 1;
+                }
+            }
+
+            return best;
+        }
+
+        private Table BuildFourColumnChunkTable(
+            PdfFont font,
+            IReadOnlyList<FourColumnPdfRow> rows,
+            int startIndex,
+            int count,
+            float[] widths,
+            params string[] headers)
+        {
+            var endIndex = Math.Min(startIndex + count, rows.Count);
+            var table = CreatePdfTable(widths, headers)
+                .SetFont(font)
+                .SetFontSize(10);
+
+            var index = startIndex;
+            while (index < endIndex)
+            {
+                var row = rows[index];
+                if (row.Kind == FourColumnPdfRowKind.GrandTotal)
+                {
+                    table.AddCell(CreatePdfGrandTotalCell(row.GroupLabel, 2));
+                    table.AddCell(CreatePdfGrandTotalCell(row.QuantityText));
+                    table.AddCell(CreatePdfGrandTotalCell(row.M2Text));
+                    index++;
+                    continue;
+                }
+
+                var rowspan = 1;
+                while (index + rowspan < endIndex
+                    && rows[index + rowspan].Kind != FourColumnPdfRowKind.GrandTotal
+                    && string.Equals(rows[index + rowspan].GroupLabel, row.GroupLabel, StringComparison.OrdinalIgnoreCase))
+                {
+                    rowspan++;
+                }
+
+                table.AddCell(CreatePdfBodyCell(row.GroupLabel, rowspan));
+
+                for (var offset = 0; offset < rowspan; offset++)
+                {
+                    AddFourColumnChunkRowCells(table, rows[index + offset]);
+                }
+
+                index += rowspan;
+            }
+
+            return table;
+        }
+
+        private void AddFourColumnChunkRowCells(Table table, FourColumnPdfRow row)
+        {
+            if (row.Kind == FourColumnPdfRowKind.Total)
+            {
+                table.AddCell(CreatePdfTotalCell(row.SecondColumnText));
+                table.AddCell(CreatePdfTotalCell(row.QuantityText));
+                table.AddCell(CreatePdfTotalCell(row.M2Text));
+                return;
+            }
+
+            table.AddCell(CreatePdfBodyCell(row.SecondColumnText));
+            table.AddCell(CreatePdfBodyCell(row.QuantityText));
+            table.AddCell(CreatePdfBodyCell(row.M2Text));
+        }
+
+        private Table BuildFiveColumnChunkTable(
+            PdfFont font,
+            IReadOnlyList<FiveColumnPdfRow> rows,
+            int startIndex,
+            int count,
+            float[] widths,
+            params string[] headers)
+        {
+            var endIndex = Math.Min(startIndex + count, rows.Count);
+            var table = CreatePdfTable(widths, headers)
+                .SetFont(font)
+                .SetFontSize(10);
+
+            var index = startIndex;
+            while (index < endIndex)
+            {
+                var row = rows[index];
+                if (row.Kind == FiveColumnPdfRowKind.GrandTotal)
+                {
+                    table.AddCell(CreatePdfGrandTotalCell(row.ThirdColumnText, 3));
+                    table.AddCell(CreatePdfGrandTotalCell(row.QuantityText));
+                    table.AddCell(CreatePdfGrandTotalCell(row.M2Text));
+                    index++;
+                    continue;
+                }
+
+                var colorRowspan = 1;
+                while (index + colorRowspan < endIndex
+                    && rows[index + colorRowspan].Kind != FiveColumnPdfRowKind.GrandTotal
+                    && string.Equals(rows[index + colorRowspan].FirstColumnText, row.FirstColumnText, StringComparison.OrdinalIgnoreCase))
+                {
+                    colorRowspan++;
+                }
+
+                table.AddCell(CreatePdfBodyCell(row.FirstColumnText, colorRowspan));
+
+                var colorBlockEnd = index + colorRowspan;
+                var innerIndex = index;
+                while (innerIndex < colorBlockEnd)
+                {
+                    var innerRow = rows[innerIndex];
+                    if (innerRow.Kind == FiveColumnPdfRowKind.GroupTotal)
+                    {
+                        table.AddCell(CreatePdfTotalCell(innerRow.ThirdColumnText, 2));
+                        table.AddCell(CreatePdfTotalCell(innerRow.QuantityText));
+                        table.AddCell(CreatePdfTotalCell(innerRow.M2Text));
+                        innerIndex++;
+                        continue;
+                    }
+
+                    var productRowspan = 1;
+                    while (innerIndex + productRowspan < colorBlockEnd
+                        && rows[innerIndex + productRowspan].Kind != FiveColumnPdfRowKind.GroupTotal
+                        && string.Equals(rows[innerIndex + productRowspan].SecondColumnText, innerRow.SecondColumnText, StringComparison.OrdinalIgnoreCase))
+                    {
+                        productRowspan++;
+                    }
+
+                    table.AddCell(CreatePdfBodyCell(innerRow.SecondColumnText ?? "-", productRowspan));
+
+                    for (var offset = 0; offset < productRowspan; offset++)
+                    {
+                        AddFiveColumnChunkRowCells(table, rows[innerIndex + offset]);
+                    }
+
+                    innerIndex += productRowspan;
+                }
+
+                index = colorBlockEnd;
+            }
+
+            return table;
+        }
+
+        private void AddFiveColumnChunkRowCells(Table table, FiveColumnPdfRow row)
+        {
+            if (row.Kind == FiveColumnPdfRowKind.ProductSubtotal)
+            {
+                table.AddCell(CreatePdfSubtotalCell(row.ThirdColumnText));
+                table.AddCell(CreatePdfSubtotalCell(row.QuantityText));
+                table.AddCell(CreatePdfSubtotalCell(row.M2Text));
+                return;
+            }
+
+            table.AddCell(CreatePdfBodyCell(row.ThirdColumnText));
+            table.AddCell(CreatePdfBodyCell(row.QuantityText));
+            table.AddCell(CreatePdfBodyCell(row.M2Text));
+        }
+
+        private bool DoesTableFit(Document document, Table table, float usableWidth, float availableHeight)
+        {
+            var renderer = table.CreateRendererSubTree();
+            renderer.SetParent(new DocumentRenderer(document));
+
+            var layoutResult = renderer.Layout(new LayoutContext(
+                new LayoutArea(1, new Rectangle(0, 0, usableWidth, availableHeight))));
+
+            return layoutResult.GetStatus() == LayoutResult.FULL;
+        }
+
+        private float MeasureHeadingHeight(Document document, PdfFont font, string heading, float usableWidth, float availableHeight)
+        {
+            var paragraph = new Paragraph(heading)
+                .SetFont(font)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SimulateBold()
+                .SetFontSize(13)
+                .SetMarginBottom(12);
+
+            var renderer = paragraph.CreateRendererSubTree();
+            renderer.SetParent(new DocumentRenderer(document));
+
+            var layoutResult = renderer.Layout(new LayoutContext(
+                new LayoutArea(1, new Rectangle(0, 0, usableWidth, availableHeight))));
+
+            return layoutResult.GetOccupiedArea()?.GetBBox().GetHeight() ?? 0f;
+        }
+
+        private sealed class FourColumnPdfRow
+        {
+            public string GroupLabel { get; set; } = string.Empty;
+            public string SecondColumnText { get; set; } = string.Empty;
+            public string QuantityText { get; set; } = string.Empty;
+            public string M2Text { get; set; } = string.Empty;
+            public FourColumnPdfRowKind Kind { get; set; }
+        }
+
+        private enum FourColumnPdfRowKind
+        {
+            Data,
+            Total,
+            GrandTotal
+        }
+
+        private sealed class FiveColumnPdfRow
+        {
+            public string FirstColumnText { get; set; } = string.Empty;
+            public string? SecondColumnText { get; set; }
+            public string ThirdColumnText { get; set; } = string.Empty;
+            public string QuantityText { get; set; } = string.Empty;
+            public string M2Text { get; set; } = string.Empty;
+            public FiveColumnPdfRowKind Kind { get; set; }
+        }
+
+        private enum FiveColumnPdfRowKind
+        {
+            Data,
+            ProductSubtotal,
+            GroupTotal,
+            GrandTotal
         }
 
         private void AddPdfGrandTotalRow(Table table, string label, int labelColSpan, string primaryValue, string secondaryValue)
@@ -1460,7 +2170,7 @@ namespace Inventar.Controllers
         {
             return _context.Tepisi
                 .AsNoTracking()
-                .Where(item => !item.Disabled && !string.IsNullOrWhiteSpace(item.Name));
+                .Where(item => !item.Disabled && !item.CreatedForDirectSale);
         }
 
         private async Task<List<InventoryReportRow>> GetActiveInventoryReportRowsAsync(bool onlyPerM2 = false)
@@ -1508,11 +2218,13 @@ namespace Inventar.Controllers
 
                     return new InventoryReportRow
                     {
+                        ProductId = product.Id,
                         ProductNumber = product.ProductNumber,
-                        ProductName = product.Name?.Trim() ?? string.Empty,
+                        ProductName = BuildProductNameLabel(product.Name),
                         Model = product.Model,
                         Color = product.Color,
                         Quantity = product.Quantity,
+                        Price = product.Price,
                         PerM2 = product.PerM2,
                         PoMjeri = product.PoMjeri,
                         EffectiveWidth = product.Width,
@@ -1551,7 +2263,9 @@ namespace Inventar.Controllers
 
         private Table CreatePdfTable(float[] widths, params string[] headers)
         {
-            var table = new Table(UnitValue.CreatePercentArray(widths)).UseAllAvailableWidth();
+            var table = new Table(UnitValue.CreatePercentArray(widths))
+                .UseAllAvailableWidth()
+                .SetKeepTogether(false);
 
             foreach (var header in headers)
             {
@@ -1689,32 +2403,22 @@ namespace Inventar.Controllers
 
         private static decimal CalculateItemM2PerUnit(Tepih item)
         {
-            if (!item.PerM2 || !item.Width.HasValue || !item.Length.HasValue)
-            {
-                return 0m;
-            }
-
-            return ((decimal)item.Width.Value * item.Length.Value) / 10000m;
+            return PoMjeriHelper.CalculateM2PerUnit(item.PerM2, item.Width, item.Length) ?? 0m;
         }
 
         private static decimal CalculateItemM2Total(Tepih item)
         {
-            return CalculateItemM2PerUnit(item) * item.Quantity;
+            return PoMjeriHelper.CalculateM2Total(item.PerM2, item.Width, item.Length, item.Quantity) ?? 0m;
         }
 
         private static decimal CalculateItemM2PerUnit(InventoryReportRow item)
         {
-            if (!item.PerM2 || !item.EffectiveWidth.HasValue || !item.EffectiveLength.HasValue)
-            {
-                return 0m;
-            }
-
-            return ((decimal)item.EffectiveWidth.Value * item.EffectiveLength.Value) / 10000m;
+            return PoMjeriHelper.CalculateM2PerUnit(item.PerM2, item.EffectiveWidth, item.EffectiveLength) ?? 0m;
         }
 
         private static decimal CalculateItemM2Total(InventoryReportRow item)
         {
-            return CalculateItemM2PerUnit(item) * item.Quantity;
+            return PoMjeriHelper.CalculateM2Total(item.PerM2, item.EffectiveWidth, item.EffectiveLength, item.Quantity) ?? 0m;
         }
 
         private static string BuildSizeLabel(int? width, int? length)
@@ -1726,13 +2430,28 @@ namespace Inventar.Controllers
 
         private static string BuildInventorySizeLabel(InventoryReportRow item)
         {
-            var effectiveLabel = BuildSizeLabel(item.EffectiveWidth, item.EffectiveLength);
-            if (!item.PoMjeri)
+            return BuildInventorySizeLabel(
+                item.EffectiveWidth,
+                item.EffectiveLength,
+                item.OriginalWidth,
+                item.OriginalLength,
+                item.PoMjeri);
+        }
+
+        private static string BuildInventorySizeLabel(
+            int? effectiveWidth,
+            int? effectiveLength,
+            int? originalWidth,
+            int? originalLength,
+            bool poMjeri)
+        {
+            var effectiveLabel = BuildSizeLabel(effectiveWidth, effectiveLength);
+            if (!poMjeri)
             {
                 return effectiveLabel;
             }
 
-            var originalLabel = BuildSizeLabel(item.OriginalWidth, item.OriginalLength);
+            var originalLabel = BuildSizeLabel(originalWidth, originalLength);
             if (effectiveLabel == "-" || string.Equals(effectiveLabel, originalLabel, StringComparison.OrdinalIgnoreCase))
             {
                 return effectiveLabel == "-" ? originalLabel : effectiveLabel;
@@ -1746,13 +2465,44 @@ namespace Inventar.Controllers
             return string.IsNullOrWhiteSpace(color) ? "-" : color.Trim();
         }
 
+        private static string BuildProductNameLabel(string? productName)
+        {
+            return string.IsNullOrWhiteSpace(productName) ? "-" : productName.Trim();
+        }
+
+        private static string BuildProductNumberLabel(string? productNumber)
+        {
+            return string.IsNullOrWhiteSpace(productNumber) ? "-" : productNumber.Trim();
+        }
+
+        private static decimal CalculateInventoryRowTotalPrice(InventoryReportRow item)
+        {
+            decimal totalPrice;
+            if (item.PoMjeri)
+            {
+                totalPrice = item.Price * InventoryPricingHelper.CalculatePoMjeriLengthFactor(item.EffectiveLength) * item.Quantity;
+            }
+            else if (item.PerM2)
+            {
+                totalPrice = item.Price * (PoMjeriHelper.CalculateM2Total(true, item.EffectiveWidth, item.EffectiveLength, item.Quantity) ?? 0m);
+            }
+            else
+            {
+                totalPrice = item.Price * item.Quantity;
+            }
+
+            return Math.Round(totalPrice, 2);
+        }
+
         private sealed class InventoryReportRow
         {
+            public int ProductId { get; set; }
             public string? ProductNumber { get; set; }
             public string ProductName { get; set; } = string.Empty;
             public string? Model { get; set; }
             public string? Color { get; set; }
             public int Quantity { get; set; }
+            public decimal Price { get; set; }
             public bool PerM2 { get; set; }
             public bool PoMjeri { get; set; }
             public int? EffectiveWidth { get; set; }

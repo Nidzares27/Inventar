@@ -54,8 +54,10 @@ namespace Inventar.Controllers
                     })
                     .ToListAsync();
 
+                var remainingLengths = await BuildRemainingLengthLookupAsync(poMjeriProducts);
                 ViewBag.ReservedDisplay = BuildReservedDisplayLookup(tepisi, activeReservations);
-                ViewBag.RemainingSizeDisplay = await BuildRemainingSizeLookupAsync(poMjeriProducts);
+                ViewBag.RemainingLengths = remainingLengths;
+                ViewBag.RemainingSizeDisplay = BuildRemainingSizeLookup(poMjeriProducts, remainingLengths);
                 return View(tepisi);
             }
             catch (Exception ex)
@@ -79,6 +81,10 @@ namespace Inventar.Controllers
             }
 
             TextEncodingHelper.DecodeProductForDisplay(tepih);
+            tepih.ProductImages = tepih.ProductImages
+                .Where(image => !image.Disabled && ProductMediaFolders.IsStorefrontMedia(image.CloudinaryPublicId))
+                .OrderBy(image => image.SortOrder)
+                .ToList();
 
             return View(tepih);
         }
@@ -347,7 +353,9 @@ namespace Inventar.Controllers
                 return RedirectToAction(nameof(Edit), new { id });
             }
 
-            var activeImages = tepih.ProductImages.Where(image => !image.Disabled).ToList();
+            var activeImages = tepih.ProductImages
+                .Where(image => !image.Disabled && ProductMediaFolders.IsStorefrontMedia(image.CloudinaryPublicId))
+                .ToList();
             var hasPrimary = activeImages.Any(image => image.IsPrimary && !IsVideoMediaType(image.MediaType));
             var nextSortOrder = activeImages.Any() ? activeImages.Max(image => image.SortOrder) + 1 : 1;
             var successfulUploads = 0;
@@ -492,7 +500,7 @@ namespace Inventar.Controllers
                 .OrderBy(product => product.Id == tepih.Id ? 0 : 1)
                 .ThenBy(product => product.Id)
                 .SelectMany(product => product.ProductImages
-                    .Where(image => !image.Disabled)
+                    .Where(image => !image.Disabled && ProductMediaFolders.IsStorefrontMedia(image.CloudinaryPublicId))
                     .OrderByDescending(image => image.IsPrimary)
                     .ThenBy(image => image.SortOrder)
                     .ThenBy(image => image.Id))
@@ -523,7 +531,10 @@ namespace Inventar.Controllers
         public async Task<IActionResult> SetPrimaryStorefrontImage(int id, int imageId)
         {
             var images = await _context.ProductImages
-                .Where(image => image.TepihId == id && !image.Disabled)
+                .Where(image =>
+                    image.TepihId == id &&
+                    !image.Disabled &&
+                    !image.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix))
                 .ToListAsync();
 
             if (images.Count == 0)
@@ -559,7 +570,11 @@ namespace Inventar.Controllers
         public async Task<IActionResult> DeleteStorefrontImage(int id, int imageId)
         {
             var image = await _context.ProductImages
-                .FirstOrDefaultAsync(productImage => productImage.Id == imageId && productImage.TepihId == id && !productImage.Disabled);
+                .FirstOrDefaultAsync(productImage =>
+                    productImage.Id == imageId &&
+                    productImage.TepihId == id &&
+                    !productImage.Disabled &&
+                    !productImage.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix));
 
             if (image == null)
             {
@@ -572,6 +587,7 @@ namespace Inventar.Controllers
                     .AnyAsync(productImage =>
                         !productImage.Disabled &&
                         productImage.Id != image.Id &&
+                        !productImage.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix) &&
                         productImage.CloudinaryPublicId == image.CloudinaryPublicId &&
                         productImage.MediaType == image.MediaType);
 
@@ -594,6 +610,7 @@ namespace Inventar.Controllers
                     productImage.TepihId == id &&
                     !productImage.Disabled &&
                     productImage.Id != imageId &&
+                    !productImage.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix) &&
                     productImage.MediaType != "video")
                 .OrderBy(productImage => productImage.SortOrder)
                 .FirstOrDefaultAsync();
@@ -613,11 +630,11 @@ namespace Inventar.Controllers
             return Math.Max(tepih.Quantity - tepih.ReservedQuantity, 0);
         }
 
-        private async Task<Dictionary<int, string>> BuildRemainingSizeLookupAsync(IReadOnlyCollection<Tepih> poMjeriProducts)
+        private async Task<Dictionary<int, int>> BuildRemainingLengthLookupAsync(IReadOnlyCollection<Tepih> poMjeriProducts)
         {
             if (poMjeriProducts.Count == 0)
             {
-                return new Dictionary<int, string>();
+                return new Dictionary<int, int>();
             }
 
             var poMjeriProductIds = poMjeriProducts.Select(product => product.Id).ToList();
@@ -638,15 +655,30 @@ namespace Inventar.Controllers
                         ? matchedSales
                         : Array.Empty<Prodaja>();
 
-                    var remainingLength = PoMjeriHelper.CalculateRemainingLength(product, productSales);
-                    return PoMjeriHelper.FormatRemainingSize(product.Width, remainingLength) ?? "-";
+                    return PoMjeriHelper.CalculateRemainingLength(product, productSales);
+                });
+        }
+
+        private static Dictionary<int, string> BuildRemainingSizeLookup(
+            IReadOnlyCollection<Tepih> poMjeriProducts,
+            IReadOnlyDictionary<int, int> remainingLengths)
+        {
+            return poMjeriProducts.ToDictionary(
+                product => product.Id,
+                product =>
+                {
+                    var displayLength = remainingLengths.TryGetValue(product.Id, out var remainingLength)
+                        ? remainingLength
+                        : product.Length ?? 0;
+
+                    return PoMjeriHelper.FormatRemainingSize(product.Width, displayLength) ?? "-";
                 });
         }
 
         private static List<StorefrontProductImageViewModel> MapProductImages(IEnumerable<ProductImage>? productImages)
         {
             return productImages?
-                .Where(image => !image.Disabled)
+                .Where(image => !image.Disabled && ProductMediaFolders.IsStorefrontMedia(image.CloudinaryPublicId))
                 .OrderBy(image => image.SortOrder)
                 .Select(image => new StorefrontProductImageViewModel
                 {
@@ -664,7 +696,10 @@ namespace Inventar.Controllers
         private async Task<List<StorefrontProductImageViewModel>> LoadProductImagesAsync(int productId)
         {
             var productImages = await _context.ProductImages
-                .Where(image => image.TepihId == productId && !image.Disabled)
+                .Where(image =>
+                    image.TepihId == productId &&
+                    !image.Disabled &&
+                    !image.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix))
                 .OrderBy(image => image.SortOrder)
                 .AsNoTracking()
                 .ToListAsync();
@@ -674,21 +709,35 @@ namespace Inventar.Controllers
 
         private async Task<string?> ResolveSlugAsync(int productId, EditTepihViewModel tepihVM, Tepih existingProduct)
         {
-            var requestedSlug = string.IsNullOrWhiteSpace(tepihVM.Slug)
-                ? ProductSlugHelper.BuildDefaultSlug(new Tepih
-                {
-                    Id = productId,
-                    Name = tepihVM.Name,
-                    ProductNumber = tepihVM.ProductNumber,
-                    Width = tepihVM.Width,
-                    Length = tepihVM.Length,
-                    Color = tepihVM.Color
-                })
-                : ProductSlugHelper.NormalizeSlug(tepihVM.Slug);
+            var isCustomSlug = !string.IsNullOrWhiteSpace(tepihVM.Slug);
+            var requestedSlug = isCustomSlug
+                ? ProductSlugHelper.NormalizeSlug(tepihVM.Slug)
+                : await ProductSlugHelper.GenerateUniqueSlugAsync(
+                    _context.Tepisi.AsQueryable(),
+                    new Tepih
+                    {
+                        Id = productId,
+                        Name = tepihVM.Name,
+                        ProductNumber = tepihVM.ProductNumber,
+                        Model = tepihVM.Model,
+                        Width = tepihVM.Width,
+                        Length = tepihVM.Length,
+                        Color = tepihVM.Color,
+                        UnID = existingProduct.UnID
+                    },
+                    excludedProductId: productId);
 
             if (string.IsNullOrWhiteSpace(requestedSlug))
             {
-                requestedSlug = ProductSlugHelper.BuildDefaultSlug(existingProduct);
+                requestedSlug = await ProductSlugHelper.GenerateUniqueSlugAsync(
+                    _context.Tepisi.AsQueryable(),
+                    existingProduct,
+                    excludedProductId: productId);
+            }
+
+            if (!isCustomSlug)
+            {
+                return requestedSlug;
             }
 
             var slugExists = await _context.Tepisi
@@ -752,7 +801,9 @@ namespace Inventar.Controllers
             foreach (var targetProduct in targetProducts)
             {
                 var activeImages = await _context.ProductImages
-                    .Where(image => !image.Disabled)
+                    .Where(image =>
+                        !image.Disabled &&
+                        !image.CloudinaryPublicId.StartsWith(ProductMediaFolders.InventoryGalleryFolderPrefix))
                     .Where(image => image.TepihId == targetProduct.Id)
                     .ToListAsync();
 

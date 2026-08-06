@@ -143,7 +143,10 @@ public class CheckoutService : ICheckoutService
         {
             var product = products[line.ProductId];
             var primaryImage = product.ProductImages
-                .Where(image => !image.Disabled && !string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
+                .Where(image =>
+                    !image.Disabled &&
+                    ProductMediaFolders.IsStorefrontMedia(image.CloudinaryPublicId) &&
+                    !string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(image => image.IsPrimary)
                 .ThenBy(image => image.SortOrder)
                 .FirstOrDefault();

@@ -1,11 +1,14 @@
 ﻿@using System.Text.Json
+@using Inventar.Utils
 @model IEnumerable<Inventar.Models.Tepih>
 @{
+    var remainingLengths = ViewBag.RemainingLengths as IReadOnlyDictionary<int, int> ?? new Dictionary<int, int>();
     var isAdminLike = User.IsInRole("admin") || User.IsInRole("superadmin");
     var isEmployee = User.IsInRole("employee");
     var isUser = User.IsInRole("user");
     var isCompactRole = isEmployee || isUser;
-    var canPrintPdf = User.Identity?.IsAuthenticated == true && (isAdminLike || isEmployee || isUser);
+    var canSeeInventoryTotals = isAdminLike;
+    var canPrintPdf = User.Identity?.IsAuthenticated == true && (isAdminLike || isEmployee);
 
     const int rowNumberColumnIndex = 0;
     const int actionColumnIndex = 11;
@@ -52,6 +55,223 @@
             padding-left: 0;
         }
     }
+
+    .inventory-gallery-link {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        color: #0d6efd;
+        text-decoration: underline;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .inventory-gallery-link:hover {
+        color: #084298;
+    }
+
+    .inventory-gallery-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(10, 14, 28, 0.72);
+    }
+
+    .inventory-gallery-modal.is-open {
+        display: flex;
+    }
+
+    .inventory-gallery-modal__panel {
+        width: min(1180px, 96vw);
+        max-height: 94vh;
+        overflow: hidden;
+        border-radius: 1.15rem;
+        background: #fff;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .inventory-gallery-modal__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e8e8ef;
+    }
+
+    .inventory-gallery-modal__title {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .inventory-gallery-modal__subtitle {
+        margin-top: 0.2rem;
+        color: #5f6b85;
+        font-size: 0.95rem;
+    }
+
+    .inventory-gallery-modal__close {
+        border: 0;
+        background: transparent;
+        color: #35405c;
+        font-size: 2rem;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .inventory-gallery-modal__body {
+        padding: 0.85rem 1rem 1.1rem;
+        overflow: auto;
+    }
+
+    .inventory-gallery-modal__empty {
+        /* padding: 2rem 1rem; */
+        text-align: center;
+        color: #5f6b85;
+    }
+
+    .inventory-gallery-slider {
+        width: 100%;
+    }
+
+    .inventory-gallery-slider__nav {
+        position: absolute;
+        top: 50%;
+        z-index: 2;
+        transform: translateY(-50%);
+        border: 0;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #143b88;
+        font-size: 1.5rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.18);
+        backdrop-filter: blur(4px);
+    }
+
+    .inventory-gallery-slider__nav[data-gallery-nav="prev"] {
+        left: 0.85rem;
+    }
+
+    .inventory-gallery-slider__nav[data-gallery-nav="next"] {
+        right: 0.85rem;
+    }
+
+    .inventory-gallery-slider__nav:hover:not(:disabled) {
+        background: #fff;
+    }
+
+    .inventory-gallery-slider__nav:disabled {
+        opacity: 0.45;
+        cursor: default;
+        box-shadow: none;
+    }
+
+    .inventory-gallery-slider__viewport {
+        position: relative;
+        width: 100%;
+    }
+
+    .inventory-gallery-slider__media-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: clamp(360px, 72vh, 880px);
+        max-height: 79vh;
+        padding: 0.75rem;
+        border-radius: 1rem;
+        background: #fff;
+        overflow: hidden;
+        touch-action: pan-y;
+    }
+
+    .inventory-gallery-slider__media-wrap img,
+    .inventory-gallery-slider__media-wrap video {
+        display: block;
+        max-width: 100%;
+        max-height: min(75vh, 840px);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 0.9rem;
+    }
+
+    .inventory-gallery-slider__caption {
+        margin-top: 0.95rem;
+        text-align: center;
+        color: #4c5977;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .inventory-gallery-slider__meta {
+        margin-top: 0.35rem;
+        text-align: center;
+        color: #7a849b;
+        font-size: 0.85rem;
+    }
+
+    @@media (max-width: 768px) {
+        .inventory-gallery-modal {
+            padding: 0.5rem;
+        }
+
+        .inventory-gallery-modal__panel {
+            width: 100%;
+            max-height: 97vh;
+            border-radius: 0.9rem;
+        }
+
+        .inventory-gallery-modal__header {
+            padding: 0.85rem 1rem;
+        }
+
+        .inventory-gallery-modal__body {
+            padding: 0.55rem 0.55rem 0.8rem;
+        }
+
+        .inventory-gallery-slider__nav {
+            width: 2.4rem;
+            height: 2.4rem;
+            font-size: 1.3rem;
+        }
+
+        .inventory-gallery-slider__nav[data-gallery-nav="prev"] {
+            left: 0.45rem;
+        }
+
+        .inventory-gallery-slider__nav[data-gallery-nav="next"] {
+            right: 0.45rem;
+        }
+
+        .inventory-gallery-slider__media-wrap {
+            min-height: clamp(300px, 64vh, 700px);
+            max-height: 72vh;
+            padding: 0.45rem;
+        }
+
+        .inventory-gallery-slider__media-wrap img,
+        .inventory-gallery-slider__media-wrap video {
+            max-height: 68vh;
+        }
+
+        .inventory-gallery-slider__caption {
+            font-size: 0.95rem;
+        }
+    }
 </style>
 
 <div class="inventory-page-header">
@@ -95,10 +315,8 @@
     <tbody>
         @foreach (var item in Model)
         {
-            var itemM2 = item.PerM2 && item.Length.HasValue && item.Width.HasValue
-                ? Math.Round((decimal)(item.Length.Value * item.Width.Value) / 10000, 2)
-                : (decimal?)null;
-            var itemM2Total = itemM2.HasValue ? Math.Round(itemM2.Value * item.Quantity, 2) : (decimal?)null;
+            var itemM2 = PoMjeriHelper.CalculateInventoryDisplayM2PerUnit(item, remainingLengths);
+            var itemM2Total = PoMjeriHelper.CalculateInventoryDisplayM2Total(item, remainingLengths);
             var rowClass = item.PoMjeri
                 ? "inventory-row--po-mjeri"
                 : item.Quantity < 0
@@ -139,7 +357,15 @@
                     }
                 </td>
 
-                <td>@item.Model</td>
+                <td>
+                    <button type="button"
+                            class="inventory-gallery-link"
+                            data-gallery-product-id="@item.Id"
+                            data-gallery-product-name="@item.Name"
+                            data-gallery-product-model="@item.Model">
+                        @(string.IsNullOrWhiteSpace(item.Model) ? "-" : item.Model)
+                    </button>
+                </td>
                 <td>@item.Color</td>
                 <td>@((item.Width != null && item.Length != null) ? $"{item.Width}X{item.Length}" : "")</td>
                 <td>@(itemM2?.ToString("0.##") ?? "")</td>
@@ -160,11 +386,14 @@
 </div>
 
 <div class="inventory-summary-bar">
-    <div class="inventory-summary-bar__totals">
-        <span>@Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span></span>
-        <span>|</span>
-        <span>@Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span></span>
-    </div>
+    @if (canSeeInventoryTotals)
+    {
+        <div class="inventory-summary-bar__totals">
+            <span>@Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span></span>
+            <span>|</span>
+            <span>@Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span></span>
+        </div>
+    }
     <div class="inventory-legend" aria-label="Inventory row colors legend">
         <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--po-mjeri"></span>@Inventar.Resources.Resource.PerMeasureProduct</span>
         <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--negative"></span>@Inventar.Resources.Resource.Quantity < 0</span>
@@ -183,6 +412,21 @@
 {
     <button id="downloadPDF" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
 }
+</div>
+
+<div id="inventoryGalleryModal" class="inventory-gallery-modal" aria-hidden="true">
+    <div class="inventory-gallery-modal__panel" role="dialog" aria-modal="true" aria-labelledby="inventoryGalleryModalTitle">
+        <div class="inventory-gallery-modal__header">
+            <div>
+                <h3 id="inventoryGalleryModalTitle" class="inventory-gallery-modal__title">@Inventar.Resources.Resource.ProductGallery</h3>
+                <div id="inventoryGalleryModalSubtitle" class="inventory-gallery-modal__subtitle"></div>
+            </div>
+            <button type="button" class="inventory-gallery-modal__close" id="inventoryGalleryModalClose" aria-label="Zatvori galeriju">&times;</button>
+        </div>
+        <div class="inventory-gallery-modal__body">
+            <div id="inventoryGalleryModalContent" class="inventory-gallery-modal__empty">Učitavanje galerije...</div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -234,8 +478,8 @@
                 var totalM2 = 0;
 
                 table.rows({ filter: 'applied' }).data().each(function (value) {
-                    totalQuantity += parseFloat(value[@quantityColumnIndex]) || 0;
-                    totalM2 += parseFloat(value[@m2TotalColumnIndex]) || 0;
+                    totalQuantity += window.InventarNumber.parseUiNumber(value[@quantityColumnIndex]);
+                    totalM2 += window.InventarNumber.parseUiNumber(value[@m2TotalColumnIndex]);
                 });
 
                 $('#totalQuantity').text(totalQuantity);
@@ -261,6 +505,149 @@
 
             updateTotals();
             table.draw();
+
+            var galleryModal = document.getElementById('inventoryGalleryModal');
+            var galleryModalContent = document.getElementById('inventoryGalleryModalContent');
+            var galleryModalTitle = document.getElementById('inventoryGalleryModalTitle');
+            var galleryModalSubtitle = document.getElementById('inventoryGalleryModalSubtitle');
+            var galleryModalClose = document.getElementById('inventoryGalleryModalClose');
+            var galleryItems = [];
+            var galleryIndex = 0;
+            var galleryTouchStartX = null;
+
+            function escapeHtml(value) {
+                return $('<div>').text(value || '').html();
+            }
+
+            function closeGalleryModal() {
+                galleryItems = [];
+                galleryIndex = 0;
+                galleryModal.classList.remove('is-open');
+                galleryModal.setAttribute('aria-hidden', 'true');
+                galleryModalContent.innerHTML = '';
+            }
+
+            function renderGallerySlide() {
+                if (!galleryItems.length) {
+                    galleryModalContent.innerHTML = '<div class="inventory-gallery-modal__empty">@Inventar.Resources.Resource.NoImagesUploadedYet</div>';
+                    return;
+                }
+
+                var item = galleryItems[galleryIndex];
+                var mediaHtml = item.mediaType === 'video'
+                    ? '<video controls playsinline preload="metadata"><source src="' + escapeHtml(item.url) + '"></video>'
+                    : '<img src="' + escapeHtml(item.url) + '" alt="' + escapeHtml(item.altText || "") + '">';
+                var captionText = galleryModalSubtitle && galleryModalSubtitle.textContent
+                    ? galleryModalSubtitle.textContent
+                    : (item.altText || 'Galerijski fajl');
+                var caption = escapeHtml(captionText);
+                var meta = (galleryIndex + 1) + ' / ' + galleryItems.length + ' • ' + (item.mediaType === 'video' ? 'Video' : 'Image');
+                var prevDisabled = galleryItems.length <= 1 ? 'disabled' : '';
+                var nextDisabled = galleryItems.length <= 1 ? 'disabled' : '';
+
+                galleryModalContent.innerHTML =
+                    '<div class="inventory-gallery-slider">' +
+                        '<div class="inventory-gallery-slider__viewport">' +
+                            '<button type="button" class="inventory-gallery-slider__nav" data-gallery-nav="prev" ' + prevDisabled + '>&lsaquo;</button>' +
+                            '<div class="inventory-gallery-slider__media-wrap" id="inventoryGallerySwipeArea">' + mediaHtml + '</div>' +
+                            '<button type="button" class="inventory-gallery-slider__nav" data-gallery-nav="next" ' + nextDisabled + '>&rsaquo;</button>' +
+                            '<div class="inventory-gallery-slider__caption">' + caption + '</div>' +
+                            '<div class="inventory-gallery-slider__meta">' + meta + '</div>' +
+                        '</div>' +
+                    '</div>';
+
+                var swipeArea = document.getElementById('inventoryGallerySwipeArea');
+                if (swipeArea) {
+                    swipeArea.addEventListener('touchstart', function (event) {
+                        galleryTouchStartX = event.changedTouches[0].clientX;
+                    }, { passive: true });
+
+                    swipeArea.addEventListener('touchend', function (event) {
+                        if (galleryTouchStartX === null || galleryItems.length <= 1) {
+                            galleryTouchStartX = null;
+                            return;
+                        }
+
+                        var deltaX = event.changedTouches[0].clientX - galleryTouchStartX;
+                        galleryTouchStartX = null;
+
+                        if (Math.abs(deltaX) < 35) {
+                            return;
+                        }
+
+                        if (deltaX < 0) {
+                            galleryIndex = (galleryIndex + 1) % galleryItems.length;
+                        } else {
+                            galleryIndex = (galleryIndex - 1 + galleryItems.length) % galleryItems.length;
+                        }
+
+                        renderGallerySlide();
+                    }, { passive: true });
+                }
+            }
+
+            function openGalleryModal(productId, productName, productModel) {
+                galleryModalTitle.textContent = 'Galerija proizvoda';
+                galleryModalSubtitle.textContent = [productName, productModel].filter(Boolean).join(' • ');
+                galleryModalContent.innerHTML = '<div class="inventory-gallery-modal__empty">@Inventar.Resources.Resource.LoadingGallery</div>';
+                galleryModal.classList.add('is-open');
+                galleryModal.setAttribute('aria-hidden', 'false');
+
+                fetch('@Url.Action("InventoryGalleryMedia", "InventoryItem")' + '?id=' + encodeURIComponent(productId), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error('@Inventar.Resources.Resource.FailedToLoadGallery');
+                        }
+
+                        return response.json();
+                    })
+                    .then(function (payload) {
+                        galleryItems = Array.isArray(payload.items) ? payload.items : [];
+                        galleryIndex = 0;
+                        galleryModalSubtitle.textContent = [payload.name || productName, payload.model || productModel].filter(Boolean).join(' • ');
+                        renderGallerySlide();
+                    })
+                    .catch(function () {
+                        galleryModalContent.innerHTML = '<div class="inventory-gallery-modal__empty">@Inventar.Resources.Resource.CannotLoadGallery</div>';
+                    });
+            }
+
+            $(document).on('click', '[data-gallery-product-id]', function () {
+                var button = $(this);
+                openGalleryModal(
+                    button.attr('data-gallery-product-id'),
+                    button.attr('data-gallery-product-name'),
+                    button.attr('data-gallery-product-model'));
+            });
+
+            $(document).on('click', '[data-gallery-nav]', function () {
+                if (!galleryItems.length) {
+                    return;
+                }
+
+                galleryIndex = $(this).attr('data-gallery-nav') === 'next'
+                    ? (galleryIndex + 1) % galleryItems.length
+                    : (galleryIndex - 1 + galleryItems.length) % galleryItems.length;
+
+                renderGallerySlide();
+            });
+
+            galleryModalClose.addEventListener('click', closeGalleryModal);
+            galleryModal.addEventListener('click', function (event) {
+                if (event.target === galleryModal) {
+                    closeGalleryModal();
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && galleryModal.classList.contains('is-open')) {
+                    closeGalleryModal();
+                }
+            });
         });
     </script>
 
@@ -307,7 +694,7 @@
                     });
 
                     var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
-                    var totalM2 = parseFloat($('#totalM2').text()) || 0;
+                    var totalM2 = window.InventarNumber.parseUiNumber($('#totalM2').text());
 
                     $.ajax({
                         url: '@Url.Action("GenerateInventoryPDF", "Pdf")',
@@ -318,8 +705,8 @@
                             data: data,
                             filters: filters,
                             columnHeaders: columnHeaders,
-                            totalQuantity: totalQuantity,
-                            totalM2: totalM2
+                            totalQuantity: @Html.Raw(canSeeInventoryTotals ? "totalQuantity" : "0"),
+                            totalM2: @Html.Raw(canSeeInventoryTotals ? "totalM2" : "0")
                         }),
                         xhrFields: {
                             responseType: 'blob'

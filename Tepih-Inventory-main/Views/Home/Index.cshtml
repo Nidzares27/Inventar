@@ -4,12 +4,13 @@
 <link rel="stylesheet" href="~/css/Login.css" asp-append-version="true" />
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = Inventar.Resources.Resource.Login;
 }
 
 <div class="container">
     <div class="row">
         <div class="col-sm-8 offset-sm-2 col-md-6 offset-md-3 ">
+            <img src="~/KHLOGO.png" asp-append-version="true" alt="Kasmir Home" class="admin-layout-nav__brand-logo" />
             <p>
                 <h4 class="naslov" style="text-align:center">@Inventar.Resources.Resource.LogInToYourAccount</h4>
             </p>
@@ -21,7 +22,8 @@
             }
             <div class="row" style="margin-top: 2rem;">
                 <div class="col-sm-12" style="margin-bottom: 2rem;">
-                    <form asp-action="Index">
+                    <form asp-action="Index" method="post">
+                        @Html.AntiForgeryToken()
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group" style="margin-bottom: 1rem;">
                             <label asp-for="EmailAddress" class="control-label">@Inventar.Resources.Resource.EmailAddress</label>
@@ -35,7 +37,7 @@
                         </div>
                         <div class="form-group" style="display:flex">
                             <div style="margin-bottom: auto; margin-top:auto; flex:1;">
-                                <input id="confirmBtn" class="btn btn-outline-success float right" style="width:-webkit-fill-available " type="submit" value="@Inventar.Resources.Resource.Log_in" />
+                                <button id="confirmBtn" class="btn btn-outline-success float right" style="width:-webkit-fill-available" type="submit">@Inventar.Resources.Resource.Log_in</button>
                             </div>
 @*                             <div style="margin-bottom: auto; margin-top:auto; flex:2">
                                 <a asp-controller="Home" asp-action="ForgotPassword" style="float:right">@Inventar.Resources.Resource.ForgotPassword</a>
@@ -55,27 +57,32 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const inputs = document.querySelectorAll("input, select");
+            sessionStorage.removeItem("confirmBtn");
 
-            // Load saved values from sessionStorage
+            const inputs = document.querySelectorAll(
+                "input:not([type='password']):not([type='submit']):not([type='button']):not([type='hidden']), select, textarea"
+            );
+
             inputs.forEach(input => {
-                const id = input.id;
-                const savedValue = sessionStorage.getItem(id);
-
-                if (savedValue !== null) {
-                    input.value = savedValue; // Restore value from sessionStorage
-                } else {
-                    sessionStorage.setItem(id, input.value); // Store default value
+                const key = input.id || input.name;
+                if (!key) {
+                    return;
                 }
 
-                // Save to sessionStorage on input change
+                const savedValue = sessionStorage.getItem(key);
+
+                if (savedValue !== null) {
+                    input.value = savedValue;
+                } else {
+                    sessionStorage.setItem(key, input.value);
+                }
+
                 input.addEventListener("input", function () {
-                    sessionStorage.setItem(id, this.value);
+                    sessionStorage.setItem(key, this.value);
                 });
 
-                // Special case for <select> elements (ensure correct selection is displayed)
                 input.addEventListener("change", function () {
-                    sessionStorage.setItem(id, this.value);
+                    sessionStorage.setItem(key, this.value);
                 });
             });
         });

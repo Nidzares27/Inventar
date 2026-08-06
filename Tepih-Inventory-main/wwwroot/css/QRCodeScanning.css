@@ -29,27 +29,104 @@
     grid-area: toolbar;
 }
 
+.scan-camera-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin: 0 0 0.75rem;
+}
+
+.scan-camera-controls__group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.scan-camera-controls__label {
+    font-weight: 600;
+    margin: 0;
+}
+
+.scan-camera-controls__select {
+    width: min(100%, 22rem);
+    min-width: 13rem;
+}
+
+.scan-camera-controls__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+}
+
+.scan-camera-controls__toggle i {
+    font-size: 0.9rem;
+}
+
 #qr-reader {
     width: 100%;
     max-width: 32rem;
     margin: 0 auto;
     overflow: hidden;
+    background: #000;
+    border-radius: 0.75rem;
 }
 
 #qr-reader video,
 #qr-reader img,
-#qr-reader canvas,
 #qr-reader__scan_region video,
 #qr-reader__scan_region img {
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
     max-height: 35vh !important;
-    object-fit: cover;
+    object-fit: contain !important;
+    display: block;
+    margin: 0 auto;
+    background: #000;
+}
+
+#qr-reader canvas {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 0 auto;
 }
 
 #qr-reader__scan_region {
     min-height: 0 !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+}
+
+#qr-reader.qr-reader--apple {
+    width: min(100%, 19rem);
+    max-width: 19rem;
+    aspect-ratio: 1 / 1;
+}
+
+#qr-reader.qr-reader--apple #qr-reader__scan_region {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+#qr-reader.qr-reader--apple video,
+#qr-reader.qr-reader--apple img,
+#qr-reader.qr-reader--apple #qr-reader__scan_region video,
+#qr-reader.qr-reader--apple #qr-reader__scan_region img,
+#qr-reader.qr-reader--apple canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    object-fit: cover !important;
 }
 
 #qr-reader img[alt="Info icon"],
@@ -195,21 +272,30 @@
 
 .quantity-stepper {
     display: inline-flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 0.15rem;
+    justify-content: center;
+    gap: 0.35rem;
 }
 
 .quantity-stepper__button {
-    width: 1.85rem;
-    min-width: 1.85rem;
-    padding: 0.05rem 0.2rem;
+    width: 2.15rem;
+    min-width: 2.15rem;
+    height: 2.15rem;
+    padding: 0.15rem;
     line-height: 1;
+    font-size: 1.05rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .quantity-stepper__value {
     font-weight: 600;
     line-height: 1.1;
+    min-width: 1rem;
+    text-align: center;
 }
 
 #productTable form {
@@ -232,6 +318,52 @@
     white-space: nowrap;
 }
 
+#productTable .product-table__model-col,
+#productTable .product-table__model-cell {
+    width: 6.25rem;
+    max-width: 6.25rem;
+}
+
+#productTable .product-table__size-col,
+#productTable .product-table__size-cell {
+    width: 5.8rem;
+    max-width: 5.8rem;
+}
+
+#productTable .product-table__price-col,
+#productTable .product-table__price-cell {
+    width: 5.4rem;
+    max-width: 5.4rem;
+}
+
+#productTable .product-table__quantity-col,
+#productTable .product-table__quantity-cell {
+    width: 6.75rem;
+    max-width: 6.75rem;
+}
+
+#productTable .product-table__actions-col,
+#productTable .product-table__actions-cell {
+    width: 3.1rem;
+    max-width: 3.1rem;
+    white-space: nowrap;
+}
+
+#productTable .product-table__actions-cell {
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+}
+
+.product-table__delete-button {
+    width: 1.95rem;
+    min-width: 1.95rem;
+    height: 1.95rem;
+    padding: 0.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 @media (max-width: 991.98px) {
     .scan-search-layout {
         grid-template-columns: minmax(0, 1fr);
@@ -248,8 +380,45 @@
 }
 
 @media (max-width: 575.98px) {
+    .scan-camera-controls {
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+    }
+
+    .scan-camera-controls__group {
+        width: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+    }
+
+    .scan-camera-controls__label {
+        width: auto;
+        flex: 0 0 auto;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .scan-camera-controls__select {
+        width: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .scan-camera-controls__toggle {
+        flex: 0 0 auto;
+    }
+
     .scan-toolbar {
         margin: 0;
+    }
+
+    #qr-reader.qr-reader--apple {
+        width: min(100%, 18.5rem);
+        max-width: 18.5rem;
     }
 
     .parameter-input {
@@ -262,12 +431,55 @@
 
     #productTable th,
     #productTable td {
-        padding: 0.35rem 0.25rem;
+        padding: 0.35rem 0.05rem;
+    }
+
+    #productTable .product-table__model-col,
+    #productTable .product-table__model-cell {
+        width: 4.65rem;
+        max-width: 4.65rem;
+    }
+
+    #productTable .product-table__size-col,
+    #productTable .product-table__size-cell {
+        width: 4.25rem;
+        max-width: 4.25rem;
+    }
+
+    #productTable .product-table__price-col,
+    #productTable .product-table__price-cell {
+        width: 4.15rem;
+        max-width: 4.15rem;
+    }
+
+    #productTable .product-table__quantity-col,
+    #productTable .product-table__quantity-cell {
+        width: 5.7rem;
+        max-width: 5.7rem;
     }
 
     .quantity-stepper__button {
-        width: 1.7rem;
-        min-width: 1.7rem;
+        width: 2.05rem;
+        min-width: 2.05rem;
+        height: 2.05rem;
+        font-size: 1rem;
+    }
+
+    .quantity-stepper {
+        gap: 0.25rem;
+    }
+
+    #productTable .product-table__actions-col,
+    #productTable .product-table__actions-cell {
+        width: 2.3rem;
+        max-width: 2.3rem;
+    }
+
+    .product-table__delete-button {
+        width: 1.65rem;
+        min-width: 1.65rem;
+        height: 1.65rem;
+        padding: 0.15rem;
     }
 
     .manual-entry-input {

@@ -3,182 +3,187 @@
 
 @{
     ViewData["Title"] = "Details";
-    var storefrontImages = Model.ProductImages?.Where(image => !image.Disabled).OrderBy(image => image.SortOrder).ToList()
+    var storefrontImages = Model.ProductImages?
+        .Where(image => !image.Disabled && Inventar.Utils.ProductMediaFolders.IsStorefrontMedia(image.CloudinaryPublicId))
+        .OrderBy(image => image.SortOrder)
+        .ToList()
         ?? new List<ProductImage>();
     var availableQuantity = Math.Max(Model.Quantity - Model.ReservedQuantity, 0);
 }
 
-<h1>@Inventar.Resources.Resource.Details</h1>
+<div class="details-page">
+    <h1 class="details-page__title">@Inventar.Resources.Resource.Details</h1>
 
-<table class="custom-table">
-    <tr>
-        <th>@Html.DisplayNameFor(model => model.Id)</th>
-        <td>@Html.DisplayFor(model => model.Id)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Name</th>
-        <td>@Html.DisplayFor(model => model.Name)</td>
-    </tr>
-    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-    {
+    <table class="custom-table custom-table--details">
         <tr>
-            <th>@Inventar.Resources.Resource.ProductNumber</th>
-            <td>@Html.DisplayFor(model => model.ProductNumber)</td>
-        </tr>
-    }
-    <tr>
-        <th>@Html.DisplayNameFor(model => model.Model)</th>
-        <td>@Html.DisplayFor(model => model.Model)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.BroaderCategory</th>
-        <td>@Html.DisplayFor(model => model.BroaderCategory)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.NarrowerCategory</th>
-        <td>@Html.DisplayFor(model => model.NarrowerCategory)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.DateTime</th>
-        <td>@Html.DisplayFor(model => model.DateTime)</td>
-    </tr>
-    <tr>
-        <th>@Html.DisplayNameFor(model => model.QRCodeUrl)</th>
-        <td>
-            @Html.DisplayFor(model => model.QRCodeUrl)
-            <div>
-                @if (!string.IsNullOrEmpty(Model.QRCodeUrl))
-                {
-                    <img src="@Model.QRCodeUrl" alt="QR Code" class="img-fluid rounded" style="max-height:150px;" />
-                }
-                else
-                {
-                    <span>N/A</span>
-                }
-            </div>
-        </td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Quantity</th>
-        <td>@Html.DisplayFor(model => model.Quantity)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Reserved</th>
-        <td>@Model.ReservedQuantity</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Available</th>
-        <td>@availableQuantity</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Length</th>
-        <td>@Html.DisplayFor(model => model.Length)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Width</th>
-        <td>@Html.DisplayFor(model => model.Width)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Color</th>
-        <td>@Html.DisplayFor(model => model.Color)</td>
-    </tr>
-    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-    {
-        <tr>
-            <th>@Inventar.Resources.Resource.Price</th>
-            <td>@($"{Model.Price:0.00} €")</td>
+            <th>@Html.DisplayNameFor(model => model.Id)</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Id)</td>
         </tr>
         <tr>
-            <th>@Inventar.Resources.Resource.OnlinePrice</th>
-            <td>@($"{(Model.OnlinePrice ?? Model.Price):0.00} €")</td>
+            <th>@Inventar.Resources.Resource.Name</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Name)</td>
+        </tr>
+        @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+        {
+            <tr>
+                <th>@Inventar.Resources.Resource.ProductNumber</th>
+                <td class="details-page__value">@Html.DisplayFor(model => model.ProductNumber)</td>
+            </tr>
+        }
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Model)</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Model)</td>
         </tr>
         <tr>
-            <th>@Inventar.Resources.Resource.Published</th>
-            <td>@(Model.IsPublished ? "Yes" : "No")</td>
+            <th>@Inventar.Resources.Resource.BroaderCategory</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.BroaderCategory)</td>
         </tr>
         <tr>
-            <th>Slug</th>
-            <td>@(Model.Slug ?? "-")</td>
+            <th>@Inventar.Resources.Resource.NarrowerCategory</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.NarrowerCategory)</td>
         </tr>
         <tr>
-            <th>@Inventar.Resources.Resource.ShortDescription</th>
-            <td>@(Model.ShortDescription ?? "-")</td>
+            <th>@Inventar.Resources.Resource.DateTime</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.DateTime)</td>
         </tr>
         <tr>
-            <th>@Inventar.Resources.Resource.SEOTitle</th>
-            <td>@(Model.SeoTitle ?? "-")</td>
+            <th>@Html.DisplayNameFor(model => model.QRCodeUrl)</th>
+            <td class="details-page__value">
+                <span class="details-page__qr-url">@Html.DisplayFor(model => model.QRCodeUrl)</span>
+                <div class="details-page__qr-code">
+                    @if (!string.IsNullOrEmpty(Model.QRCodeUrl))
+                    {
+                        <img src="@Model.QRCodeUrl" alt="QR Code" class="img-fluid rounded" style="max-height:150px;" />
+                    }
+                    else
+                    {
+                        <span>N/A</span>
+                    }
+                </div>
+            </td>
         </tr>
         <tr>
-            <th>@Inventar.Resources.Resource.SEODescription</th>
-            <td>@(Model.SeoDescription ?? "-")</td>
+            <th>@Inventar.Resources.Resource.Quantity</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Quantity)</td>
         </tr>
-    }
-    <tr>
-        <th>@Inventar.Resources.Resource.PerM2</th>
-        <td>@Html.DisplayFor(model => model.PerM2)</td>
-    </tr>
-    <tr>
-        <th>@Inventar.Resources.Resource.Description</th>
-        <td>@Html.DisplayFor(model => model.Description)</td>
-    </tr>
-</table>
+        <tr>
+            <th>@Inventar.Resources.Resource.Reserved</th>
+            <td class="details-page__value">@Model.ReservedQuantity</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Available</th>
+            <td class="details-page__value">@availableQuantity</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Length</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Length)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Width</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Width)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Color</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Color)</td>
+        </tr>
+        @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+        {
+            <tr>
+                <th>@Inventar.Resources.Resource.Price</th>
+                <td class="details-page__value">@($"{Model.Price:0.00} €")</td>
+            </tr>
+            <tr>
+                <th>@Inventar.Resources.Resource.OnlinePrice</th>
+                <td class="details-page__value">@($"{(Model.OnlinePrice ?? Model.Price):0.00} €")</td>
+            </tr>
+            <tr>
+                <th>@Inventar.Resources.Resource.Published</th>
+                <td class="details-page__value">@(Model.IsPublished ? "Yes" : "No")</td>
+            </tr>
+            <tr>
+                <th>Slug</th>
+                <td class="details-page__value">@(Model.Slug ?? "-")</td>
+            </tr>
+            <tr>
+                <th>@Inventar.Resources.Resource.ShortDescription</th>
+                <td class="details-page__value">@(Model.ShortDescription ?? "-")</td>
+            </tr>
+            <tr>
+                <th>@Inventar.Resources.Resource.SEOTitle</th>
+                <td class="details-page__value">@(Model.SeoTitle ?? "-")</td>
+            </tr>
+            <tr>
+                <th>@Inventar.Resources.Resource.SEODescription</th>
+                <td class="details-page__value">@(Model.SeoDescription ?? "-")</td>
+            </tr>
+        }
+        <tr>
+            <th>@Inventar.Resources.Resource.PerM2</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.PerM2)</td>
+        </tr>
+        <tr>
+            <th>@Inventar.Resources.Resource.Description</th>
+            <td class="details-page__value">@Html.DisplayFor(model => model.Description)</td>
+        </tr>
+    </table>
 
-<div class="storefront-gallery mt-4">
-    <h4>@Inventar.Resources.Resource.ProductImages</h4>
-    @if (storefrontImages.Count == 0)
-    {
-        <div class="alert alert-light border">@Inventar.Resources.Resource.NoImagesUploadedForThisProduct_</div>
-    }
-    else
-    {
-        <div class="row g-3">
-            @foreach (var image in storefrontImages)
-            {
-                <div class="col-md-4 col-lg-3">
-                    <div class="card h-100">
-                        @if (string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
-                        {
-                            <div class="storefront-media-frame storefront-media-frame--video">
-                                <video class="card-img-top storefront-thumb"
-                                       controls
-                                       preload="metadata"
-                                       playsinline>
-                                    <source src="@image.Url" />
-                                </video>
-                                <span class="storefront-media-badge">Video</span>
+    <div class="storefront-gallery mt-4">
+        <h4 class="details-page__subtitle">@Inventar.Resources.Resource.ProductImages</h4>
+        @if (storefrontImages.Count == 0)
+        {
+            <div class="alert alert-light border">@Inventar.Resources.Resource.NoImagesUploadedForThisProduct_</div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var image in storefrontImages)
+                {
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="card h-100">
+                            @if (string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <div class="storefront-media-frame storefront-media-frame--video">
+                                    <video class="card-img-top storefront-thumb"
+                                           controls
+                                           preload="metadata"
+                                           playsinline>
+                                        <source src="@image.Url" />
+                                    </video>
+                                    <span class="storefront-media-badge">Video</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <img src="@(image.ThumbnailUrl ?? image.Url)" class="card-img-top storefront-thumb" alt="@(image.AltText ?? Model.Name)" />
+                            }
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                    <strong>#@image.SortOrder</strong>
+                                    @if (image.IsPrimary && !string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-success">@Inventar.Resources.Resource.Primary</span>
+                                    }
+                                    else if (string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-secondary">Video</span>
+                                    }
+                                </div>
+                                <div class="small text-muted mt-2 details-page__value">@(image.AltText ?? "No alt text")</div>
                             </div>
-                        }
-                        else
-                        {
-                            <img src="@(image.ThumbnailUrl ?? image.Url)" class="card-img-top storefront-thumb" alt="@(image.AltText ?? Model.Name)" />
-                        }
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center gap-2">
-                                <strong>#@image.SortOrder</strong>
-                                @if (image.IsPrimary && !string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    <span class="badge bg-success">@Inventar.Resources.Resource.Primary</span>
-                                }
-                                else if (string.Equals(image.MediaType, "video", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    <span class="badge bg-secondary">Video</span>
-                                }
-                            </div>
-                            <div class="small text-muted mt-2">@(image.AltText ?? "No alt text")</div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
-    }
-</div>
+                }
+            </div>
+        }
+    </div>
 
-<div>
-    <a asp-action="Index" class="btn btn-secondary btn-sm mt-3">@Inventar.Resources.Resource.BackToList</a>
-    @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
-    {
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm mt-3">@Inventar.Resources.Resource.Edit</a>
-    }
+    <div class="details-page__actions">
+        <a asp-action="Index" class="btn btn-secondary btn-sm">@Inventar.Resources.Resource.BackToList</a>
+        @if (User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm">@Inventar.Resources.Resource.Edit</a>
+        }
+    </div>
 </div>
 
 <style>
@@ -210,5 +215,15 @@
         font-weight: 700;
         letter-spacing: 0.04em;
         text-transform: uppercase;
+    }
+    
+    .storefront-gallery {
+        overflow: hidden;
+    }
+    
+    @@media (max-width: 575.98px) {
+        .storefront-thumb {
+            aspect-ratio: 4 / 5;
+        }
     }
 </style>

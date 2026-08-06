@@ -113,5 +113,30 @@ namespace Inventar.Utils
                 ? Math.Round(perUnit.Value * quantity, 2)
                 : null;
         }
+
+        public static int? GetInventoryDisplayLength(Tepih product, IReadOnlyDictionary<int, int>? remainingLengths = null)
+        {
+            if (!product.PoMjeri)
+            {
+                return product.Length;
+            }
+
+            if (remainingLengths != null && remainingLengths.TryGetValue(product.Id, out var remainingLength))
+            {
+                return remainingLength;
+            }
+
+            return product.Length;
+        }
+
+        public static decimal? CalculateInventoryDisplayM2PerUnit(Tepih product, IReadOnlyDictionary<int, int>? remainingLengths = null)
+        {
+            return CalculateM2PerUnit(product.PerM2, product.Width, GetInventoryDisplayLength(product, remainingLengths));
+        }
+
+        public static decimal? CalculateInventoryDisplayM2Total(Tepih product, IReadOnlyDictionary<int, int>? remainingLengths = null)
+        {
+            return CalculateM2Total(product.PerM2, product.Width, GetInventoryDisplayLength(product, remainingLengths), product.Quantity);
+        }
     }
 }

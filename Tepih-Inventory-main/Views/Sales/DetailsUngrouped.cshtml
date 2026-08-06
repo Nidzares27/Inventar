@@ -4,6 +4,50 @@
     ViewData["Title"] = "Sales Detail (Ungrouped)";
 }
 
+<style>
+    #detailsUngroupedTable thead tr.filters th {
+        padding: 1px;
+    }
+
+    #detailsUngroupedTable thead tr.filters input {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .sales-report-detail__totals {
+        margin-top: 10px;
+        margin-left: 5px;
+        font-weight: bold;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    @@media (max-width: 768px) {
+        .sales-labels-zoom {
+            zoom: 0.62;
+        }
+
+        .sales-mobile-zoom--report {
+            zoom: 0.42;
+        }
+
+        .sales-report-detail__totals {
+            font-size: 2rem;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        #downloadDetailsUngroupedPDF {
+            width: 100%;
+            margin-top: 0.35rem;
+        }
+    }
+</style>
+
 <h2>@Inventar.Resources.Resource.PerProductsDetailedUNGrouped</h2>
 
 @if (Model.Labels.CustName != null)
@@ -20,6 +64,7 @@
     </p>
 }
 
+<div class="sales-labels-zoom">
 <table id="labele">
     <thead>
         <tr>
@@ -44,7 +89,9 @@
         </tr>
     </tbody>
 </table>
+</div>
 
+<div class="sales-mobile-zoom--report">
 <table id="detailsUngroupedTable" class="table table-bordered tabela" style="font-weight:500">
     <thead>
         <tr>
@@ -61,7 +108,7 @@
             <th>@Inventar.Resources.Resource.TotalPrice</th>
         </tr>
         <tr class="filters">
-            <th><input style="width:2rem" type="text" placeholder="" disabled></th>
+            <th><input type="text" placeholder="" disabled></th>
             <th>
                 <input type="date" id="minDate" placeholder="">
             </th>
@@ -102,6 +149,7 @@
         }
     </tbody>
 </table>
+</div>
 
 <button id="downloadDetailsUngroupedPDF" class="btn btn-primary mb-3">
     @Inventar.Resources.Resource.PrintPDF
@@ -185,9 +233,9 @@
                 }
 
                 table.rows({ filter: 'applied' }).data().each(function (value, index) {
-                    totalQuantity += parseFloat(value[indexes.quantity]) || 0;
-                    totalPrice += parseFloat(value[indexes.price]) || 0;
-                    totalM2 += parseFloat(value[indexes.m2]) || 0;
+                    totalQuantity += window.InventarNumber.parseUiNumber(value[indexes.quantity]);
+                    totalPrice += window.InventarNumber.parseUiNumber(value[indexes.price]);
+                    totalM2 += window.InventarNumber.parseUiNumber(value[indexes.m2]);
                 });
 
                 $('#totalQuantity').text(totalQuantity);
@@ -197,7 +245,7 @@
             }
 
             $('#detailsUngroupedTable').after(`
-                                        <div style="margin-top: 10px; font-weight: bold;">
+                                        <div class="sales-report-detail__totals">
         @Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span>   |
         @Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span>   |
         @Inventar.Resources.Resource.PriceTotal: <span id="totalPrice">0.00</span>€
@@ -272,8 +320,8 @@
 
                 // Get totals from your DOM or compute here
                 var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
-                var totalM2 = parseFloat($('#totalM2').text()) || 0;
-                var totalPrice = parseFloat($('#totalPrice').text()) || 0;
+                var totalM2 = window.InventarNumber.parseUiNumber($('#totalM2').text());
+                var totalPrice = window.InventarNumber.parseUiNumber($('#totalPrice').text());
 
                 var customerName = '@Model.Labels.CustName';
 

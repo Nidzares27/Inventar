@@ -1,4 +1,5 @@
 using Inventar.Storefront.Models;
+using Inventar.Storefront.Utils;
 using Inventar.Storefront.ViewModels.Catalog;
 
 namespace Inventar.Storefront.Services;
@@ -66,7 +67,10 @@ public static class StorefrontProductGrouping
         foreach (var product in products)
         {
             foreach (var image in product.ProductImages
-                         .Where(image => !image.Disabled && !string.IsNullOrWhiteSpace(image.Url))
+                         .Where(image =>
+                             !image.Disabled &&
+                             ProductMediaFolders.IsStorefrontMedia(image.CloudinaryPublicId) &&
+                             !string.IsNullOrWhiteSpace(image.Url))
                          .OrderByDescending(image => image.IsPrimary)
                          .ThenBy(image => image.SortOrder)
                          .ThenBy(image => image.Id))

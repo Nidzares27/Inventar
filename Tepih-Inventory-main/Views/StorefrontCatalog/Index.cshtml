@@ -1,20 +1,66 @@
+@using Inventar.Utils
 @model IEnumerable<Inventar.Models.Tepih>
 @{
     var reservedDisplay = ViewBag.ReservedDisplay as IDictionary<int, string> ?? new Dictionary<int, string>();
     var remainingSizeDisplay = ViewBag.RemainingSizeDisplay as IDictionary<int, string> ?? new Dictionary<int, string>();
+    var remainingLengths = ViewBag.RemainingLengths as IReadOnlyDictionary<int, int> ?? new Dictionary<int, int>();
     var isAdminLike = User.IsInRole("admin") || User.IsInRole("superadmin");
     var isEmployee = User.IsInRole("employee");
     var isUser = User.IsInRole("user");
+    var canSeeInventoryTotals = isAdminLike;
     const int actionColumnIndex = 17;
     const int totalM2ColumnIndex = 9;
     const int totalQuantityColumnIndex = 12;
     const int totalAvailableColumnIndex = 14;
 }
 
+<style>
+    #TepisiTable thead tr.filters th {
+        padding: 1px;
+    }
+
+    #TepisiTable thead tr.filters input {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .storefront-catalog-mobile-zoom {
+        width: 100%;
+    }
+
+    .inventory-summary-bar__totals {
+        margin-left: 5px;
+        white-space: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    @@media (max-width: 768px) {
+        .storefront-catalog-mobile-zoom {
+            zoom: 0.32;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        #downloadPDF,
+        .btn-success[href="/InventoryItem/Create"] {
+            width: 100%;
+        }
+
+        #downloadPDF {
+            margin-top: 0.35rem;
+        }
+    }
+</style>
+
 <div class="inventory-page-header">
     <h2>@Inventar.Resources.Resource.InventoryItems</h2>
 </div>
 
+<div class="storefront-catalog-mobile-zoom">
 <table id="TepisiTable" class="table stripe tabela inventory-table" style="font-weight:500">
     <thead>
         <tr>
@@ -39,32 +85,32 @@
         </tr>
 
         <tr class="filters">
-            <th><input style="width:2rem" disabled></th>
-            <th><input style="width:5rem" placeholder="Id"></th>
-            <th><input style="width:5rem" placeholder="ProductNumber"></th>
-            <th><input style="width:7.5rem" placeholder="Name"></th>
-            <th><input style="width:5rem" placeholder="Model"></th>
-            <th><input style="width:7.5rem" placeholder="Color"></th>
-            <th><input style="width:5rem" placeholder="Size"></th>
-            <th><input style="width:6rem" placeholder="Remaining"></th>
-            <th><input style="width:5rem" placeholder="m2"></th>
-            <th><input style="width:5rem" placeholder="M2Total"></th>
-            <th><input style="width:5rem" placeholder="Price"></th>
-            <th><input style="width:6rem" placeholder="Online"></th>
-            <th><input style="width:5rem" placeholder="Qty"></th>
-            <th><input style="width:5rem" placeholder="Reserved"></th>
-            <th><input style="width:5rem" placeholder="Available"></th>
-            <th><input style="width:5rem" placeholder="UnID"></th>
-            <th><input style="width:5rem" placeholder="Published"></th>
-            <th><input style="width:5rem" disabled></th>
+            <th><input style="width:2rem" data-column-index="0" disabled></th>
+            <th><input style="width:5rem" data-column-index="1" placeholder="Id"></th>
+            <th><input style="width:5rem" data-column-index="2" placeholder="ProductNumber"></th>
+            <th><input style="width:7.5rem" data-column-index="3" placeholder="Name"></th>
+            <th><input style="width:5rem" data-column-index="4" placeholder="Model"></th>
+            <th><input style="width:7.5rem" data-column-index="5" placeholder="Color"></th>
+            <th><input style="width:5rem" data-column-index="6" placeholder="Size"></th>
+            <th><input style="width:6rem" data-column-index="7" placeholder="Remaining"></th>
+            <th><input style="width:5rem" data-column-index="8" placeholder="m2"></th>
+            <th><input style="width:5rem" data-column-index="9" placeholder="M2Total"></th>
+            <th><input style="width:5rem" data-column-index="10" placeholder="Price"></th>
+            <th><input style="width:6rem" data-column-index="11" placeholder="Online"></th>
+            <th><input style="width:5rem" data-column-index="12" placeholder="Qty"></th>
+            <th><input style="width:5rem" data-column-index="13" placeholder="Reserved"></th>
+            <th><input style="width:5rem" data-column-index="14" placeholder="Available"></th>
+            <th><input style="width:5rem" data-column-index="15" placeholder="UnID"></th>
+            <th><input style="width:5rem" data-column-index="16" placeholder="Published"></th>
+            <th><input style="width:5rem" data-column-index="17" disabled></th>
         </tr>
     </thead>
 
     <tbody>
         @foreach (var item in Model)
         {
-            var itemM2 = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000), 2) : (decimal?)null;
-            var itemM2Total = item.PerM2 ? Math.Round(((decimal)((int)item.Length * (int)item.Width) / 10000 * item.Quantity), 2) : (decimal?)null;
+            var itemM2 = PoMjeriHelper.CalculateInventoryDisplayM2PerUnit(item, remainingLengths);
+            var itemM2Total = PoMjeriHelper.CalculateInventoryDisplayM2Total(item, remainingLengths);
             var availableQuantity = Math.Max(item.Quantity - item.ReservedQuantity, 0);
             var rowClass = item.PoMjeri
                 ? "inventory-row--po-mjeri"
@@ -141,15 +187,19 @@
         }
     </tbody>
 </table>
+</div>
 
 <div class="inventory-summary-bar">
-    <div class="inventory-summary-bar__totals">
-        <span>@Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span></span>
-        <span>|</span>
-        <span>Available: <span id="totalAvailable">0</span></span>
-        <span>|</span>
-        <span>@Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span></span>
-    </div>
+    @if (canSeeInventoryTotals)
+    {
+        <div class="inventory-summary-bar__totals">
+            <span>@Inventar.Resources.Resource.TotalQuantity: <span id="totalQuantity">0</span></span>
+            <span>|</span>
+            <span>Available: <span id="totalAvailable">0</span></span>
+            <span>|</span>
+            <span>@Inventar.Resources.Resource.M2Total: <span id="totalM2">0.00</span></span>
+        </div>
+    }
     <div class="inventory-legend" aria-label="Storefront catalog row colors legend">
         <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--po-mjeri"></span>@Inventar.Resources.Resource.PerMeasureProduct</span>
         <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--negative"></span>@Inventar.Resources.Resource.Quantity < 0</span>
@@ -206,13 +256,18 @@
                 columnDefs: @Html.Raw(visibilityJson)
             });
 
-            $('#TepisiTable thead tr:eq(1) th').each(function (index) {
+            $('#TepisiTable thead tr:eq(1) th').each(function () {
                 var input = $('input', this);
                 if (input.length === 0) return;
 
                 input.on('keyup change', function () {
-                    if (table.column(index).visible()) {
-                        table.column(index).search(this.value).draw();
+                    var columnIndex = parseInt(input.data('column-index'), 10);
+                    if (!Number.isInteger(columnIndex)) {
+                        return;
+                    }
+
+                    if (table.column(columnIndex).visible()) {
+                        table.column(columnIndex).search(this.value).draw();
                     }
                 });
             });
@@ -223,9 +278,9 @@
                 var totalM2 = 0;
 
                 table.rows({ filter: 'applied' }).data().each(function (value) {
-                    totalQuantity += parseFloat(value[@totalQuantityColumnIndex]) || 0;
-                    totalAvailable += parseFloat(value[@totalAvailableColumnIndex]) || 0;
-                    totalM2 += parseFloat(value[@totalM2ColumnIndex]) || 0;
+                    totalQuantity += window.InventarNumber.parseUiNumber(value[@totalQuantityColumnIndex]);
+                    totalAvailable += window.InventarNumber.parseUiNumber(value[@totalAvailableColumnIndex]);
+                    totalM2 += window.InventarNumber.parseUiNumber(value[@totalM2ColumnIndex]);
                 });
 
                 $('#totalQuantity').text(totalQuantity);
@@ -296,7 +351,7 @@
                 });
 
                 var totalQuantity = parseInt($('#totalQuantity').text()) || 0;
-                var totalM2 = parseFloat($('#totalM2').text()) || 0;
+                var totalM2 = window.InventarNumber.parseUiNumber($('#totalM2').text());
 
                 $.ajax({
                     url: '@Url.Action("GenerateInventoryPDF", "Pdf")',
@@ -307,8 +362,8 @@
                         data: data,
                         filters: filters,
                         columnHeaders: columnHeaders,
-                        totalQuantity: totalQuantity,
-                        totalM2: totalM2
+                        totalQuantity: @Html.Raw(canSeeInventoryTotals ? "totalQuantity" : "0"),
+                        totalM2: @Html.Raw(canSeeInventoryTotals ? "totalM2" : "0")
                     }),
                     xhrFields: {
                         responseType: 'blob'

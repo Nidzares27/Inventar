@@ -3,6 +3,33 @@
 @{
     ViewData["Title"] = @Inventar.Resources.Resource.AllAccounts;
 }
+
+<style>
+    #Nalozi thead tr.filters th {
+        padding: 1px;
+    }
+
+    #Nalozi thead tr.filters input {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .all-accounts-mobile-zoom {
+        width: 100%;
+    }
+
+    @@media (max-width: 768px) {
+        .all-accounts-mobile-zoom {
+            zoom: 0.34;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+    }
+</style>
+
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success">@TempData["SuccessMessage"]</div>
@@ -16,6 +43,7 @@
 <small id="passwordHelp" class="form-text text-muted">
     @Inventar.Resources.Resource.PasswordRequirements
 </small>
+<div class="all-accounts-mobile-zoom">
 <table id="Nalozi" class="table stripe tabela" style="font-weight:500">
     <thead class="thead-dark">
         <tr>
@@ -71,6 +99,7 @@
         }
     </tbody>
 </table>
+</div>
 @section Scripts {
     <link rel="stylesheet" href="~/css/allAccounts.css" asp-append-version="true" />
 

@@ -112,6 +112,21 @@ namespace Inventar.Data
                 entity.Property(x => x.Price).HasColumnType("decimal(18,4)");
                 entity.Property(x => x.DirectSaleOriginalTotal).HasColumnType("decimal(18,2)");
             });
+
+            builder.Entity<Dug>(entity =>
+            {
+                entity.Property(x => x.DebtAmount).HasColumnType("decimal(18,2)");
+            });
+
+            builder.Entity<Kupac>(entity =>
+            {
+                entity.Property(x => x.LeftToPay).HasColumnType("decimal(18,2)");
+            });
+
+            builder.Entity<Placanje>(entity =>
+            {
+                entity.Property(x => x.Amount).HasColumnType("decimal(18,2)");
+            });
         }
     }
 }

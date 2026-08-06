@@ -78,8 +78,8 @@
                 const m2Text = $('td:eq(3)', row).text().replace(/[^\d.-]/g, '');
                 const quantityText = $('td:eq(4)', row).text();
 
-                const spent = parseFloat(spentText) || 0;
-                const m2 = parseFloat(m2Text) || 0;
+                const spent = window.InventarNumber.parseUiNumber(spentText);
+                const m2 = window.InventarNumber.parseUiNumber(m2Text);
                 const qty = parseInt(quantityText) || 0;
 
                 totalSpent += spent;
@@ -171,8 +171,8 @@
 
                 // Get totals from your DOM or compute here
                 var totalQuantity = parseInt($('#totalQuantityDisplay').text()) || 0;
-                var totalM2 = parseFloat($('#totalM2Display').text()) || 0;
-                var totalPrice = parseFloat($('#totalSpentDisplay').text()) || 0;
+                var totalM2 = window.InventarNumber.parseUiNumber($('#totalM2Display').text());
+                var totalPrice = window.InventarNumber.parseUiNumber($('#totalSpentDisplay').text());
 
                 // Send data to server
                 $.ajax({

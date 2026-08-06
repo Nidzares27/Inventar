@@ -22,6 +22,32 @@
     };
 }
 
+<style>
+    #StorefrontOrdersTable thead tr.filters th {
+        padding: 1px;
+    }
+
+    #StorefrontOrdersTable thead tr.filters input {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .storefront-orders-mobile-zoom {
+        width: 100%;
+    }
+
+    @@media (max-width: 768px) {
+        .storefront-orders-mobile-zoom {
+            zoom: 0.48;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+    }
+</style>
+
 <div class="inventory-page-header">
     <h2>@Inventar.Resources.Resource.WebOrders</h2>
 </div>
@@ -50,6 +76,7 @@
     </div>
 }
 
+<div class="storefront-orders-mobile-zoom">
 <table id="StorefrontOrdersTable" class="table stripe tabela" style="font-weight:500">
     <thead>
         <tr>
@@ -105,6 +132,7 @@
         }
     </tbody>
 </table>
+</div>
 
 <div class="inventory-summary-bar inventory-summary-bar--legend-only">
     <div class="inventory-summary-bar__totals"></div>

@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+using Inventar.Utils;
+
 namespace Inventar.ViewModels.Sales
 {
     public class SalesEntryViewModel
@@ -17,7 +19,7 @@ namespace Inventar.ViewModels.Sales
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public bool PerM2 { get; set; }
-        public decimal? M2Total => PerM2 ? Math.Round((decimal)Length * (decimal)Width / 10000m * Quantity, 2) : null;
+        public decimal? M2Total => PoMjeriHelper.CalculateM2Total(PerM2, Width, Length, Quantity);
         public decimal TotalPrice { get; set; }
         [Range(0, 100)]
         public int? Rabat { get; set; }

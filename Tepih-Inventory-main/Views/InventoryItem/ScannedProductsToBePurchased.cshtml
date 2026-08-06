@@ -2,6 +2,7 @@
 @using System.Globalization
 @model ScannedProductsOverviewViewModel
 
+<div class="scanned-purchase-page">
 <h2>@Inventar.Resources.Resource.BuyerInfo</h2>
 @if (TempData["SuccessMessage"] != null)
 {
@@ -17,15 +18,15 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
-<form asp-action="ScannedProductsToBePurchased" method="post" onsubmit="return validateForm()">
+<form asp-action="ScannedProductsToBePurchased" method="post" onsubmit="return validateForm()" class="scanned-purchase-form">
     <input type="hidden" class="form-control" asp-for="PurchaseTime" />
     <div class="form-group">
-        <div class="row g-3" style="margin-bottom:1rem">
-            <div class="col-sm-6" style="padding-right:2rem">
+        <div class="row g-3 scanned-purchase-form__row">
+            <div class="col-sm-6 scanned-purchase-form__name-col">
                 <label for="FullName">@Inventar.Resources.Resource.FullName</label>
                 <input type="text" id="FullName" class="form-control" asp-for="FullName" required autocomplete="off" />
             </div>
-            <div class="col-sm-6" style="padding-left:2rem">
+            <div class="col-sm-6 scanned-purchase-form__payment-col">
                 <div class="row" style="height:100%; display:none">
                     <div class="form-check col" style="display: flex; align-items: center;">
                         <input class="form-check-input" type="radio" name="PlannedPaymentType" asp-for="PlannedPaymentType" value="Cash" id="cash">
@@ -48,12 +49,11 @@
                 </div>
             </div>
         </div>
-        <input type="checkbox" class="form-check-input" asp-for="PrintPDF" />
-        <label class="form-check-label" asp-for="PrintPDF">@Inventar.Resources.Resource.PrintPDF</label>
         <div id="suggestions" style="border-style: groove;"></div>
     </div>
     <button type="submit" class="btn btn-primary">@Inventar.Resources.Resource.ConfirmPurchase</button>
 </form>
+<div class="scanned-purchase-table-zoom">
 <table id="productTable" class="table table-hover table-striped">
     <thead>
         <tr>
@@ -140,9 +140,13 @@
         }
     </tbody>
 </table>
+</div>
 <div class="d-flex justify-content-between align-items-center mt-2">
     <div>
-        <button id="createExcel" class="btn btn-success">Excel</button>
+        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+            <button id="printPurchasePdf" type="button" class="btn btn-primary">@Inventar.Resources.Resource.PrintPDF</button>
+            <button id="createExcel" type="button" class="btn btn-success">@Inventar.Resources.Resource.Excel</button>
+        </div>
     </div>
     <div style="text-align: right;">
         <strong>@Inventar.Resources.Resource.Total: <span id="totalPrice">0</span>€</strong>
@@ -152,18 +156,40 @@
 @* <div style="text-align: right; margin-top: 10px; display:@(User.Identity.IsAuthenticated && (User.IsInRole("admin") || User.IsInRole("superadmin")) ? "block" : "none")">
     <strong>@Inventar.Resources.Resource.Total: <span id="totalPrice">0</span>€</strong>
 </div> *@
+</div>
 
 @using System.Text.Json
 @{
     // serialize Model.Products to a JS-safe payload
     var productsJson = JsonSerializer.Serialize(Model.Products);
     var purchaseTimeJson = JsonSerializer.Serialize(Model.PurchaseTime);
+    var scannedPurchaseResourcesJson = JsonSerializer.Serialize(new
+    {
+        noProductsToExport = Inventar.Resources.Resource.ResourceManager.GetString("NoProductsToExport") ?? "No products to export.",
+        errorExportingPdf = Inventar.Resources.Resource.ResourceManager.GetString("ErrorExportingPdf") ?? "An error occurred while exporting PDF.",
+        errorExportingExcel = Inventar.Resources.Resource.ResourceManager.GetString("ErrorExportingExcel") ?? "An error occurred while exporting Excel.",
+        confirmPdfWithoutFullName = Inventar.Resources.Resource.ResourceManager.GetString("ConfirmPdfWithoutBuyerFullName") ?? "Do you want to print PDF without entering buyer's full name?",
+        confirmExcelWithoutFullName = Inventar.Resources.Resource.ResourceManager.GetString("ConfirmExcelWithoutBuyerFullName") ?? "Do you want to print Excel without entering buyer's full name?"
+    });
 }
 
 <style>
     td, th {
         text-align: center;
     }
+
+    .scanned-purchase-form__row {
+        margin-bottom: 1rem;
+    }
+
+    .scanned-purchase-form__name-col {
+        padding-right: 2rem;
+    }
+
+    .scanned-purchase-form__payment-col {
+        padding-left: 2rem;
+    }
+
     input{
         border: 2px solid #111 !important;
     }
@@ -196,6 +222,45 @@
             background: #007bff;
             color: white;
         }
+
+    @@media (max-width: 768px) {
+        .scanned-purchase-page {
+            overflow-x: hidden;
+        }
+
+        .scanned-purchase-form__name-col,
+        .scanned-purchase-form__payment-col {
+            padding-right: calc(var(--bs-gutter-x) * .5);
+            padding-left: calc(var(--bs-gutter-x) * .5);
+        }
+
+        .scanned-purchase-table-zoom {
+            zoom: 0.60;
+        }
+
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+
+        #productTable {
+            margin-bottom: 0.75rem;
+        }
+
+        .d-flex.justify-content-between.align-items-center.mt-2 {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.75rem;
+        }
+
+        .d-flex.justify-content-between.align-items-center.mt-2 > div {
+            text-align: center !important;
+        }
+
+        .d-flex.justify-content-between.align-items-center.mt-2 .btn {
+            width: 100%;
+        }
+    }
 </style>
 <script>
     function parseUiNumber(value) {
@@ -407,6 +472,7 @@
     // Prefilled client-side copies from server model (so you don't need to gather table DOM)
     const productsForExport = @Html.Raw(productsJson);
     const purchaseTimeForExport = @Html.Raw(purchaseTimeJson); // will be JSON Date if DateTime
+    const scannedPurchaseResources = @Html.Raw(scannedPurchaseResourcesJson);
 
     function downloadBlobAsFile(blob, filename) {
         const url = window.URL.createObjectURL(blob);
@@ -419,7 +485,72 @@
         window.URL.revokeObjectURL(url);
     }
 
+    async function exportPurchaseDocument(url, fallbackFileName, errorMessage) {
+        if (!productsForExport || productsForExport.length === 0) {
+            alert(scannedPurchaseResources.noProductsToExport);
+            return;
+        }
+
+        try {
+            const payload = {
+                FullName: document.getElementById("FullName").value.trim(),
+                PurchaseTime: purchaseTimeForExport,
+                Products: productsForExport
+            };
+
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!resp.ok) {
+                const txt = await resp.text();
+                alert(txt || errorMessage);
+                return;
+            }
+
+            const contentDisposition = resp.headers.get('content-disposition');
+            let fileName = fallbackFileName;
+            if (contentDisposition && contentDisposition.indexOf('filename=') !== -1) {
+                const match = /filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/.exec(contentDisposition);
+                if (match && match[1]) {
+                    fileName = decodeURIComponent(match[1]);
+                }
+            }
+
+            const blob = await resp.blob();
+            downloadBlobAsFile(blob, fileName);
+        } catch (ex) {
+            console.error(ex);
+            alert(errorMessage);
+        }
+    }
+
+    function confirmExportWithoutFullName(message) {
+        const fullName = document.getElementById("FullName")?.value.trim() ?? "";
+        if (fullName) {
+            return true;
+        }
+
+        return confirm(message);
+    }
+
+    document.getElementById('printPurchasePdf').addEventListener('click', async function () {
+        if (!confirmExportWithoutFullName(scannedPurchaseResources.confirmPdfWithoutFullName)) {
+            return;
+        }
+
+        await exportPurchaseDocument('/InventoryItem/ExportScannedProductsToPdf', 'purchase.pdf', scannedPurchaseResources.errorExportingPdf);
+    });
+
     document.getElementById('createExcel').addEventListener('click', async function () {
+        if (!confirmExportWithoutFullName(scannedPurchaseResources.confirmExcelWithoutFullName)) {
+            return;
+        }
+
         try {
             // Build payload
             const payload = {
@@ -438,7 +569,7 @@
 
             if (!resp.ok) {
                 const txt = await resp.text();
-                alert('Export failed: ' + txt);
+                alert(txt || scannedPurchaseResources.errorExportingExcel);
                 return;
             }
 
@@ -459,7 +590,7 @@
             downloadBlobAsFile(blob, fileName);
         } catch (ex) {
             console.error(ex);
-            alert('An error occurred while exporting Excel.');
+            alert(scannedPurchaseResources.errorExportingExcel);
         }
     });
 </script>

@@ -1,0 +1,75 @@
+@using System.Globalization
+@model Inventar.ViewModels.Inventory.SimilarProductsLookupResultViewModel
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-warning similar-products-placeholder mb-0">@Model.ErrorMessage</div>
+}
+else if (Model.Summary != null)
+{
+    var totalQuantity = Model.Rows.Sum(row => row.Quantity);
+    var hasM2TotalValues = Model.Rows.Any(row => row.M2Total.HasValue);
+    var totalM2Total = Model.Rows.Sum(row => row.M2Total ?? 0m);
+
+    <div class="similar-products-summary">
+        <span class="similar-products-summary__value">@Model.Summary.ProductNumber</span>
+        <span class="similar-products-summary__separator">|</span>
+        <span class="similar-products-summary__value similar-products-summary__value--emphasis">@Model.Summary.ProductName</span>
+        <span class="similar-products-summary__separator">|</span>
+        <span class="similar-products-summary__value">@Model.Summary.Price.ToString("0.00", CultureInfo.InvariantCulture) &euro;</span>
+        <span class="similar-products-summary__separator">|</span>
+        <span class="similar-products-summary__value similar-products-summary__value--emphasis">@Model.Summary.Model</span>
+        <span class="similar-products-summary__separator">|</span>
+        <span class="similar-products-summary__value">@Model.Summary.Color</span>
+        <span class="similar-products-summary__separator">|</span>
+        <span class="similar-products-summary__value">@Model.Summary.Size</span>
+        <span class="similar-products-summary__separator">|</span>
+        <span class="similar-products-summary__value">@Model.Summary.Quantity</span>
+        <span class="similar-products-summary__separator">|</span>
+        <span class="similar-products-summary__value">@(Model.Summary.M2Total.HasValue ? Model.Summary.M2Total.Value.ToString("0.##", CultureInfo.InvariantCulture) : "-")</span>
+    </div>
+
+    <div class="similar-products-mobile-zoom">
+        <div class="table-responsive similar-products-table-wrap">
+            <table class="table table-bordered similar-products-table">
+                <thead>
+                    <tr>
+                        <th class="similar-products-table__product-number-col">ProductNumber</th>
+                        <th class="similar-products-table__price-col">@Inventar.Resources.Resource.Price</th>
+                        <th class="similar-products-table__color-col">@Inventar.Resources.Resource.Color</th>
+                        <th class="similar-products-table__size-col">@Inventar.Resources.Resource.Size</th>
+                        <th class="similar-products-table__quantity-col">@Inventar.Resources.Resource.Quantity</th>
+                        <th class="similar-products-table__m2total-col">m2Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Rows)
+                    {
+                        var rowM2Total = row.M2Total.HasValue
+                            ? row.M2Total.Value.ToString("0.##", CultureInfo.InvariantCulture)
+                            : "-";
+
+                        <tr class="@(row.IsGroupStart ? "similar-products-table__row--group-start" : string.Empty)">
+                            <td class="similar-products-table__product-number-cell">@row.ProductNumber</td>
+                            <td class="similar-products-table__price-cell">@row.Price.ToString("0.00", CultureInfo.InvariantCulture) &euro;</td>
+                            @if (row.ShowColor)
+                            {
+                                <td class="similar-products-table__color-cell" rowspan="@row.ColorRowSpan">@row.Color</td>
+                            }
+                            <td class="similar-products-table__size-cell">@row.Size</td>
+                            <td class="similar-products-table__quantity-cell">@row.Quantity</td>
+                            <td class="similar-products-table__m2total-cell">@rowM2Total</td>
+                        </tr>
+                    }
+                    <tr class="similar-products-table__totals-row">
+                        <td colspan="4" class="similar-products-table__totals-label">@Inventar.Resources.Resource.Total</td>
+                        <td class="similar-products-table__quantity-cell">@totalQuantity</td>
+                        <td class="similar-products-table__m2total-cell">
+                            @(hasM2TotalValues ? totalM2Total.ToString("0.##", CultureInfo.InvariantCulture) : "-")
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -5,12 +5,27 @@
     ViewData["Title"] = "Delete";
 }
 
-<h1>@Inventar.Resources.Resource.DeleteProduct</h1>
+<style>
+    @@media (max-width: 768px) {
+        .inventory-delete-mobile-zoom {
+            zoom: 0.82;
+        }
 
-<h3>@Inventar.Resources.Resource.DeleteThis</h3>
+        .container-fluid {
+            padding-right: 0;
+            padding-left: 0;
+        }
+    }
+</style>
+
+<div class="details-page">
+<h1 class="details-page__title">@Inventar.Resources.Resource.DeleteProduct</h1>
+
+<h3 class="details-page__subtitle">@Inventar.Resources.Resource.DeleteThis</h3>
 <div>
     <hr />
-    <table class="custom-table">
+    <div class="inventory-delete-mobile-zoom">
+    <table class="custom-table custom-table--details">
         <tr>
             <th>@Html.DisplayNameFor(model => model.Id)</th>
             <td>@Html.DisplayFor(model => model.Id)</td>
@@ -34,8 +49,8 @@
         <tr>
             <th>@Html.DisplayNameFor(model => model.QRCodeUrl)</th>
             <td>
-                @Html.DisplayFor(model => model.QRCodeUrl)
-                <div>
+                <span class="details-page__qr-url">@Html.DisplayFor(model => model.QRCodeUrl)</span>
+                <div class="details-page__qr-code">
                     @if (!string.IsNullOrEmpty(Model.QRCodeUrl))
                     {
                         <img src="@Model.QRCodeUrl" alt="QR Code" class="img-fluid rounded" style="max-height:150px;" />
@@ -76,10 +91,12 @@
             <td>@Html.DisplayFor(model => model.Description)</td>
         </tr>
     </table>
+    </div>
 
-    <form asp-action="Delete">
+    <form asp-action="Delete" class="details-page__actions">
         <input type="hidden" asp-for="Id" />
-        <input type="submit" value="@Inventar.Resources.Resource.Delete" class="btn btn-danger" /> |
+        <input type="submit" value="@Inventar.Resources.Resource.Delete" class="btn btn-danger" />
         <a asp-action="Index" class="btn btn-secondary btn-sm">@Inventar.Resources.Resource.BackToList</a>
     </form>
+</div>
 </div>

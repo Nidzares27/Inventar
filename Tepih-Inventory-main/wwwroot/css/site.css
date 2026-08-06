@@ -26,6 +26,38 @@ body {
     min-width: 0;
 }
 
+.admin-layout-nav__brand-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding-bottom:0 !important;
+    padding-top:0 !important;
+}
+
+.admin-layout-nav__brand-logo {
+    display: block;
+    width: 220px;
+    height: 220px;
+    object-fit: contain;
+    margin: auto;
+}
+
+.admin-layout-nav__brand-logoo {
+    display: block;
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin: auto;
+}
+
+.layout-link {
+    align-content:center;
+    height:100%;
+/*    padding-left:0.25rem !important;
+    padding-right:0.25rem !important;*/
+}
+
 .dataTables_wrapper .dataTables_paginate {
     float: none !important;
     text-align: center !important;
@@ -60,7 +92,7 @@ body {
 }
 
 .inventory-table tbody tr.inventory-row--negative > td {
-    background-color: #efe1ff !important;
+    background-color: #979797 !important;
 }
 
 .inventory-table tbody tr.inventory-row--po-mjeri > td {
@@ -68,7 +100,7 @@ body {
 }
 
 .inventory-table tbody tr.inventory-row--empty > td {
-    background-color: #ffdfe2 !important;
+    background-color: #fd929c !important;
 }
 
 .inventory-table tbody tr.inventory-row--low > td {
@@ -172,11 +204,11 @@ table thead tr.filters select,
 }
 
 .inventory-legend__swatch--negative {
-    background-color: #efe1ff;
+    background-color: #979797;
 }
 
 .inventory-legend__swatch--empty {
-    background-color: #ffdfe2;
+    background-color: #fd929c;
 }
 
 .inventory-legend__swatch--low {
@@ -254,6 +286,21 @@ table thead tr.filters select,
 @media (max-width: 768px) {
     .admin-layout-nav__row {
         align-items: center !important;
+    }
+
+    .admin-layout-nav__brand-logo {
+        width: 139px;
+        height: 139px;
+    }
+
+    .admin-layout-nav__brand-logoo {
+        width: 35px;
+        height: 35px;
+    }
+
+    .layout-link {
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
     }
 
     .inventory-legend {

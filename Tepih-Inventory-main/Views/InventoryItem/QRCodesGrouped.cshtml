@@ -1,8 +1,10 @@
 ﻿@model Inventar.ViewModels.Inventory.GroupedQrCodesViewModel
 @{
     var isAdminLike = User.IsInRole("admin") || User.IsInRole("superadmin");
+    var isEmployee = User.IsInRole("employee");
     var isUser = User.IsInRole("user");
-    var canPrintPdf = User.Identity?.IsAuthenticated == true;
+    var canSeeInventoryTotals = isAdminLike;
+    var canPrintPdf = User.Identity?.IsAuthenticated == true && (isAdminLike || isEmployee);
 }
 
 <style>
@@ -81,9 +83,12 @@
 </div>
 
 <div class="inventory-summary-bar">
-    <div class="inventory-summary-bar__totals">
-        <span>@Inventar.Resources.Resource.TotalQuantity: <span id="groupedTotalQuantity">0</span></span>
-    </div>
+    @if (canSeeInventoryTotals)
+    {
+        <div class="inventory-summary-bar__totals">
+            <span>@Inventar.Resources.Resource.TotalQuantity: <span id="groupedTotalQuantity">0</span></span>
+        </div>
+    }
     <div class="inventory-legend" aria-label="Inventory row colors legend">
         <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--po-mjeri"></span>@Inventar.Resources.Resource.PerMeasureProduct</span>
         <span class="inventory-legend__item"><span class="inventory-legend__swatch inventory-legend__swatch--negative"></span>@Inventar.Resources.Resource.Quantity < 0</span>
@@ -132,7 +137,7 @@
                 var totalQuantity = 0;
 
                 table.rows({ filter: 'applied' }).data().each(function (value) {
-                    totalQuantity += parseFloat(value[quantityColumnIndex]) || 0;
+                    totalQuantity += window.InventarNumber.parseUiNumber(value[quantityColumnIndex]);
                 });
 
                 $('#groupedTotalQuantity').text(totalQuantity);
@@ -197,7 +202,7 @@
                             data: data,
                             filters: filters,
                             columnHeaders: columnHeaders,
-                            totalQuantity: totalQuantity,
+                            totalQuantity: @Html.Raw(canSeeInventoryTotals ? "totalQuantity" : "0"),
                             totalM2: null,
                             includeTotalM2: false
                         }),
